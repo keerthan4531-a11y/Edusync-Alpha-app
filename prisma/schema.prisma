@@ -24,9 +24,10 @@ model User {
   department     Department?     @relation("DepartmentUsers", fields: [departmentId], references: [id])
   hodDepartment  Department?     @relation("DepartmentHOD")
   
-  stageProgresses StageProgress[]
-  submissions     Submission[]
-  badges          UserBadge[]
+  stageProgresses  StageProgress[]
+  submissions      Submission[]
+  badges           UserBadge[]
+  stage1Activities Stage1Activity[]
   
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -72,17 +73,43 @@ model Problem {
 }
 
 model Submission {
-  id         String   @id @default(uuid())
-  userId     String
-  problemId  String
-  code       String
-  language   String
-  status     String @default("PENDING")
-  xpAwarded  Int      @default(0)
+  id          String   @id @default(cuid())
+  userId      String
+  problemId   String
+  code        String
+  language    String
+  status      String
+  xpAwarded   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem     Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+}
+
+model Stage1Activity {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // "READING", "LISTENING", "WRITING", "SPEAKING"
+  score       Int      @default(0)
+  xpAwarded   Int      @default(0)
+  feedback    String?  // Can store JSON string for structured feedback
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentId   String?
+  content     Stage1Content? @relation(fields: [contentId], references: [id], onDelete: SetNull)
+}
+
+model Stage1Content {
+  id          String   @id @default(cuid())
+  type        String   // "READING", "LISTENING", "WRITING", "SPEAKING"
+  title       String
+  content     String   // The passage, prompt, or audio text
+  questions   String?  // JSON string of MCQ questions or blanks
+  difficulty  String   @default("medium")
+  isActive    Boolean  @default(true)
   
-  user       User     @relation(fields: [userId], references: [id])
-  problem    Problem  @relation(fields: [problemId], references: [id])
-  createdAt  DateTime @default(now())
+  activities  Stage1Activity[]
 }
 
 model Project {
