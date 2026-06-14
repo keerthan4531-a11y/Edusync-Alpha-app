@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+
+
+model User {
+  id             String          @id @default(uuid())
+  name           String
+  email          String          @unique
+  passwordHash   String
+  role           String          @default("STUDENT")
+  xp             Int             @default(0)
+  coins          Int             @default(0)
+  level          Int             @default(1)
+  currentStreak  Int             @default(0)
+  longestStreak  Int             @default(0)
+  departmentId   String?
+  department     Department?     @relation("DepartmentUsers", fields: [departmentId], references: [id])
+  hodDepartment  Department?     @relation("DepartmentHOD")
+  
+  stageProgresses StageProgress[]
+  submissions     Submission[]
+  badges          UserBadge[]
+  
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model Department {
+  id      String @id @default(uuid())
+  name    String
+  hodId   String? @unique
+  hod     User?   @relation("DepartmentHOD", fields: [hodId], references: [id])
+  users   User[]  @relation("DepartmentUsers")
+}
+
+model Stage {
+  id                String          @id @default(uuid())
+  number            Int             @unique // 1-4
+  name              String
+  unlockXpThreshold Int             @default(0)
+  progresses        StageProgress[]
+}
+
+model StageProgress {
+  id          String   @id @default(uuid())
+  userId      String
+  stageId     String
+  status      String   @default("LOCKED")
+  completedAt DateTime?
+  
+  user        User     @relation(fields: [userId], references: [id])
+  stage       Stage    @relation(fields: [stageId], references: [id])
+
+  @@unique([userId, stageId])
+}
+
+model Problem {
+  id              String       @id @default(uuid())
+  title           String
+  description     String
+  difficulty      String
+  languageSupport String       // e.g., "javascript,python,cpp" or JSON
+  testCases       String       // JSON string of test cases
+  submissions     Submission[]
+}
+
+model Submission {
+  id         String   @id @default(uuid())
+  userId     String
+  problemId  String
+  code       String
+  language   String
+  status     String @default("PENDING")
+  xpAwarded  Int      @default(0)
+  
+  user       User     @relation(fields: [userId], references: [id])
+  problem    Problem  @relation(fields: [problemId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model Project {
+  id           String   @id @default(uuid())
+  title        String
+  description  String
+  teamMembers  String   // JSON string or simple text list for now
+  repoUrl      String?
+  status       String   @default("ACTIVE")
+}
+
+model Badge {
+  id          String      @id @default(uuid())
+  name        String
+  description String
+  iconUrl     String
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id        String   @id @default(uuid())
+  userId    String
+  badgeId   String
+  earnedAt  DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id])
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+
+  @@unique([userId, badgeId])
+}
+
+model DailyChallenge {
+  id         String   @id @default(uuid())
+  date       DateTime @unique
+  difficulty String
+  xpReward   Int
+  coinReward Int
+  type       String   // e.g., "QUIZ", "CODING", "LISTENING"
+}
