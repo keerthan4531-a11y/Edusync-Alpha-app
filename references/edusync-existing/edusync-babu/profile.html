@@ -1,0 +1,3034 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <script src="/static/js/edusync-ai-engine.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduSync 4.0 - Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+
+        *::-webkit-scrollbar {
+            display: none; /* Chrome, Safari and Opera */
+        }
+
+                :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --dark: #f8fafc;
+            --darker: #f1f5f9;
+            --light: #1e293b;
+            --glass: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(0, 0, 0, 0.15);
+            --text: #0f172a;
+            --text-muted: #475569;
+            --stage-1: #8b5cf6;
+            --stage-2: #3b82f6;
+            --stage-3: #10b981;
+            --stage-4: #f59e0b;
+        }
+
+                                [data-theme="dark"] {
+            --dark: #0f172a;
+            --darker: #020617;
+            --light: #f1f5f9;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--darker), var(--dark));
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Navigation - Glassmorphism Pill */
+        .nav-header {
+            position: relative;
+            z-index: 1000;
+            padding: 12px 20px;
+            background: transparent;
+            flex-shrink: 0;
+        }
+
+        .top-nav {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+            padding: 12px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 50px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            font-size: 24px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-btn {
+            background: var(--glass);
+            color: var(--text);
+            border: 1px solid var(--glass-border);
+            padding: 8px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .nav-btn:hover {
+            background: var(--glass);
+            transform: translateY(-2px);
+        }
+
+        .nav-btn.danger {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+
+        .nav-btn.danger:hover {
+            background: rgba(239, 68, 68, 0.3);
+        }
+
+        .nav-btn.primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #ffffff;
+            border: none;
+        }
+
+        .nav-btn.primary:hover {
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        /* Main Container */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styles - Modern Layout */
+        .sidebar {
+            width: 280px;
+            background: transparent;
+            border-right: 1px solid var(--glass-border);
+            padding: 30px 0;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .menu-item {
+            margin-bottom: 0;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 16px 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 500;
+            font-size: 15px;
+            border: 1px solid transparent;
+        }
+
+        .menu-link:hover {
+            background: var(--glass);
+            color: var(--text);
+            transform: translateX(5px);
+            border-color: var(--glass-border);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+
+        .menu-link.active {
+            background: rgba(99, 102, 241, 0.12);
+            color: var(--primary);
+            font-weight: 600;
+            box-shadow: -6px 0 0 0 var(--primary);
+            border-left: 1px solid transparent;
+        }
+
+        .menu-icon {
+            font-size: 20px;
+            width: 26px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .menu-link.active .menu-icon {
+            color: var(--primary);
+        }
+
+        .menu-link:hover .menu-icon {
+            transform: scale(1.1);
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        /* Profile Header */
+        .profile-header {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(16, 185, 129, 0.1));
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: 700;
+            color: var(--text);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-edit {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: var(--text);
+            padding: 5px;
+            text-align: center;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .profile-avatar:hover .avatar-edit {
+            opacity: 1;
+        }
+
+        .profile-info {
+            flex: 1;
+        }
+
+        .profile-name {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .profile-email {
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .verified-badge {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--secondary);
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .profile-stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+
+
+        /* Tab Content */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Form Styles */
+        .form-section {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text);
+        }
+
+        .section-title i {
+            color: var(--primary);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text);
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+
+        /* Chips Input */
+        .chips-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .chip {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .chip-remove {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            padding: 0;
+            font-size: 12px;
+        }
+
+        .chips-input {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chips-input input {
+            flex: 1;
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--glass);
+            color: var(--text);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--glass);
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--secondary), #0d9c6f);
+            color: var(--text);
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #dc2626);
+            color: var(--text);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Badges Section */
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .badge-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: transform 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .badge-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .badge-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .badge-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+
+        .badge-desc {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .badge-date {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .badge-card.earned {
+            border-color: var(--secondary);
+        }
+
+        .badge-card.locked {
+            opacity: 0.5;
+            filter: grayscale(0.8);
+        }
+
+        /* Achievements Section */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .achievement-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .achievement-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .achievement-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .achievement-content {
+            flex: 1;
+        }
+
+        .achievement-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .achievement-desc {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .achievement-progress {
+            margin-top: 15px;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--glass);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transition: width 0.5s ease;
+        }
+
+        .progress-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Activity Section */
+        .activity-timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .activity-timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--glass-border);
+        }
+
+        .activity-item {
+            position: relative;
+            margin-bottom: 30px;
+            padding-left: 20px;
+        }
+
+        .activity-item::before {
+            content: '';
+            position: absolute;
+            left: -10px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: 3px solid var(--dark);
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .activity-content {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        .activity-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .activity-desc {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        /* Security Section */
+        .security-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .security-card {
+            background: var(--glass);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .security-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .security-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .security-status {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-enabled {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--secondary);
+        }
+
+        .status-disabled {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .security-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            display: none;
+        }
+
+        [data-theme="dark"] .loading-overlay {
+            background: rgba(2, 6, 23, 0.8);
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        [data-theme="dark"] .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: var(--dark);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--text);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 70px;
+            }
+
+            .menu-link span {
+                display: none;
+            }
+
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-stats {
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 10px;
+            }
+
+            .sidebar-menu {
+                display: flex;
+                overflow-x: auto;
+                gap: 10px;
+            }
+
+            .menu-item {
+                margin-bottom: 0;
+            }
+
+            .menu-link {
+                padding: 10px 15px;
+                white-space: nowrap;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .badges-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 10001;
+            color: #0f172a;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .toast.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        .toast.info {
+            border-left: 4px solid var(--info);
+        }
+
+        .toast-icon {
+            font-size: 20px;
+        }
+
+        .toast.success .toast-icon {
+            color: var(--success);
+        }
+
+        .toast.error .toast-icon {
+            color: var(--danger);
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .toast-message {
+            font-size: 14px;
+            color: #475569;
+        }
+
+        .toast-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            padding: 0;
+        }
+
+        /* Skill Tags */
+        .skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .skill-tag {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .skill-tag.level-beginner {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--secondary);
+        }
+
+        .skill-tag.level-intermediate {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--accent);
+        }
+
+        .skill-tag.level-advanced {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        /* Password Strength */
+        .password-strength {
+            margin-top: 10px;
+        }
+
+        .strength-bar {
+            height: 6px;
+            background: var(--glass);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .strength-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+
+        .strength-text {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .strength-weak {
+            background: var(--danger);
+        }
+
+        .strength-medium {
+            background: var(--warning);
+        }
+
+        .strength-strong {
+            background: var(--success);
+        }
+    
+        
+
+
+
+    
+        
+        /* Smooth Theme Transition */
+        *, *::before, *::after {
+            transition: background 0.3s ease, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease !important;
+        }
+        
+        /* Exclude animations that shouldn't be transitioned */
+        .sun-moon, .slider-round, .sun-icon, .moon-icon, .cloud, .star, .pulse, .ai-assistant-btn {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+        .sun-moon, .slider-round, .sun-icon, .moon-icon, .cloud, .star, .pulse, .ai-assistant-btn {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+
+    </style>
+
+
+    <style>
+        /* Fancy Theme Switcher Styles */
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        .theme-switch {
+            display: inline-block;
+            height: 28px;
+            position: relative;
+            width: 56px;
+        }
+
+        .theme-switch input {
+            display: none;
+        }
+
+        .slider-round {
+            background-color: #87ceeb;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .sun-moon {
+            background-color: #f7d94c;
+            bottom: 4px;
+            height: 20px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            box-shadow: 0 0 10px rgba(247, 217, 76, 0.8);
+        }
+
+        .sun-icon { color: #d4a017; font-size: 10px; }
+        .moon-icon { color: #f1f5f9; font-size: 10px; display: none; }
+        .cloud { position: absolute; color: #fff; opacity: 0.8; transition: .4s; }
+        .cloud1 { top: 4px; right: 8px; font-size: 7px; }
+        .cloud2 { bottom: 4px; right: 15px; font-size: 5px; }
+        .star { position: absolute; background-color: #fff; border-radius: 50%; opacity: 0; transition: .4s; }
+        .star1 { top: 6px; left: 12px; width: 1.5px; height: 1.5px; }
+        .star2 { top: 10px; left: 20px; width: 2px; height: 2px; }
+        .star3 { bottom: 8px; left: 16px; width: 1.5px; height: 1.5px; }
+
+        input:checked + .slider-round { background-color: #1e293b; }
+        input:checked + .slider-round .sun-moon {
+            transform: translateX(28px); background-color: #f1f5f9; box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        input:checked + .slider-round .sun-icon { display: none; }
+        input:checked + .slider-round .moon-icon { display: block; color: #94a3b8; }
+        input:checked + .slider-round .cloud { opacity: 0; transform: translateY(15px); }
+        input:checked + .slider-round .star { opacity: 1; }
+
+        /* Smooth Theme Transition for everything */
+        *, *::before, *::after {
+            transition: background 0.3s ease, background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease !important;
+        }
+        
+        .sun-moon, .slider-round, .sun-icon, .moon-icon, .cloud, .star, .pulse, [style*="transition"] {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+    </style>
+
+    <script>
+        function applyStudentTheme(theme) {
+            if (!theme) return;
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            
+            // Update all theme checkboxes on the page
+            const themeCheckboxes = document.querySelectorAll('.theme-checkbox');
+            themeCheckboxes.forEach(cb => {
+                cb.checked = (theme === 'dark');
+            });
+            
+            // Dispatch a custom event (if any scripts want to listen)
+            window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: theme } }));
+        }
+
+        (function() {
+            let currentTheme = localStorage.getItem('student_theme');
+            if (currentTheme) {
+                applyStudentTheme(currentTheme);
+            } else {
+                const oldTheme = localStorage.getItem('theme');
+                if (oldTheme) {
+                    localStorage.setItem('student_theme', oldTheme);
+                    applyStudentTheme(oldTheme);
+                } else {
+                    applyStudentTheme('light');
+                }
+            }
+        })();
+
+        // Listen for storage changes across tabs
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'student_theme') {
+                applyStudentTheme(e.newValue || 'light');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const themeCheckboxes = document.querySelectorAll('.theme-checkbox');
+            themeCheckboxes.forEach(cb => {
+                cb.checked = (localStorage.getItem('student_theme') === 'dark');
+                cb.addEventListener('change', function(e) {
+                    const newTheme = e.target.checked ? 'dark' : 'light';
+                    localStorage.setItem('student_theme', newTheme);
+                    applyStudentTheme(newTheme);
+                });
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <!-- Top Navigation -->
+    <header class="nav-header">
+    <nav class="top-nav">
+        <a href="student_dashboard.html" class="logo">
+            <i class="fas fa-graduation-cap logo-icon"></i>
+            <span>EduSync 4.0</span>
+        </a>
+
+        <div class="user-menu">
+            <a href="student_dashboard.html" class="nav-btn">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <button class="nav-btn danger" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </nav>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="menu-item">
+                    <a href="#" class="menu-link active" data-tab="personal-info">
+                        <i class="fas fa-user-circle menu-icon"></i>
+                        <span>Personal Info</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-tab="education">
+                        <i class="fas fa-graduation-cap menu-icon"></i>
+                        <span>Education</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-tab="skills">
+                        <i class="fas fa-tools menu-icon"></i>
+                        <span>Skills & Interests</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-tab="achievements">
+                        <i class="fas fa-trophy menu-icon"></i>
+                        <span>Achievements</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-tab="badges">
+                        <i class="fas fa-award menu-icon"></i>
+                        <span>Badges</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-tab="activity">
+                        <i class="fas fa-history menu-icon"></i>
+                        <span>Activity</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-tab="security">
+                        <i class="fas fa-shield-alt menu-icon"></i>
+                        <span>Security</span>
+                    </a>
+                </li>
+                <li class="menu-item">
+                    <a href="#" class="menu-link" data-tab="settings">
+                        <i class="fas fa-cog menu-icon"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Profile Header -->
+            <div class="profile-header">
+                <div class="profile-avatar" id="profileAvatar">
+                    <div id="avatarText">JD</div>
+                    <div class="avatar-edit">
+                        <i class="fas fa-camera"></i> Change
+                    </div>
+                </div>
+
+                <div class="profile-info">
+                    <h1 class="profile-name" id="profileName">John Doe</h1>
+                    <div class="profile-email">
+                        <span id="profileEmail">john.doe@example.com</span>
+                        <span class="verified-badge">
+                            <i class="fas fa-check-circle"></i> Verified
+                        </span>
+                    </div>
+                    <div class="profile-stats">
+                        <div class="profile-stat">
+                            <div class="stat-value" id="statLevel">3</div>
+                            <div class="stat-label">Level</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="stat-value" id="statCredits">1,250</div>
+                            <div class="stat-label">Credits</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="stat-value" id="statStreak">7</div>
+                            <div class="stat-label">Day Streak</div>
+                        </div>
+                        <div class="profile-stat">
+                            <div class="stat-value" id="statStage">Stage 1</div>
+                            <div class="stat-label">Current Stage</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Tab Contents -->
+            <!-- Personal Info Tab -->
+            <div class="tab-content active" id="personal-info-tab">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-user-edit"></i>
+                        Personal Information
+                    </h3>
+                    <form id="personalInfoForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="fullName" placeholder="Enter your full name"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" placeholder="Enter your email"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="phone" placeholder="Enter your phone number">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="dob">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Gender</label>
+                                <select class="form-control form-select" id="gender">
+                                    <option value="">Select gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                    <option value="prefer-not-to-say">Prefer not to say</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Bio</label>
+                                <textarea class="form-control form-textarea" id="bio"
+                                    placeholder="Tell us about yourself..."></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Profile Picture</label>
+                            <input type="file" class="form-control" id="profilePicture" accept="image/*"
+                                style="padding: 8px;">
+                            <small class="text-muted">Upload a profile picture (max 5MB, JPG/PNG)</small>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="resetForm('personalInfoForm')">
+                                <i class="fas fa-undo"></i> Reset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Education Tab -->
+            <div class="tab-content" id="education-tab">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-university"></i>
+                        Educational Information
+                    </h3>
+                    <form id="educationForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Roll Number</label>
+                                <input type="text" class="form-control" id="rollNumber"
+                                    placeholder="Enter your roll number" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Department</label>
+                                <select class="form-control form-select" id="department">
+                                    <option value="">Select department</option>
+                                    <option value="CSE">Computer Science & Engineering</option>
+                                    <option value="IT">Information Technology</option>
+                                    <option value="ECE">Electronics & Communication</option>
+                                    <option value="EEE">Electrical & Electronics</option>
+                                    <option value="MECH">Mechanical Engineering</option>
+                                    <option value="CIVIL">Civil Engineering</option>
+                                    <option value="CHEM">Chemical Engineering</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Year of Study</label>
+                                <select class="form-control form-select" id="year">
+                                    <option value="">Select year</option>
+                                    <option value="1">First Year</option>
+                                    <option value="2">Second Year</option>
+                                    <option value="3">Third Year</option>
+                                    <option value="4">Fourth Year</option>
+                                    <option value="5">Fifth Year</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Current Stage</label>
+                                <select class="form-control form-select" id="stage" disabled>
+                                    <option value="">Select stage</option>
+                                    <option value="freshie">Freshie (Stage 1)</option>
+                                    <option value="sophomore">Sophomore (Stage 2)</option>
+                                    <option value="junior">Junior (Stage 3)</option>
+                                    <option value="final_year">Final Year (Stage 4)</option>
+                                    <option value="alumni">Alumni</option>
+                                </select>
+                                <small class="text-muted">Stage is auto-updated based on progress</small>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-chart-line"></i>
+                        Academic Progress
+                    </h3>
+                    <div class="achievements-grid">
+                        <div class="achievement-card">
+                            <div class="achievement-header">
+                                <div class="achievement-icon" style="background: rgba(99, 102, 241, 0.2);">
+                                    <i class="fas fa-trophy" style="color: var(--primary);"></i>
+                                </div>
+                                <div class="achievement-content">
+                                    <div class="achievement-title">Completed Challenges</div>
+                                    <div class="achievement-desc" id="completedChallenges">0 challenges completed</div>
+                                </div>
+                            </div>
+                            <div class="achievement-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%" id="challengesProgress"></div>
+                                </div>
+                                <div class="progress-text">
+                                    <span>Current: <span id="currentChallenges">0</span></span>
+                                    <span>Goal: 100</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="achievement-card">
+                            <div class="achievement-header">
+                                <div class="achievement-icon" style="background: rgba(16, 185, 129, 0.2);">
+                                    <i class="fas fa-project-diagram" style="color: var(--secondary);"></i>
+                                </div>
+                                <div class="achievement-content">
+                                    <div class="achievement-title">Projects Completed</div>
+                                    <div class="achievement-desc" id="completedProjects">0 projects completed</div>
+                                </div>
+                            </div>
+                            <div class="achievement-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%" id="projectsProgress"></div>
+                                </div>
+                                <div class="progress-text">
+                                    <span>Current: <span id="currentProjects">0</span></span>
+                                    <span>Goal: 10</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Skills & Interests Tab -->
+            <div class="tab-content" id="skills-tab">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-code"></i>
+                        Technical Skills
+                    </h3>
+                    <div class="form-group">
+                        <label class="form-label">Add Skill</label>
+                        <div class="chips-input">
+                            <input type="text" class="form-control" id="skillInput"
+                                placeholder="Enter a skill (e.g., Python, JavaScript)">
+                            <button type="button" class="btn btn-secondary" onclick="addSkill()">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                        <div class="skill-tags" id="skillsContainer">
+                            <!-- Skills will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-heart"></i>
+                        Interests & Hobbies
+                    </h3>
+                    <div class="form-group">
+                        <label class="form-label">Add Interest</label>
+                        <div class="chips-input">
+                            <input type="text" class="form-control" id="interestInput"
+                                placeholder="Enter an interest (e.g., AI, Web Development)">
+                            <button type="button" class="btn btn-secondary" onclick="addInterest()">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                        <div class="skill-tags" id="interestsContainer">
+                            <!-- Interests will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-bullseye"></i>
+                        Career Goals
+                    </h3>
+                    <div class="form-group">
+                        <label class="form-label">Add Career Goal</label>
+                        <div class="chips-input">
+                            <input type="text" class="form-control" id="goalInput"
+                                placeholder="Enter a career goal (e.g., Software Engineer, Data Scientist)">
+                            <button type="button" class="btn btn-secondary" onclick="addGoal()">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                        <div class="skill-tags" id="goalsContainer">
+                            <!-- Goals will be added here dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Areas for Improvement
+                    </h3>
+                    <div class="form-group">
+                        <label class="form-label">Add Weak Area</label>
+                        <div class="chips-input">
+                            <input type="text" class="form-control" id="weakAreaInput"
+                                placeholder="Enter an area to improve (e.g., Data Structures, Communication)">
+                            <button type="button" class="btn btn-secondary" onclick="addWeakArea()">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                        <div class="skill-tags" id="weakAreasContainer">
+                            <!-- Weak areas will be added here dynamically -->
+                        </div>
+                        <small class="text-muted">Identifying weak areas helps us create personalized learning paths for
+                            you</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Achievements Tab -->
+            <div class="tab-content" id="achievements-tab">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Learning Statistics
+                    </h3>
+                    <div class="achievements-grid">
+                        <div class="achievement-card">
+                            <div class="achievement-header">
+                                <div class="achievement-icon" style="background: rgba(99, 102, 241, 0.2);">
+                                    <i class="fas fa-clock" style="color: var(--primary);"></i>
+                                </div>
+                                <div class="achievement-content">
+                                    <div class="achievement-title">Learning Streak</div>
+                                    <div class="achievement-desc" id="learningStreak">0 days streak</div>
+                                </div>
+                            </div>
+                            <div class="achievement-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%" id="streakProgress"></div>
+                                </div>
+                                <div class="progress-text">
+                                    <span>Current: <span id="currentStreak">0</span> days</span>
+                                    <span>Goal: 30 days</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="achievement-card">
+                            <div class="achievement-header">
+                                <div class="achievement-icon" style="background: rgba(16, 185, 129, 0.2);">
+                                    <i class="fas fa-star" style="color: var(--secondary);"></i>
+                                </div>
+                                <div class="achievement-content">
+                                    <div class="achievement-title">Average Score</div>
+                                    <div class="achievement-desc" id="averageScore">0% average score</div>
+                                </div>
+                            </div>
+                            <div class="achievement-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%" id="scoreProgress"></div>
+                                </div>
+                                <div class="progress-text">
+                                    <span>Current: <span id="currentScore">0</span>%</span>
+                                    <span>Goal: 90%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="achievement-card">
+                            <div class="achievement-header">
+                                <div class="achievement-icon" style="background: rgba(245, 158, 11, 0.2);">
+                                    <i class="fas fa-coins" style="color: var(--accent);"></i>
+                                </div>
+                                <div class="achievement-content">
+                                    <div class="achievement-title">Total Credits</div>
+                                    <div class="achievement-desc" id="totalCredits">0 credits earned</div>
+                                </div>
+                            </div>
+                            <div class="achievement-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%" id="creditsProgress"></div>
+                                </div>
+                                <div class="progress-text">
+                                    <span>Current: <span id="currentCredits">0</span></span>
+                                    <span>Goal: 5000</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="achievement-card">
+                            <div class="achievement-header">
+                                <div class="achievement-icon" style="background: rgba(239, 68, 68, 0.2);">
+                                    <i class="fas fa-code-branch" style="color: var(--danger);"></i>
+                                </div>
+                                <div class="achievement-content">
+                                    <div class="achievement-title">Code Contributions</div>
+                                    <div class="achievement-desc" id="codeContributions">0 contributions</div>
+                                </div>
+                            </div>
+                            <div class="achievement-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 0%" id="contributionsProgress"></div>
+                                </div>
+                                <div class="progress-text">
+                                    <span>Current: <span id="currentContributions">0</span></span>
+                                    <span>Goal: 100</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Badges Tab -->
+            <div class="tab-content" id="badges-tab">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-award"></i>
+                        Earned Badges
+                    </h3>
+                    <div class="badges-grid" id="earnedBadgesGrid">
+                        <!-- Earned badges will be loaded here -->
+                        <div class="badge-card earned">
+                            <div class="badge-icon">🎉</div>
+                            <div class="badge-name">Welcome Aboard</div>
+                            <div class="badge-desc">Joined EduSync 4.0</div>
+                            <div class="badge-date">Earned: Just now</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-lock"></i>
+                        Available Badges
+                    </h3>
+                    <div class="badges-grid" id="availableBadgesGrid">
+                        <!-- Available badges will be loaded here -->
+                        <div class="badge-card locked">
+                            <div class="badge-icon">🔥</div>
+                            <div class="badge-name">7-Day Streak</div>
+                            <div class="badge-desc">Login for 7 consecutive days</div>
+                            <div class="badge-date">Locked</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Tab -->
+            <div class="tab-content" id="activity-tab">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-history"></i>
+                        Recent Activity
+                    </h3>
+                    <div class="activity-timeline" id="activityTimeline">
+                        <!-- Activity items will be loaded here -->
+                        <div class="activity-item">
+                            <div class="activity-time">Just now</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Profile Viewed</div>
+                                <div class="activity-desc">You viewed your profile page</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Tab -->
+            <div class="tab-content" id="security-tab">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-key"></i>
+                        Change Password
+                    </h3>
+                    <form id="changePasswordForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Current Password</label>
+                                <input type="password" class="form-control" id="currentPassword"
+                                    placeholder="Enter current password" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">New Password</label>
+                                <input type="password" class="form-control" id="newPassword"
+                                    placeholder="Enter new password" required oninput="checkPasswordStrength(this.value)">
+                                <div class="password-strength">
+                                    <div class="strength-bar">
+                                        <div class="strength-fill" id="passwordStrengthBar"></div>
+                                    </div>
+                                    <div class="strength-text" id="passwordStrengthText">Password strength</div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirmPassword"
+                                    placeholder="Confirm new password" required>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-key"></i> Change Password
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-shield-alt"></i>
+                        Security Settings
+                    </h3>
+                    <div class="security-grid">
+                        <div class="security-card">
+                            <div class="security-header">
+                                <div class="security-icon" style="background: rgba(99, 102, 241, 0.2);">
+                                    <i class="fas fa-envelope" style="color: var(--primary);"></i>
+                                </div>
+                                <div class="security-content">
+                                    <div class="achievement-title">Email Notifications</div>
+                                    <div class="achievement-desc">Receive email updates</div>
+                                </div>
+                                <span class="security-status status-enabled" id="emailStatus">Enabled</span>
+                            </div>
+                            <div class="security-actions">
+                                <button class="btn btn-secondary" onclick="toggleEmailNotifications()">
+                                    <i class="fas fa-toggle-on"></i> Toggle
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="security-card">
+                            <div class="security-header">
+                                <div class="security-icon" style="background: rgba(16, 185, 129, 0.2);">
+                                    <i class="fas fa-bell" style="color: var(--secondary);"></i>
+                                </div>
+                                <div class="security-content">
+                                    <div class="achievement-title">Push Notifications</div>
+                                    <div class="achievement-desc">Browser notifications</div>
+                                </div>
+                                <span class="security-status status-enabled" id="pushStatus">Enabled</span>
+                            </div>
+                            <div class="security-actions">
+                                <button class="btn btn-secondary" onclick="togglePushNotifications()">
+                                    <i class="fas fa-toggle-on"></i> Toggle
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="security-card">
+                            <div class="security-header">
+                                <div class="security-icon" style="background: rgba(245, 158, 11, 0.2);">
+                                    <i class="fas fa-history" style="color: var(--accent);"></i>
+                                </div>
+                                <div class="security-content">
+                                    <div class="achievement-title">Activity Log</div>
+                                    <div class="achievement-desc">Track all account activity</div>
+                                </div>
+                                <span class="security-status status-enabled" id="activityLogStatus">Enabled</span>
+                            </div>
+                            <div class="security-actions">
+                                <button class="btn btn-secondary" onclick="toggleActivityLog()">
+                                    <i class="fas fa-toggle-on"></i> Toggle
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="security-card">
+                            <div class="security-header">
+                                <div class="security-icon" style="background: rgba(239, 68, 68, 0.2);">
+                                    <i class="fas fa-sign-out-alt" style="color: var(--danger);"></i>
+                                </div>
+                                <div class="security-content">
+                                    <div class="achievement-title">Login Sessions</div>
+                                    <div class="achievement-desc">Manage active sessions</div>
+                                </div>
+                            </div>
+                            <div class="security-actions">
+                                <button class="btn btn-secondary" onclick="viewLoginSessions()">
+                                    <i class="fas fa-eye"></i> View Sessions
+                                </button>
+                                <button class="btn btn-danger" onclick="logoutAllSessions()">
+                                    <i class="fas fa-sign-out-alt"></i> Logout All
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div class="tab-content" id="settings-tab">
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-globe"></i>
+                        Language & Region
+                    </h3>
+                    <form id="languageSettingsForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label class="form-label">Preferred Language</label>
+                                <select class="form-control form-select" id="preferredLanguage">
+                                    <option value="en">English</option>
+                                    <option value="ta">தமிழ் (Tamil)</option>
+                                    <option value="hi">हिन्दी (Hindi)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Time Zone</label>
+                                <select class="form-control form-select" id="timezone">
+                                    <option value="UTC">UTC</option>
+                                    <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                                    <option value="America/New_York">America/New_York (EST)</option>
+                                    <option value="Europe/London">Europe/London (GMT)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Date Format</label>
+                                <select class="form-control form-select" id="dateFormat">
+                                    <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                                    <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-palette"></i>
+                        Theme & Appearance
+                    </h3>
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; margin-bottom: 20px;">
+                        <div>
+                            <div style="font-weight: 600; font-size: 16px; margin-bottom: 5px;">Dark Mode</div>
+                            <div style="color: var(--text-muted); font-size: 14px;">Switch between light and dark appearance</div>
+                        </div>
+                        <div class="theme-switch-wrapper" style="margin-right: 0;">
+                            <label class="theme-switch" for="profile-theme-checkbox">
+                                <input type="checkbox" id="profile-theme-checkbox" class="theme-checkbox" />
+                                <div class="slider-round">
+                                    <div class="sun-moon">
+                                        <i class="fas fa-sun sun-icon"></i>
+                                        <i class="fas fa-moon moon-icon"></i>
+                                    </div>
+                                    <i class="fas fa-cloud cloud cloud1"></i>
+                                    <i class="fas fa-cloud cloud cloud2"></i>
+                                    <i class="fas fa-star star star1"></i>
+                                    <i class="fas fa-star star star2"></i>
+                                    <i class="fas fa-star star star3"></i>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 20px; background: var(--glass); border: 1px solid var(--glass-border); border-radius: 15px; margin-bottom: 20px;">
+                        <div>
+                            <div style="font-weight: 600; font-size: 16px; margin-bottom: 5px;">System Preference</div>
+                            <div style="color: var(--text-muted); font-size: 14px;">Use your device's system theme automatically</div>
+                        </div>
+                        <button class="btn btn-secondary" id="useSystemThemeBtn" onclick="useSystemTheme()" style="white-space: nowrap;">
+                            <i class="fas fa-desktop"></i> Use System Theme
+                        </button>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Font Size</label>
+                            <select class="form-control form-select" id="fontSize">
+                                <option value="small">Small</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="large">Large</option>
+                                <option value="xlarge">Extra Large</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="button" class="btn btn-primary" onclick="saveFontSize()">
+                            <i class="fas fa-save"></i> Save Settings
+                        </button>
+                    </div>
+                </div>
+
+
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-trash-alt"></i>
+                        Account Management
+                    </h3>
+                    <div class="form-group">
+                        <label class="form-label">Export Data</label>
+                        <p style="color: var(--text-muted); margin-bottom: 15px;">
+                            Download all your data in JSON format
+                        </p>
+                        <button class="btn btn-secondary" onclick="exportData()">
+                            <i class="fas fa-download"></i> Export My Data
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Delete Account</label>
+                        <p style="color: var(--text-muted); margin-bottom: 15px;">
+                            Permanently delete your account and all associated data. This action cannot be undone.
+                        </p>
+                        <button class="btn btn-danger" onclick="showDeleteAccountModal()">
+                            <i class="fas fa-trash-alt"></i> Delete Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div style="margin-top: 20px; color: var(--text);">Loading...</div>
+    </div>
+
+    <!-- Modal for Delete Account -->
+    <div class="modal" id="deleteAccountModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+                    Delete Account
+                </div>
+                <button class="modal-close" onclick="closeDeleteAccountModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <p style="margin-bottom: 20px; color: var(--text);">
+                    Are you sure you want to delete your account? This action is permanent and cannot be undone.
+                    All your data, including progress, achievements, and projects will be deleted.
+                </p>
+                <div class="form-group">
+                    <label class="form-label">Enter your password to confirm</label>
+                    <input type="password" class="form-control" id="deletePassword"
+                        placeholder="Enter your password to confirm">
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="confirmDelete">
+                        <span style="color: var(--text);">I understand this action is irreversible</span>
+                    </label>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn btn-danger" onclick="confirmDeleteAccount()" disabled id="confirmDeleteBtn">
+                        <i class="fas fa-trash-alt"></i> Delete Account
+                    </button>
+                    <button class="btn btn-secondary" onclick="closeDeleteAccountModal()">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <div class="toast-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="toast-content">
+            <div class="toast-title" id="toastTitle">Success</div>
+            <div class="toast-message" id="toastMessage">Operation completed successfully</div>
+        </div>
+        <button class="toast-close" onclick="hideToast()">&times;</button>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE_URL = 'http://localhost:8000/api';
+
+        // User data
+        let userData = JSON.parse(localStorage.getItem('user_data')) || {};
+        let skills = [];
+        let interests = [];
+        let goals = [];
+        let weakAreas = [];
+
+        // Initialize profile
+        async function initProfile() {
+            showLoading();
+
+            try {
+                // Check authentication
+                const token = localStorage.getItem('access_token');
+                if (!token) {
+                    window.location.href = '/login';
+                    return;
+                }
+
+                // Fetch user profile
+                await fetchUserProfile();
+
+                // Load initial data
+                loadUserData();
+                loadSkills();
+                loadAchievements();
+                loadBadges();
+                loadActivity();
+                loadSecuritySettings();
+
+                hideLoading();
+            } catch (error) {
+                console.error('Failed to initialize profile:', error);
+                showToast('Error', 'Failed to load profile data', 'error');
+                hideLoading();
+            }
+        }
+
+        // Fetch user profile from API
+        async function fetchUserProfile() {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`${API_BASE_URL}/users/profile`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                userData = data;
+                localStorage.setItem('user_data', JSON.stringify(data));
+                return data;
+            } else if (response.status === 401) {
+                // Token expired, refresh
+                const refreshed = await refreshToken();
+                if (refreshed) {
+                    return fetchUserProfile();
+                } else {
+                    window.location.href = '/login';
+                }
+            } else {
+                throw new Error('Failed to fetch profile');
+            }
+        }
+
+        // Load user data into form
+        function loadUserData() {
+            // Profile header
+            document.getElementById('profileName').textContent = userData.full_name || 'User';
+            document.getElementById('profileEmail').textContent = userData.email || '';
+            document.getElementById('avatarText').textContent = getInitials(userData.full_name || 'User');
+            document.getElementById('statLevel').textContent = userData.level || 1;
+            document.getElementById('statCredits').textContent = formatNumber(userData.credits || 0);
+            document.getElementById('statStreak').textContent = userData.daily_login_streak || 0;
+            document.getElementById('statStage').textContent = getStageDisplay(userData.stage);
+
+            // Personal info form
+            document.getElementById('fullName').value = userData.full_name || '';
+            document.getElementById('email').value = userData.email || '';
+            document.getElementById('phone').value = userData.phone || '';
+            document.getElementById('dob').value = userData.date_of_birth || '';
+            document.getElementById('gender').value = userData.gender || '';
+            document.getElementById('bio').value = userData.bio || '';
+
+            // Education form
+            document.getElementById('rollNumber').value = userData.roll_number || '';
+            document.getElementById('department').value = userData.department || '';
+            document.getElementById('year').value = userData.year || '';
+            document.getElementById('stage').value = userData.stage || 'freshie';
+
+            // Theme and appearance
+            const savedTheme = userData.theme || localStorage.getItem('student_theme') || 'light';
+            const profileToggle = document.getElementById('profile-theme-checkbox');
+            if (profileToggle) {
+                profileToggle.checked = (savedTheme === 'dark');
+            }
+            applyStudentTheme(savedTheme);
+        }
+
+        // Load skills into UI
+        function loadSkills() {
+            const skillsContainer = document.getElementById('skillsContainer');
+            const interestsContainer = document.getElementById('interestsContainer');
+            const goalsContainer = document.getElementById('goalsContainer');
+            const weakAreasContainer = document.getElementById('weakAreasContainer');
+
+            // Clear containers
+            skillsContainer.innerHTML = '';
+            interestsContainer.innerHTML = '';
+            goalsContainer.innerHTML = '';
+            weakAreasContainer.innerHTML = '';
+
+            // Add skills
+            skills.forEach(skill => {
+                const skillTag = createTag(skill, 'skill');
+                skillsContainer.appendChild(skillTag);
+            });
+
+            // Add interests
+            interests.forEach(interest => {
+                const interestTag = createTag(interest, 'interest');
+                interestsContainer.appendChild(interestTag);
+            });
+
+            // Add goals
+            goals.forEach(goal => {
+                const goalTag = createTag(goal, 'goal');
+                goalsContainer.appendChild(goalTag);
+            });
+
+            // Add weak areas
+            weakAreas.forEach(area => {
+                const areaTag = createTag(area, 'weak');
+                weakAreasContainer.appendChild(areaTag);
+            });
+        }
+
+        // Load achievements
+        function loadAchievements() {
+            // Challenges progress
+            const completedChallenges = userData.completed_challenges || 0;
+            const challengePercent = Math.min(100, (completedChallenges / 100) * 100);
+            document.getElementById('completedChallenges').textContent = `${completedChallenges} challenges completed`;
+            document.getElementById('currentChallenges').textContent = completedChallenges;
+            document.getElementById('challengesProgress').style.width = `${challengePercent}%`;
+
+            // Projects progress
+            const completedProjects = userData.projects_completed || 0;
+            const projectPercent = Math.min(100, (completedProjects / 10) * 100);
+            document.getElementById('completedProjects').textContent = `${completedProjects} projects completed`;
+            document.getElementById('currentProjects').textContent = completedProjects;
+            document.getElementById('projectsProgress').style.width = `${projectPercent}%`;
+
+            // Learning streak
+            const streak = userData.daily_login_streak || 0;
+            const streakPercent = Math.min(100, (streak / 30) * 100);
+            document.getElementById('learningStreak').textContent = `${streak} days streak`;
+            document.getElementById('currentStreak').textContent = streak;
+            document.getElementById('streakProgress').style.width = `${streakPercent}%`;
+
+            // Average score (from stats)
+            const avgScore = userData.stats?.average_score || 0;
+            const scorePercent = Math.min(100, (avgScore / 90) * 100);
+            document.getElementById('averageScore').textContent = `${avgScore}% average score`;
+            document.getElementById('currentScore').textContent = avgScore;
+            document.getElementById('scoreProgress').style.width = `${scorePercent}%`;
+
+            // Total credits
+            const credits = userData.credits || 0;
+            const creditsPercent = Math.min(100, (credits / 5000) * 100);
+            document.getElementById('totalCredits').textContent = `${credits} credits earned`;
+            document.getElementById('currentCredits').textContent = credits;
+            document.getElementById('creditsProgress').style.width = `${creditsPercent}%`;
+        }
+
+        // Load badges
+        async function loadBadges() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_BASE_URL}/badges`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const earnedBadgesGrid = document.getElementById('earnedBadgesGrid');
+                    const availableBadgesGrid = document.getElementById('availableBadgesGrid');
+
+                    earnedBadgesGrid.innerHTML = '';
+                    availableBadgesGrid.innerHTML = '';
+
+                    // Add earned badges
+                    if (data.badges && data.badges.length > 0) {
+                        data.badges.forEach(badge => {
+                            const badgeCard = createBadgeCard(badge, true);
+                            earnedBadgesGrid.appendChild(badgeCard);
+                        });
+                    }
+
+                    // Add sample available badges (in real app, get from API)
+                    const availableBadges = [
+                        { name: '7-Day Streak', icon: '🔥', desc: 'Login for 7 consecutive days' },
+                        { name: 'Challenge Master', icon: '⚡', desc: 'Complete 50 challenges' },
+                        { name: 'Code Ninja', icon: '💻', desc: 'Solve 100 coding problems' },
+                        { name: 'Project Champion', icon: '🏆', desc: 'Complete 5 projects' },
+                        { name: 'Voice Virtuoso', icon: '🎤', desc: 'Score 90+ in 10 voice challenges' },
+                        { name: 'Team Player', icon: '🤝', desc: 'Collaborate on 3 group projects' }
+                    ];
+
+                    availableBadges.forEach(badge => {
+                        const badgeCard = createBadgeCard(badge, false);
+                        availableBadgesGrid.appendChild(badgeCard);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load badges:', error);
+            }
+        }
+
+        // Load activity
+        async function loadActivity() {
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_BASE_URL}/submissions?limit=10`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const timeline = document.getElementById('activityTimeline');
+                    timeline.innerHTML = '';
+
+                    if (data.submissions && data.submissions.length > 0) {
+                        data.submissions.forEach(submission => {
+                            const activityItem = createActivityItem(submission);
+                            timeline.appendChild(activityItem);
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load activity:', error);
+            }
+        }
+
+        // Load security settings
+        function loadSecuritySettings() {
+            const notifications = userData.notification_preferences || {};
+            document.getElementById('emailStatus').textContent = notifications.email ? 'Enabled' : 'Disabled';
+            document.getElementById('pushStatus').textContent = notifications.push ? 'Enabled' : 'Disabled';
+            document.getElementById('activityLogStatus').textContent = 'Enabled';
+        }
+
+        // Helper functions
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase();
+        }
+
+        function getStageDisplay(stage) {
+            const stages = {
+                'freshie': 'Stage 1',
+                'sophomore': 'Stage 2',
+                'junior': 'Stage 3',
+                'final_year': 'Stage 4',
+                'alumni': 'Alumni'
+            };
+            return stages[stage] || 'Stage 1';
+        }
+
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        }
+
+        function createTag(text, type) {
+            const tag = document.createElement('div');
+            tag.className = `skill-tag ${type === 'weak' ? 'level-beginner' : ''}`;
+            tag.innerHTML = `
+                ${text}
+                <button class="skill-tag-remove" onclick="removeTag('${type}', '${text}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            return tag;
+        }
+
+        function createBadgeCard(badge, isEarned) {
+            const card = document.createElement('div');
+            card.className = `badge-card ${isEarned ? 'earned' : 'locked'}`;
+            card.innerHTML = `
+                <div class="badge-icon">${badge.icon}</div>
+                <div class="badge-name">${badge.name}</div>
+                <div class="badge-desc">${badge.desc}</div>
+                <div class="badge-date">${isEarned ? `Earned: ${formatDate(badge.earned_date)}` : 'Locked'}</div>
+            `;
+            return card;
+        }
+
+        function createActivityItem(activity) {
+            const item = document.createElement('div');
+            item.className = 'activity-item';
+            item.innerHTML = `
+                <div class="activity-time">${formatTime(activity.submitted_at)}</div>
+                <div class="activity-content">
+                    <div class="activity-title">${activity.challenge_title}</div>
+                    <div class="activity-desc">Score: ${activity.score}/100 • Credits: +${activity.credits_earned}</div>
+                </div>
+            `;
+            return item;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Recently';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function formatTime(dateString) {
+            if (!dateString) return 'Just now';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+
+            if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+            if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+            if (days < 7) return `${days} day${days !== 1 ? 's' : ''} ago`;
+            return formatDate(dateString);
+        }
+
+        // Form handling
+        document.getElementById('personalInfoForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await updatePersonalInfo();
+        });
+
+        document.getElementById('educationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await updateEducationInfo();
+        });
+
+        document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await changePassword();
+        });
+
+        document.getElementById('languageSettingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await updateLanguageSettings();
+        });
+
+        // Update personal info
+        async function updatePersonalInfo() {
+            showLoading();
+
+            try {
+                const formData = {
+                    full_name: document.getElementById('fullName').value,
+                    phone: document.getElementById('phone').value,
+                    bio: document.getElementById('bio').value
+                };
+
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_BASE_URL}/users/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    await fetchUserProfile();
+                    showToast('Success', 'Personal information updated successfully', 'success');
+                } else {
+                    throw new Error('Failed to update personal info');
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                showToast('Error', 'Failed to update personal information', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Update education info
+        async function updateEducationInfo() {
+            showLoading();
+
+            try {
+                const formData = {
+                    department: document.getElementById('department').value,
+                    year: parseInt(document.getElementById('year').value),
+                    roll_number: document.getElementById('rollNumber').value
+                };
+
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_BASE_URL}/users/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    await fetchUserProfile();
+                    showToast('Success', 'Education information updated successfully', 'success');
+                } else {
+                    throw new Error('Failed to update education info');
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                showToast('Error', 'Failed to update education information', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Change password
+        async function changePassword() {
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                showToast('Error', 'New passwords do not match', 'error');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                if (response.ok) {
+                    document.getElementById('changePasswordForm').reset();
+                    showToast('Success', 'Password changed successfully', 'success');
+                } else {
+                    const data = await response.json();
+                    throw new Error(data.detail || 'Failed to change password');
+                }
+            } catch (error) {
+                console.error('Password change error:', error);
+                showToast('Error', error.message, 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // Update language settings
+        async function updateLanguageSettings() {
+            showLoading();
+
+            try {
+                const formData = {
+                    preferred_language: document.getElementById('preferredLanguage').value,
+                    timezone: document.getElementById('timezone').value
+                };
+
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_BASE_URL}/users/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    await fetchUserProfile();
+                    showToast('Success', 'Language settings updated successfully', 'success');
+                } else {
+                    throw new Error('Failed to update language settings');
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                showToast('Error', 'Failed to update language settings', 'error');
+            } finally {
+                hideLoading();
+            }
+        }
+
+
+        // Tag management functions
+        function addSkill() {
+            const input = document.getElementById('skillInput');
+            const skill = input.value.trim();
+            if (skill && !skills.includes(skill)) {
+                skills.push(skill);
+                loadSkills();
+                input.value = '';
+                updateSkillsOnServer();
+            }
+        }
+
+        function addInterest() {
+            const input = document.getElementById('interestInput');
+            const interest = input.value.trim();
+            if (interest && !interests.includes(interest)) {
+                interests.push(interest);
+                loadSkills();
+                input.value = '';
+                updateSkillsOnServer();
+            }
+        }
+
+        function addGoal() {
+            const input = document.getElementById('goalInput');
+            const goal = input.value.trim();
+            if (goal && !goals.includes(goal)) {
+                goals.push(goal);
+                loadSkills();
+                input.value = '';
+                updateSkillsOnServer();
+            }
+        }
+
+        function addWeakArea() {
+            const input = document.getElementById('weakAreaInput');
+            const area = input.value.trim();
+            if (area && !weakAreas.includes(area)) {
+                weakAreas.push(area);
+                loadSkills();
+                input.value = '';
+                updateSkillsOnServer();
+            }
+        }
+
+        function removeTag(type, text) {
+            switch (type) {
+                case 'skill':
+                    skills = skills.filter(s => s !== text);
+                    break;
+                case 'interest':
+                    interests = interests.filter(i => i !== text);
+                    break;
+                case 'goal':
+                    goals = goals.filter(g => g !== text);
+                    break;
+                case 'weak':
+                    weakAreas = weakAreas.filter(w => w !== text);
+                    break;
+            }
+            loadSkills();
+            updateSkillsOnServer();
+        }
+
+        async function updateSkillsOnServer() {
+            try {
+                const formData = {
+                    skills: skills,
+                    interests: interests,
+                    career_goals: goals,
+                    weak_areas: weakAreas
+                };
+
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_BASE_URL}/users/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    await fetchUserProfile();
+                }
+            } catch (error) {
+                console.error('Failed to update skills:', error);
+            }
+        }
+
+        // Security functions
+        function toggleEmailNotifications() {
+            const status = document.getElementById('emailStatus');
+            const newStatus = status.textContent === 'Enabled' ? 'Disabled' : 'Enabled';
+            status.textContent = newStatus;
+            updateNotificationPreferences();
+        }
+
+        function togglePushNotifications() {
+            const status = document.getElementById('pushStatus');
+            const newStatus = status.textContent === 'Enabled' ? 'Disabled' : 'Enabled';
+            status.textContent = newStatus;
+            updateNotificationPreferences();
+        }
+
+        function toggleActivityLog() {
+            const status = document.getElementById('activityLogStatus');
+            const newStatus = status.textContent === 'Enabled' ? 'Disabled' : 'Enabled';
+            status.textContent = newStatus;
+        }
+
+        async function updateNotificationPreferences() {
+            try {
+                const preferences = {
+                    email: document.getElementById('emailStatus').textContent === 'Enabled',
+                    push: document.getElementById('pushStatus').textContent === 'Enabled'
+                };
+
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_BASE_URL}/users/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        notification_preferences: preferences
+                    })
+                });
+
+                if (response.ok) {
+                    await fetchUserProfile();
+                }
+            } catch (error) {
+                console.error('Failed to update notifications:', error);
+            }
+        }
+
+        function viewLoginSessions() {
+            showToast('Info', 'Login sessions feature coming soon', 'info');
+        }
+
+        function logoutAllSessions() {
+            if (confirm('Are you sure you want to logout from all devices?')) {
+                localStorage.clear();
+                window.location.href = '/login';
+            }
+        }
+
+        // Account management
+        function exportData() {
+            showToast('Info', 'Data export feature coming soon', 'info');
+        }
+
+        function showDeleteAccountModal() {
+            document.getElementById('deleteAccountModal').classList.add('active');
+        }
+
+        function closeDeleteAccountModal() {
+            document.getElementById('deleteAccountModal').classList.remove('active');
+        }
+
+        function confirmDeleteAccount() {
+            const password = document.getElementById('deletePassword').value;
+            const confirmed = document.getElementById('confirmDelete').checked;
+
+            if (!password) {
+                showToast('Error', 'Please enter your password', 'error');
+                return;
+            }
+
+            if (!confirmed) {
+                showToast('Error', 'Please confirm you understand', 'error');
+                return;
+            }
+
+            // Delete account logic would go here
+            showToast('Warning', 'Account deletion feature coming soon', 'warning');
+            closeDeleteAccountModal();
+        }
+
+        // Password strength checker
+        function checkPasswordStrength(password) {
+            const bar = document.getElementById('passwordStrengthBar');
+            const text = document.getElementById('passwordStrengthText');
+
+            let strength = 0;
+            if (password.length >= 8) strength += 1;
+            if (/[A-Z]/.test(password)) strength += 1;
+            if (/[a-z]/.test(password)) strength += 1;
+            if (/[0-9]/.test(password)) strength += 1;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 1;
+
+            let width = 0;
+            let strengthText = 'Weak';
+            let className = 'strength-weak';
+
+            if (strength <= 2) {
+                width = 33;
+            } else if (strength === 3) {
+                width = 66;
+                strengthText = 'Medium';
+                className = 'strength-medium';
+            } else {
+                width = 100;
+                strengthText = 'Strong';
+                className = 'strength-strong';
+            }
+
+            bar.style.width = `${width}%`;
+            bar.className = `strength-fill ${className}`;
+            text.textContent = strengthText;
+        }
+
+        // Theme reset
+        function resetTheme() {
+            document.getElementById('theme').value = 'dark';
+            document.getElementById('fontSize').value = 'medium';
+            showToast('Success', 'Theme reset to default', 'success');
+        }
+
+        // Form reset
+        function resetForm(formId) {
+            document.getElementById(formId).reset();
+            loadUserData();
+        }
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tabId = btn.getAttribute('data-tab');
+
+                // Update active tab button
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update active tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(`${tabId}-tab`).classList.add('active');
+            });
+        });
+
+        // Sidebar navigation
+        document.querySelectorAll('.menu-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tabId = link.getAttribute('data-tab');
+
+                // Update active menu item
+                document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+
+                // Update active tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                const targetTab = document.getElementById(`${tabId}-tab`);
+                if (targetTab) {
+                    targetTab.classList.add('active');
+                }
+            });
+        });
+
+        // Profile picture upload
+        document.getElementById('profilePicture').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('Error', 'File size must be less than 5MB', 'error');
+                return;
+            }
+
+            if (!file.type.match('image/(jpeg|png|jpg)')) {
+                showToast('Error', 'Only JPG and PNG images are allowed', 'error');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const token = localStorage.getItem('access_token');
+                const response = await fetch(`${API_BASE_URL}/users/profile/picture`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    await fetchUserProfile();
+                    showToast('Success', 'Profile picture updated successfully', 'success');
+                } else {
+                    throw new Error('Failed to upload profile picture');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showToast('Error', 'Failed to upload profile picture', 'error');
+            } finally {
+                hideLoading();
+                e.target.value = '';
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.clear();
+            window.location.href = '/login';
+        });
+
+        // Toast functions
+        function showToast(title, message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.className = `toast ${type}`;
+            document.getElementById('toastTitle').textContent = title;
+            document.getElementById('toastMessage').textContent = message;
+
+            const icon = toast.querySelector('.toast-icon i');
+            switch (type) {
+                case 'success': icon.className = 'fas fa-check-circle'; break;
+                case 'error': icon.className = 'fas fa-exclamation-circle'; break;
+                case 'warning': icon.className = 'fas fa-exclamation-triangle'; break;
+                case 'info': icon.className = 'fas fa-info-circle'; break;
+            }
+
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 5000);
+        }
+
+        function hideToast() {
+            document.getElementById('toast').classList.remove('show');
+        }
+
+        // Loading functions
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        // Token refresh
+        async function refreshToken() {
+            try {
+                const refreshToken = localStorage.getItem('refresh_token');
+                if (!refreshToken) return false;
+
+                const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ refresh_token: refreshToken })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('access_token', data.access_token);
+                    return true;
+                }
+            } catch (error) {
+                console.error('Token refresh failed:', error);
+            }
+            return false;
+        }
+
+        // Delete account confirmation
+        document.getElementById('confirmDelete').addEventListener('change', function () {
+            document.getElementById('confirmDeleteBtn').disabled = !this.checked;
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', initProfile);
+    </script>
+
+    <!-- Student Theme Sync Script -->
+    <script>
+        // Global function to apply theme
+        function applyStudentTheme(theme) {
+            if (!theme) return;
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            
+            // Sync any theme checkboxes on the page
+            const themeCheckboxes = document.querySelectorAll('.theme-checkbox');
+            themeCheckboxes.forEach(cb => {
+                cb.checked = (theme === 'dark');
+            });
+            
+            window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: theme } }));
+        }
+
+        // Apply theme on page load
+        (function() {
+            const savedTheme = localStorage.getItem('student_theme') || 'light';
+            applyStudentTheme(savedTheme);
+        })();
+
+        // Setup profile theme toggle when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const profileToggle = document.getElementById('profile-theme-checkbox');
+            if (profileToggle) {
+                // Set initial state from localStorage
+                const currentTheme = localStorage.getItem('student_theme') || 'light';
+                profileToggle.checked = (currentTheme === 'dark');
+
+                // Handle toggle change - immediately apply and save
+                profileToggle.addEventListener('change', async function(e) {
+                    const newTheme = e.target.checked ? 'dark' : 'light';
+                    localStorage.setItem('student_theme', newTheme);
+                    applyStudentTheme(newTheme);
+
+                    // Optional: Sync with backend if available in profile context
+                    try {
+                        const token = localStorage.getItem('access_token');
+                        if (token) {
+                            await fetch(`${API_BASE_URL}/users/profile`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ theme: newTheme })
+                            });
+                        }
+                    } catch (err) {
+                        console.error('Failed to sync theme with backend:', err);
+                    }
+                });
+            }
+
+            // Listen for theme changes from other tabs
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'student_theme') {
+                    applyStudentTheme(e.newValue || 'light');
+                }
+            });
+        });
+
+        // Use system theme preference
+        function useSystemTheme() {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const newTheme = prefersDark ? 'dark' : 'light';
+            localStorage.setItem('student_theme', newTheme);
+            applyStudentTheme(newTheme);
+
+            // Sync with backend
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                fetch(`${API_BASE_URL}/users/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ theme: newTheme })
+                }).catch(err => console.error('Failed to sync theme with backend:', err));
+            }
+
+            // Show feedback
+            showToast('Success', 'Theme set to ' + (prefersDark ? 'Dark' : 'Light') + ' based on system preference!', 'success');
+        }
+
+        // Save font size preference
+        function saveFontSize() {
+            const fontSize = document.getElementById('fontSize').value;
+            localStorage.setItem('student_fontSize', fontSize);
+            showToast('Success', 'Font size saved: ' + fontSize, 'success');
+        }
+    </script>
+
+</body>
+
+</html>

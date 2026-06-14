@@ -1,0 +1,48 @@
+{
+  "customMessage": {
+    "title": "通知範本",
+    "description": "為您的機構創建一個範本訊息",
+    "addTemplate": "新增範本",
+    "editTemplate": "編輯範本",
+    "showMessage": "顯示訊息",
+    "updatedAt": "更新時間"
+  },
+  "email": {
+    "title": "電子郵件",
+    "description": "電子郵件是一種通訊渠道，可讓您發送和接收郵件。",
+    "connected": "電子郵件已連接到您的帳戶",
+    "notYetConnected": "尚未連接電子郵件",
+    "notYetConnectedDescription": "請點擊下方按鈕將您的電子郵件連接到系統"
+  },
+  "form": {
+    "name": "名稱",
+    "namePlaceholder": "輸入名稱",
+    "nameRequired": "名稱為必填項",
+    "content": "內容",
+    "contentPlaceholder": "輸入內容",
+    "contentRequired": "內容為必填項",
+    "type": "類型",
+    "typePlaceholder": "選擇類型",
+    "emailNotification": "電子郵件通知",
+    "whatsappNotification": "WhatsApp 通知",
+    "editMessage": "編輯訊息",
+    "repeaterFormat": "課程項目格式",
+    "repeaterFormatHint": "定義每個課程/課堂項目的格式。此模板將為每個項目重複。",
+    "repeaterFormatPlaceholder": "輸入每個重複項目的格式...",
+    "typeOptions": {
+      "admin_notif_after_enrollment_submitted": "當報名提交時通知管理員",
+      "student_notif_after_enrollment_submitted": "當報名提交時通知學生",
+      "student_notif_after_payment_approved": "當付款獲批時通知學生",
+      "student_notif_after_payment_rejected": "當付款被拒時通知學生",
+      "student_notif_after_application_confirmed": "當申請確認時通知學生",
+      "teacher_notif_after_application_submitted": "當申請提交時通知教師",
+      "student_notif_after_add_new_lesson": "當新增課程時通知學生",
+      "teacher_notif_after_add_new_class": "當新增班級時通知教師",
+      "student_notif_payment_reminder": "通知學生付款提醒",
+      "student_notif_after_change_lesson_date": "當更改課程日期時通知學生",
+      "student_lesson_reminder": "學生課程提醒",
+      "create_invoice": "通知學生新發票創建"
+    },
+    "updateSuccess": "通知範本更新成功"
+  }
+}
