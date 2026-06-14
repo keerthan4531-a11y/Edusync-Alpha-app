@@ -79,7 +79,7 @@ async function main() {
 
   if (activities.length >= 2) {
     console.log("✅ Stage1Activities saved successfully!");
-    console.log("Recent Activities:", activities.map(a => ({ type: a.type, score: a.score, xp: a.xpAwarded })));
+    console.log("Recent Activities:", activities.map((a: any) => ({ type: a.type, score: a.score, xp: a.xpAwarded })));
   } else {
     console.log("❌ Activities not saved correctly!");
   }
