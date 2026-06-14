@@ -162,7 +162,8 @@ response. Business logic lives in `lib/`, never inline in routes.
 - ✅ Phase A: Aesthetic bridge (glassmorphism, stage colors, floating topbar) — Done
 - ✅ Phase B: Feature inventory of `edusync-babu`'s 150+ routes — Done
 - 🔄 Phase C: Stage 1 (Communication, AI-heavy) — IN PROGRESS
-  - Next: Reading + Listening modules first, then Writing + Speaking (AI)
+  - ✅ Reading + Listening modules — Done
+  - ✅ Writing + Speaking (AI) — Done
 - ⬜ Phase D: Stage 3 (Projects)
 - ⬜ Phase E: Stage 4 (Career Prep)
 - ⬜ Phase F: Faculty & HOD dashboards

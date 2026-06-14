@@ -5,6 +5,9 @@ import { Stage1ContentDTO, ActivityType } from "@/types/communication";
 import { ReadingModule } from "./ReadingModule";
 import { ListeningModule } from "./ListeningModule";
 
+import { WritingModule } from "./WritingModule";
+import { SpeakingModule } from "./SpeakingModule";
+
 interface Stage1ClientProps {
   initialContent: Record<ActivityType, Stage1ContentDTO[]>;
 }
@@ -61,17 +64,21 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
         )}
         
         {activeTab === "WRITING" && (
-          <div className="p-12 text-center bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl text-gray-400">
-            <h2 className="text-2xl font-bold text-white mb-2">AI Writing Tutor</h2>
-            <p>This module is coming in the next iteration!</p>
-          </div>
+          <WritingModule 
+            content={currentChallenge} 
+            onNext={() => setActiveTab("SPEAKING")} 
+          />
         )}
 
         {activeTab === "SPEAKING" && (
-          <div className="p-12 text-center bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl text-gray-400">
-            <h2 className="text-2xl font-bold text-white mb-2">Speech & Roleplay</h2>
-            <p>This module is coming in the next iteration!</p>
-          </div>
+          <SpeakingModule 
+            content={currentChallenge} 
+            onFinish={() => {
+              // Usually would redirect to dashboard or show confetti
+              alert("Stage 1 completed! Great job.");
+              window.location.href = "/student-dashboard";
+            }} 
+          />
         )}
       </div>
     </div>
