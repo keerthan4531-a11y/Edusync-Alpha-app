@@ -1,6 +1,5 @@
-// A simple in-memory rate limiter for development
-// In production, you would use Redis (as noted in Phase H roadmap)
-
+// In-memory store for rate limiting
+// TODO: move to DB or Redis-based rate limiting for production (Phase H) since in-memory won't persist across serverless function instances on Vercel
 const rateLimits = new Map<string, number>();
 
 /**
