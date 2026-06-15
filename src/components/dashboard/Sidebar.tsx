@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, BookOpen, Code, Briefcase, GraduationCap, Users, BarChart } from "lucide-react"
+import { LayoutDashboard, BookOpen, Code, Briefcase, GraduationCap, Users, BarChart, Mail, Languages, School, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface SidebarProps {
@@ -22,10 +22,14 @@ const getMenuByRole = (role: string): MenuItem[] => {
   if (role === "STUDENT") {
     return [
       { name: "Dashboard", href: "/student-dashboard", icon: LayoutDashboard },
+      { name: "My Classrooms", href: "/student-dashboard/classrooms", icon: School },
       { name: "Stage 1: Communication", href: "/student-dashboard/stage-1-communication", icon: BookOpen, stage: "stage1" },
       { name: "Stage 2: Coding", href: "/student-dashboard/stage-2-coding", icon: Code, stage: "stage2" },
       { name: "Stage 3: Projects", href: "/student-dashboard/stage-3-projects", icon: Briefcase, stage: "stage3" },
       { name: "Stage 4: Career", href: "/student-dashboard/stage-4-career", icon: GraduationCap, stage: "stage4" },
+      { name: "Language Courses", href: "/student-dashboard/language-courses", icon: Languages },
+      { name: "Mail Box", href: "/student-dashboard/mail", icon: Mail },
+      { name: "Profile", href: "/student-dashboard/profile", icon: User },
     ]
   }
   if (role === "FACULTY") {

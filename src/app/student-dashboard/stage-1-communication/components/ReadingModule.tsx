@@ -1,6 +1,6 @@
 "use client";
 
-import { Stage1ContentDTO } from "@/types/communication";
+import { Stage1ContentDTO, Question } from "@/types/communication";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { useMCQ } from "../hooks/useMCQ";
 
@@ -38,11 +38,11 @@ export function ReadingModule({ content, onNext }: ReadingModuleProps) {
 
       <div className="space-y-6">
         <h3 className="text-lg font-semibold text-white">Comprehension Questions</h3>
-        {content.questions?.map((q) => (
+        {content.questions?.map((q: Question) => (
           <LiquidGlassCard key={q.id} className="p-5 border-stage1/20" accentColor="#8b5cf6">
             <p className="text-white mb-4 font-medium">{q.question}</p>
             <div className="space-y-3">
-              {q.options?.map((opt, idx) => {
+              {q.options?.map((opt: string, idx: number) => {
                 const isSelected = answers[q.id] === idx;
                 const isSubmitted = result !== null;
                 const isCorrect = isSubmitted && idx === q.correctIndex;

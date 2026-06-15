@@ -20,6 +20,10 @@ model User {
   level          Int             @default(1)
   currentStreak  Int             @default(0)
   longestStreak  Int             @default(0)
+  bio            String          @default("")
+  skills         String          @default("")
+  github         String          @default("")
+  linkedin       String          @default("")
   departmentId   String?
   department     Department?     @relation("DepartmentUsers", fields: [departmentId], references: [id])
   hodDepartment  Department?     @relation("DepartmentHOD")
@@ -32,6 +36,15 @@ model User {
   ownedProjects    Project[]       @relation("OwnedProjects")
   teamMemberships  TeamMember[]    @relation("TeamMemberships")
   teamMessages     Message[]       @relation("TeamMessages")
+  
+  // Relations for classrooms, mail, courses
+  enrolledClassrooms    Classroom[]            @relation("EnrolledClassrooms")
+  facultyClassrooms     Classroom[]            @relation("FacultyClassrooms")
+  classroomInvitations  ClassroomInvitation[]
+  sentMails             Mail[]                 @relation("SentMails")
+  receivedMails         Mail[]                 @relation("ReceivedMails")
+  courseProgresses      LanguageCourseProgress[]
+  assignmentSubmissions AssignmentSubmission[]
   
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -251,4 +264,97 @@ model Stage4Activity {
   // Optional relation if it's an aptitude test
   testId      String?
   test        AptitudeTest? @relation(fields: [testId], references: [id], onDelete: SetNull)
+}
+
+// ==========================================
+// Classroom & Mail System Models
+// ==========================================
+
+model Mail {
+  id          String   @id @default(uuid())
+  senderId    String
+  sender      User     @relation("SentMails", fields: [senderId], references: [id])
+  recipientId String
+  recipient   User     @relation("ReceivedMails", fields: [recipientId], references: [id])
+  subject     String
+  body        String
+  isRead      Boolean  @default(false)
+  isStarred   Boolean  @default(false)
+  isTrash     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Classroom {
+  id           String                @id @default(uuid())
+  name         String
+  code         String                @unique // 6-char code
+  facultyId    String
+  faculty      User                  @relation("FacultyClassrooms", fields: [facultyId], references: [id])
+  students     User[]                @relation("EnrolledClassrooms")
+  invitations  ClassroomInvitation[]
+  announcements Announcement[]
+  assignments  Assignment[]
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+}
+
+model ClassroomInvitation {
+  id           String    @id @default(uuid())
+  classroomId  String
+  classroom    Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status       String    @default("PENDING") // "PENDING", "ACCEPTED", "REJECTED"
+  createdAt    DateTime  @default(now())
+
+  @@unique([classroomId, studentId])
+}
+
+model Announcement {
+  id           String    @id @default(uuid())
+  classroomId  String
+  classroom    Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  content      String
+  createdAt    DateTime  @default(now())
+}
+
+model Assignment {
+  id           String    @id @default(uuid())
+  classroomId  String
+  classroom    Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  title        String
+  description  String
+  dueDate      DateTime
+  xpReward     Int       @default(75)
+  coinReward   Int       @default(50)
+  createdAt    DateTime  @default(now())
+  submissions  AssignmentSubmission[]
+}
+
+model AssignmentSubmission {
+  id           String     @id @default(uuid())
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  code         String
+  grade        Int?
+  feedback     String?
+  status       String     @default("SUBMITTED") // "SUBMITTED", "GRADED"
+  createdAt    DateTime   @default(now())
+
+  @@unique([assignmentId, studentId])
+}
+
+model LanguageCourseProgress {
+  id                 String   @id @default(uuid())
+  userId             String
+  language           String   // "C", "CPP", "PYTHON"
+  completedExercises Int      @default(0)
+  totalCredits       Int      @default(0)
+  currentStreak      Int      @default(0)
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, language])
 }

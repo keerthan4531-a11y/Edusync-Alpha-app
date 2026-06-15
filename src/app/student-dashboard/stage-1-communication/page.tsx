@@ -18,7 +18,9 @@ export default async function Stage1CommunicationPage() {
     READING: [],
     LISTENING: [],
     WRITING: [],
-    SPEAKING: []
+    SPEAKING: [],
+    VOCABULARY: [],
+    AICHAT: []
   };
 
   rawContent.forEach(item => {
@@ -26,7 +28,7 @@ export default async function Stage1CommunicationPage() {
       const type = item.type as ActivityType;
       if (!contentMap[type]) return;
       
-      let parsedQuestions: Question[] | null = null;
+      let parsedQuestions: any = null;
       if (item.questions) {
         parsedQuestions = JSON.parse(item.questions);
       }

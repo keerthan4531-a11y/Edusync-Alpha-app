@@ -1,4 +1,4 @@
-export type ActivityType = "READING" | "LISTENING" | "WRITING" | "SPEAKING";
+export type ActivityType = "READING" | "LISTENING" | "WRITING" | "SPEAKING" | "VOCABULARY" | "AICHAT";
 
 export interface Question {
   id: number;
@@ -12,7 +12,7 @@ export interface Stage1ContentDTO {
   type: ActivityType;
   title: string;
   content: string;
-  questions: Question[] | null;
+  questions: any;
   difficulty: string;
 }
 

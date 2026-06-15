@@ -115,6 +115,42 @@ async function main() {
           correctIndex: 1
         }
       ])
+    },
+    {
+      type: 'LISTENING',
+      title: 'Grid Navigation Practice',
+      content: "Welcome to campus grid navigation. Start at the Library which is at coordinates row 1, col 1. Go one block east to coordinates row 1, col 2. From there, go one block south to row 2, col 2. Finally, go one block south again to arrive at the Hostel at coordinates row 3, col 2. Trace this path step-by-step.",
+      difficulty: 'medium',
+      questions: JSON.stringify({
+        isDirection: true,
+        gridSize: 5,
+        start: { row: 1, col: 1 },
+        end: { row: 3, col: 2 },
+        correctPath: [
+          { row: 1, col: 1 },
+          { row: 1, col: 2 },
+          { row: 2, col: 2 },
+          { row: 3, col: 2 }
+        ],
+        landmarks: [
+          { name: "Library", row: 1, col: 1 },
+          { name: "Hostel", row: 3, col: 2 },
+          { name: "Auditorium", row: 0, col: 3 },
+          { name: "Cafeteria", row: 4, col: 0 }
+        ]
+      })
+    },
+    {
+      type: 'LISTENING',
+      title: 'Voice Tone Analysis',
+      content: "I am absolutely thrilled and excited about our new campus research project!",
+      difficulty: 'easy',
+      questions: JSON.stringify({
+        isToneAnalysis: true,
+        question: "Based on the audio snippet, what is the emotional tone of the speaker?",
+        options: ["Sarcastic", "Excited", "Anxious", "Bored"],
+        correctIndex: 1
+      })
     }
   ]
 
@@ -154,11 +190,216 @@ async function main() {
     }
   ]
 
+  // 5. Vocabulary Quizzes (Meaning Check)
+  const vocabMeaningChallenges = [
+    {
+      type: 'VOCAB_MEANING',
+      title: 'eloquent',
+      content: 'eloquent',
+      difficulty: 'medium',
+      questions: JSON.stringify([
+        {
+          id: 1,
+          word: 'eloquent',
+          pronunciation: '/ˈɛləkwənt/',
+          meaning: 'fluent or persuasive in speaking or writing',
+          tamil: 'சொல்லாற்றல் மிக்க (fluent or persuasive)',
+          example: 'His eloquent speech moved the entire audience to tears.',
+          options: [
+            'fluent or persuasive in speaking or writing',
+            'difficult to understand or parse',
+            'loud, noisy and disruptive',
+            'extremely slow and hesitant'
+          ],
+          correct: 0
+        }
+      ])
+    },
+    {
+      type: 'VOCAB_MEANING',
+      title: 'resilient',
+      content: 'resilient',
+      difficulty: 'medium',
+      questions: JSON.stringify([
+        {
+          id: 2,
+          word: 'resilient',
+          pronunciation: '/rɪˈzɪliənt/',
+          meaning: 'able to withstand or recover quickly from difficult conditions',
+          tamil: 'மீள்திறன் கொண்ட (able to bounce back)',
+          example: 'The local economy has proven remarkably resilient in the face of the recession.',
+          options: [
+            'easily broken or fragile',
+            'able to withstand or recover quickly from difficult conditions',
+            'indifferent to changes',
+            'stubborn and unyielding'
+          ],
+          correct: 1
+        }
+      ])
+    },
+    {
+      type: 'VOCAB_MEANING',
+      title: 'pragmatic',
+      content: 'pragmatic',
+      difficulty: 'medium',
+      questions: JSON.stringify([
+        {
+          id: 3,
+          word: 'pragmatic',
+          pronunciation: '/præɡˈmætɪk/',
+          meaning: 'dealing with things sensibly and realistically in a way that is based on practical considerations',
+          tamil: 'நடைமுறைக்குரிய (practical approach)',
+          example: 'She took a pragmatic approach to managing the budget.',
+          options: [
+            'extremely idealistic and theoretical',
+            'dealing with things sensibly and realistically based on practical considerations',
+            'lazy and passive',
+            'unpredictable and moody'
+          ],
+          correct: 1
+        }
+      ])
+    },
+    {
+      type: 'VOCAB_MEANING',
+      title: 'meticulous',
+      content: 'meticulous',
+      difficulty: 'medium',
+      questions: JSON.stringify([
+        {
+          id: 4,
+          word: 'meticulous',
+          pronunciation: '/mɪˈtɪkjələs/',
+          meaning: 'showing great attention to detail; very careful and precise',
+          tamil: 'மிகவும் கவனமாக (careful & detailed)',
+          example: 'The researcher kept meticulous records of the experiment.',
+          options: [
+            'messy and disorganized',
+            'showing great attention to detail; very careful and precise',
+            'quick and careless',
+            'fearful and hesitant'
+          ],
+          correct: 1
+        }
+      ])
+    },
+    {
+      type: 'VOCAB_MEANING',
+      title: 'articulate',
+      content: 'articulate',
+      difficulty: 'medium',
+      questions: JSON.stringify([
+        {
+          id: 5,
+          word: 'articulate',
+          pronunciation: '/ɑːˈtɪkjʊlət/',
+          meaning: 'having or showing the ability to speak fluently and coherently',
+          tamil: 'தெளிவாக பேசக்கூடிய (clear & fluent speaking)',
+          example: 'She is an articulate speaker who expresses her ideas clearly.',
+          options: [
+            'having or showing the ability to speak fluently and coherently',
+            'unable to express thoughts clearly',
+            'loud and argumentative',
+            'speaking multiple languages fluently'
+          ],
+          correct: 0
+        }
+      ])
+    }
+  ]
+
+  // 6. Vocabulary Quizzes (Fill in the blanks)
+  const vocabFillChallenges = [
+    {
+      type: 'VOCAB_FILL',
+      title: 'eloquent fill',
+      content: 'eloquent',
+      difficulty: 'medium',
+      questions: JSON.stringify([
+        {
+          id: 1,
+          word: 'eloquent',
+          sentence: 'The class president delivered an ______ presentation that convinced the board.',
+          hint: 'fluent or persuasive in speaking or writing',
+          tamil: 'சொல்லாற்றல் மிக்க (fluent or persuasive)',
+          example: 'His eloquent speech moved the entire audience.'
+        }
+      ])
+    },
+    {
+      type: 'VOCAB_FILL',
+      title: 'resilient fill',
+      content: 'resilient',
+      difficulty: 'medium',
+      questions: JSON.stringify([
+        {
+          id: 2,
+          word: 'resilient',
+          sentence: 'Despite facing many setbacks, the startup remained ______ and eventually succeeded.',
+          hint: 'able to withstand or recover quickly from difficult conditions',
+          tamil: 'மீள்திறன் கொண்ட (able to bounce back)',
+          example: 'They are resilient and soon rebuilt after the storm.'
+        }
+      ])
+    },
+    {
+      type: 'VOCAB_FILL',
+      title: 'pragmatic fill',
+      content: 'pragmatic',
+      difficulty: 'medium',
+      questions: JSON.stringify([
+        {
+          id: 3,
+          word: 'pragmatic',
+          sentence: 'Instead of dreaming about ideal solutions, we must make a ______ decision today.',
+          hint: 'dealing with things sensibly and realistically based on practical considerations',
+          tamil: 'நடைமுறைக்குரிய (practical approach)',
+          example: 'A pragmatic view keeps us grounded.'
+        }
+      ])
+    },
+    {
+      type: 'VOCAB_FILL',
+      title: 'meticulous fill',
+      content: 'meticulous',
+      difficulty: 'medium',
+      questions: JSON.stringify([
+        {
+          id: 4,
+          word: 'meticulous',
+          sentence: "The engineer's ______ design ensured that the bridge had zero safety flaws.",
+          hint: 'showing great attention to detail; very careful and precise',
+          tamil: 'மிகவும் கவனமாக (careful & detailed)',
+          example: 'Meticulous research yields exact results.'
+        }
+      ])
+    },
+    {
+      type: 'VOCAB_FILL',
+      title: 'articulate fill',
+      content: 'articulate',
+      difficulty: 'medium',
+      questions: JSON.stringify([
+        {
+          id: 5,
+          word: 'articulate',
+          sentence: 'Students must learn to ______ their thoughts clearly during presentations.',
+          hint: 'express (an idea or feeling) fluently and coherently',
+          tamil: 'தெளிவாக பேசக்கூடிய (clear & fluent speaking)',
+          example: 'We must articulate our vision clearly.'
+        }
+      ])
+    }
+  ]
+
   const allContent = [
     ...readingPassages,
     ...listeningChallenges,
     ...writingPrompts,
-    ...speakingPrompts
+    ...speakingPrompts,
+    ...vocabMeaningChallenges,
+    ...vocabFillChallenges
   ]
 
   for (const item of allContent) {
@@ -167,7 +408,7 @@ async function main() {
     })
   }
 
-  console.log(`Seeded ${allContent.length} Stage 1 content items.`)
+  console.log(`Seeded ${allContent.length} Stage 1 content items (including vocabulary challenges).`)
 }
 
 main()
