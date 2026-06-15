@@ -20,13 +20,15 @@ import {
   ArrowRight,
   MessageSquareCode,
   User,
-  Crown
+  Crown,
+  ChevronLeft
 } from "lucide-react";
 
 interface SpeakingModuleProps {
   content: Stage1ContentDTO | null;
   challenges?: Stage1ContentDTO[];
   onFinish: () => void;
+  onSubFeatureOpen?: (isOpen: boolean) => void;
 }
 
 const SHADOW_SENTENCES = [
@@ -35,8 +37,21 @@ const SHADOW_SENTENCES = [
   { text: "The meticulous researcher kept precise records of the experimental outcomes.", difficulty: "Hard" }
 ];
 
-export function SpeakingModule({ content, challenges = [], onFinish }: SpeakingModuleProps) {
-  const [activeTab, setActiveTab] = useState<"read-aloud" | "shadowing" | "analyzer" | "roleplay">("read-aloud");
+const SPEAKING_FEATURES = [
+  { id: "read-aloud" as const, label: "Read Aloud", icon: Mic, color: "text-blue-400", bgColor: "bg-blue-400/10", borderColor: "border-blue-400/20" },
+  { id: "shadowing" as const, label: "Shadow Practice", icon: Sparkles, color: "text-purple-400", bgColor: "bg-purple-400/10", borderColor: "border-purple-400/20" },
+  { id: "analyzer" as const, label: "Pitch Analyzer", icon: Activity, color: "text-cyan-400", bgColor: "bg-cyan-400/10", borderColor: "border-cyan-400/20" },
+  { id: "roleplay" as const, label: "AI Roleplay Arena", icon: MessageSquareCode, color: "text-orange-400", bgColor: "bg-orange-400/10", borderColor: "border-orange-400/20" },
+];
+
+export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatureOpen }: SpeakingModuleProps) {
+  const [activeFeature, setActiveFeature] = useState<"read-aloud" | "shadowing" | "analyzer" | "roleplay" | null>(null);
+
+  useEffect(() => {
+    if (onSubFeatureOpen) {
+      onSubFeatureOpen(activeFeature !== null);
+    }
+  }, [activeFeature, onSubFeatureOpen]);
 
   // Read Aloud Speech Hook
   const {
@@ -442,54 +457,53 @@ export function SpeakingModule({ content, challenges = [], onFinish }: SpeakingM
 
   const [roleplayResult, setRoleplayResult] = useState<any>(null);
 
+  const handleBackToOptions = () => {
+    setActiveFeature(null);
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (isReadAloudRecording) stopReadAloudRecord();
+    if (isShadowRecording) stopShadowRecord();
+    if (isAnalyzerRecording) stopPitchAnalyzer();
+    if (isRoleplayRecording) toggleRoleplayRecord();
+  };
+
   return (
     <div className="space-y-6">
-      {/* Exercise Mode Subtabs */}
-      <div className="flex gap-1.5 p-1 bg-white/5 border border-white/10 rounded-2xl overflow-x-auto no-scrollbar flex-nowrap w-full sm:w-fit">
-        <button
-          onClick={() => { setActiveTab("read-aloud"); if(typeof window !== "undefined") window.speechSynthesis.cancel(); }}
-          className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            activeTab === "read-aloud"
-              ? "bg-purple-600 text-white shadow-md"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          Read Aloud
-        </button>
-        <button
-          onClick={() => { setActiveTab("shadowing"); if(typeof window !== "undefined") window.speechSynthesis.cancel(); }}
-          className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            activeTab === "shadowing"
-              ? "bg-purple-600 text-white shadow-md"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          Shadow Practice
-        </button>
-        <button
-          onClick={() => { setActiveTab("analyzer"); if(typeof window !== "undefined") window.speechSynthesis.cancel(); }}
-          className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            activeTab === "analyzer"
-              ? "bg-purple-600 text-white shadow-md"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          Pitch Analyzer
-        </button>
-        <button
-          onClick={() => { setActiveTab("roleplay"); if(typeof window !== "undefined") window.speechSynthesis.cancel(); }}
-          className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            activeTab === "roleplay"
-              ? "bg-purple-600 text-white shadow-md"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          AI Roleplay Arena
-        </button>
-      </div>
+      {!activeFeature ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {SPEAKING_FEATURES.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <button
+                key={feature.id}
+                onClick={() => setActiveFeature(feature.id)}
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+              >
+                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${feature.bgColor} ${feature.borderColor} border transition-transform duration-300 group-hover:scale-110`}>
+                  <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
+                </div>
+                <span className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">
+                  {feature.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div>
+          <div className="mb-6 flex items-center">
+            <button
+              onClick={handleBackToOptions}
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm"
+              aria-label="Back to Speaking Options"
+            >
+              <ChevronLeft className="w-6 h-6 text-white" />
+            </button>
+          </div>
 
-      {/* 1. READ ALOUD TAB */}
-      {activeTab === "read-aloud" && content && (
+          {/* 1. READ ALOUD TAB */}
+          {activeFeature === "read-aloud" && content && (
         <div className="space-y-6 animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
             <h2 className="text-xl font-bold text-white mb-2">{content.title}</h2>
@@ -620,7 +634,7 @@ export function SpeakingModule({ content, challenges = [], onFinish }: SpeakingM
       )}
 
       {/* 2. SHADOW PRACTICE TAB */}
-      {activeTab === "shadowing" && (
+      {activeFeature === "shadowing" && (
         <div className="space-y-6 max-w-xl mx-auto animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
@@ -750,7 +764,7 @@ export function SpeakingModule({ content, challenges = [], onFinish }: SpeakingM
       )}
 
       {/* 3. SPEECH PITCH ANALYZER TAB */}
-      {activeTab === "analyzer" && (
+      {activeFeature === "analyzer" && (
         <div className="space-y-6 max-w-xl mx-auto animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
             <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
@@ -862,7 +876,7 @@ export function SpeakingModule({ content, challenges = [], onFinish }: SpeakingM
       )}
 
       {/* 4. AI ROLEPLAY ARENA TAB */}
-      {activeTab === "roleplay" && (
+      {activeFeature === "roleplay" && (
         <div className="space-y-6 animate-in fade-in">
           {/* LOBBY MODE */}
           {roleplayMode === "lobby" && (
@@ -1071,6 +1085,8 @@ export function SpeakingModule({ content, challenges = [], onFinish }: SpeakingM
               </div>
             </LiquidGlassCard>
           )}
+        </div>
+      )}
         </div>
       )}
     </div>

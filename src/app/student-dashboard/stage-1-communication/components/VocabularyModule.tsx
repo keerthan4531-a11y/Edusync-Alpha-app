@@ -20,7 +20,8 @@ import {
   HelpCircle,
   Sparkles,
   BookOpen,
-  Award
+  Award,
+  ChevronLeft
 } from "lucide-react";
 
 interface SavedWord {
@@ -34,8 +35,18 @@ interface SavedWord {
   mastered: boolean;
 }
 
-export function VocabularyModule() {
-  const [activeSubTab, setActiveSubTab] = useState<"daily-word" | "dictionary" | "quiz">("daily-word");
+interface VocabularyModuleProps {
+  onSubFeatureOpen?: (isOpen: boolean) => void;
+}
+
+const VOCABULARY_FEATURES = [
+  { id: "daily-word" as const, label: "Word of the Day", icon: Sparkles, color: "text-purple-400", bgColor: "bg-purple-400/10", borderColor: "border-purple-400/20" },
+  { id: "dictionary" as const, label: "My Word List", icon: Book, color: "text-blue-400", bgColor: "bg-blue-400/10", borderColor: "border-blue-400/20" },
+  { id: "quiz" as const, label: "Interactive Quizzes", icon: HelpCircle, color: "text-green-400", bgColor: "bg-green-400/10", borderColor: "border-green-400/20" },
+];
+
+export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
+  const [activeFeature, setActiveFeature] = useState<"daily-word" | "dictionary" | "quiz" | null>(null);
   
   // Daily Word State
   const [dailyWords, setDailyWords] = useState<any[]>([]);
@@ -95,6 +106,12 @@ export function VocabularyModule() {
     }
     fetchDailyWords();
   }, []);
+
+  useEffect(() => {
+    if (onSubFeatureOpen) {
+      onSubFeatureOpen(activeFeature !== null);
+    }
+  }, [activeFeature, onSubFeatureOpen]);
 
   // Load My Words from localStorage
   useEffect(() => {
@@ -335,45 +352,48 @@ export function VocabularyModule() {
 
   return (
     <div className="space-y-6">
-      {/* Sub tabs selector */}
-      <div className="flex gap-2 p-1 bg-white/5 border border-white/10 rounded-2xl w-fit">
-        <button
-          onClick={() => { setActiveSubTab("daily-word"); setQuizActive(false); setQuizFinished(false); }}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            activeSubTab === "daily-word"
-              ? "bg-white/10 text-white shadow-md"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          <Sparkles className="w-4 h-4 text-purple-400" />
-          Word of the Day
-        </button>
-        <button
-          onClick={() => { setActiveSubTab("dictionary"); setQuizActive(false); setQuizFinished(false); }}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            activeSubTab === "dictionary"
-              ? "bg-white/10 text-white shadow-md"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          <Book className="w-4 h-4 text-blue-400" />
-          My Word List ({myWords.length})
-        </button>
-        <button
-          onClick={() => { setActiveSubTab("quiz"); }}
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            activeSubTab === "quiz"
-              ? "bg-white/10 text-white shadow-md"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          <HelpCircle className="w-4 h-4 text-green-400" />
-          Interactive Quizzes
-        </button>
-      </div>
+      {!activeFeature ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {VOCABULARY_FEATURES.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <button
+                key={feature.id}
+                onClick={() => {
+                  setActiveFeature(feature.id);
+                  setQuizActive(false);
+                  setQuizFinished(false);
+                }}
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+              >
+                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${feature.bgColor} ${feature.borderColor} border transition-transform duration-300 group-hover:scale-110`}>
+                  <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
+                </div>
+                <span className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">
+                  {feature.label}{feature.id === "dictionary" && ` (${myWords.length})`}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div>
+          <div className="mb-6 flex items-center">
+            <button
+              onClick={() => {
+                setActiveFeature(null);
+                setQuizActive(false);
+                setQuizFinished(false);
+              }}
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm"
+              aria-label="Back to Vocabulary Options"
+            >
+              <ChevronLeft className="w-6 h-6 text-white" />
+            </button>
+          </div>
 
-      {/* RENDER VIEW: DAILY WORD */}
-      {activeSubTab === "daily-word" && (
+          {/* RENDER VIEW: DAILY WORD */}
+          {activeFeature === "daily-word" && (
         <div className="space-y-6">
           <LiquidGlassCard className="p-6 md:p-8" accentColor="#a78bfa">
             <div className="flex justify-between items-center mb-6">
@@ -447,7 +467,7 @@ export function VocabularyModule() {
       )}
 
       {/* RENDER VIEW: DICTIONARY */}
-      {activeSubTab === "dictionary" && (
+      {activeFeature === "dictionary" && (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
             {/* Search input */}
@@ -546,7 +566,7 @@ export function VocabularyModule() {
       )}
 
       {/* RENDER VIEW: QUIZ MAIN MENU */}
-      {activeSubTab === "quiz" && !quizActive && !quizFinished && (
+      {activeFeature === "quiz" && !quizActive && !quizFinished && (
         <div className="max-w-2xl mx-auto space-y-6">
           <LiquidGlassCard className="p-6 md:p-8" accentColor="#10b981">
             <h2 className="text-xl font-bold text-green-400 mb-2 flex items-center gap-2">
@@ -984,6 +1004,8 @@ export function VocabularyModule() {
               </div>
             </form>
           </LiquidGlassCard>
+        </div>
+      )}
         </div>
       )}
     </div>

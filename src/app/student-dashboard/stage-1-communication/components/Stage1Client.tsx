@@ -8,13 +8,15 @@ import { WritingModule } from "./WritingModule";
 import { SpeakingModule } from "./SpeakingModule";
 import { VocabularyModule } from "./VocabularyModule";
 import { AIChatModule } from "./AIChatModule";
+import { useRouter } from "next/navigation";
 import { 
   BookOpen, 
   Headphones, 
   PenTool, 
   Mic, 
   BookOpenCheck, 
-  MessageSquareCode 
+  MessageSquareCode,
+  ChevronLeft
 } from "lucide-react";
 
 interface Stage1ClientProps {
@@ -31,7 +33,9 @@ const MAIN_FEATURES = [
 ];
 
 export function Stage1Client({ initialContent }: Stage1ClientProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<ActivityType | null>(null);
+  const [isSubFeatureOpen, setIsSubFeatureOpen] = useState(false);
   
   // Safe retrieval for reading/listening/writing/speaking list items
   const activeContentList = activeTab ? (initialContent[activeTab as keyof typeof initialContent] || []) : [];
@@ -39,8 +43,24 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
 
   if (!activeTab) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-8">
-        {MAIN_FEATURES.map((feature) => {
+      <div className="space-y-8">
+        <div className="mb-4 shrink-0">
+          <button 
+            onClick={() => router.back()}
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-6 h-6 text-white" />
+          </button>
+        </div>
+        <div>
+          <h1 className="text-4xl font-bold text-white tracking-tight mb-2">Stage 1: Communication</h1>
+          <p className="text-gray-400 text-lg">
+            Master English through interactive reading, listening, writing, and speaking exercises powered by Inixa AI.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+          {MAIN_FEATURES.map((feature) => {
           const Icon = feature.icon;
           return (
             <button
@@ -57,6 +77,7 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
             </button>
           );
         })}
+        </div>
       </div>
     );
   }
@@ -64,38 +85,17 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
   return (
     <div className="space-y-6">
       {/* Navigation Header */}
-      <div className="flex items-center justify-between p-2 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl">
-        <button 
-          onClick={() => setActiveTab(null)}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/10 rounded-xl transition-all"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          Back to Modules
-        </button>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar pr-2">
-          {MAIN_FEATURES.map((tab) => {
-            const IconComponent = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
-                  isActive
-                    ? "bg-purple-600 text-white shadow-lg shadow-purple-600/20"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <IconComponent className={`w-4 h-4 transition-colors ${isActive ? "text-white" : "text-gray-400"}`} />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </button>
-            );
-          })}
+      {!isSubFeatureOpen && (
+        <div className="flex items-center justify-between p-2">
+          <button 
+            onClick={() => setActiveTab(null)}
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-6 h-6 text-white" />
+          </button>
         </div>
-      </div>
-
+      )}
 
       {/* Module Rendering */}
       <div className="mt-8">
@@ -111,6 +111,7 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
             content={currentChallenge} 
             challenges={activeContentList}
             onNext={() => setActiveTab("WRITING")} 
+            onSubFeatureOpen={setIsSubFeatureOpen}
           />
         )}
         
@@ -119,6 +120,7 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
             content={currentChallenge} 
             challenges={activeContentList}
             onNext={() => setActiveTab("SPEAKING")} 
+            onSubFeatureOpen={setIsSubFeatureOpen}
           />
         )}
 
@@ -129,15 +131,16 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
             onFinish={() => {
               setActiveTab("VOCABULARY");
             }} 
+            onSubFeatureOpen={setIsSubFeatureOpen}
           />
         )}
 
         {activeTab === "VOCABULARY" && (
-          <VocabularyModule />
+          <VocabularyModule onSubFeatureOpen={setIsSubFeatureOpen} />
         )}
 
         {activeTab === "AICHAT" && (
-          <AIChatModule />
+          <AIChatModule onSubFeatureOpen={setIsSubFeatureOpen} />
         )}
       </div>
     </div>

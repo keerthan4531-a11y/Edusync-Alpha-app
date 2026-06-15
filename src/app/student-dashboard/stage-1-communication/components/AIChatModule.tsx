@@ -13,7 +13,8 @@ import {
   User, 
   Loader2,
   AlertCircle,
-  HelpCircle
+  HelpCircle,
+  ChevronLeft
 } from "lucide-react";
 
 interface ChatMessage {
@@ -23,8 +24,19 @@ interface ChatMessage {
   timestamp: Date;
 }
 
-export function AIChatModule() {
-  const [activeMode, setActiveMode] = useState<"general" | "conversation" | "grammar" | "pronunciation">("general");
+interface AIChatModuleProps {
+  onSubFeatureOpen?: (isOpen: boolean) => void;
+}
+
+const AICHAT_FEATURES = [
+  { id: "general" as const, label: "General", icon: MessageSquare, color: "text-blue-400", bgColor: "bg-blue-400/10", borderColor: "border-blue-400/20" },
+  { id: "conversation" as const, label: "Conversation", icon: User, color: "text-emerald-400", bgColor: "bg-emerald-400/10", borderColor: "border-emerald-400/20" },
+  { id: "grammar" as const, label: "Grammar Check", icon: Sparkles, color: "text-purple-400", bgColor: "bg-purple-400/10", borderColor: "border-purple-400/20" },
+  { id: "pronunciation" as const, label: "Pronunciation", icon: Mic, color: "text-orange-400", bgColor: "bg-orange-400/10", borderColor: "border-orange-400/20" },
+];
+
+export function AIChatModule({ onSubFeatureOpen }: AIChatModuleProps) {
+  const [activeFeature, setActiveFeature] = useState<"general" | "conversation" | "grammar" | "pronunciation" | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputVal, setInputVal] = useState("");
   const [isThinking, setIsThinking] = useState(false);
@@ -34,16 +46,24 @@ export function AIChatModule() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
+  useEffect(() => {
+    if (onSubFeatureOpen) {
+      onSubFeatureOpen(activeFeature !== null);
+    }
+  }, [activeFeature, onSubFeatureOpen]);
+
   // Set initial welcome message based on mode
   useEffect(() => {
+    if (!activeFeature) return;
+
     let welcome = "";
-    if (activeMode === "general") {
+    if (activeFeature === "general") {
       welcome = "Hello! I am your AI English Learning partner. You can ask me general questions about vocabulary, request study tips, or just practice your writing skills.";
-    } else if (activeMode === "conversation") {
+    } else if (activeFeature === "conversation") {
       welcome = "Hi! Let's practice general English conversation. How was your day? Tell me about what you did, and we can chat!";
-    } else if (activeMode === "grammar") {
+    } else if (activeFeature === "grammar") {
       welcome = "I'm in Strict Grammar check mode. Send me any English sentence (even with mistakes like 'I has two brother'), and I will analyze, correct, and explain the rules.";
-    } else if (activeMode === "pronunciation") {
+    } else if (activeFeature === "pronunciation") {
       welcome = "Pronunciation training active. Send me words or phrases, and I'll break down their IPA spelling phonetics and give clear speaking tips.";
     }
 
@@ -55,7 +75,7 @@ export function AIChatModule() {
         timestamp: new Date()
       }
     ]);
-  }, [activeMode]);
+  }, [activeFeature]);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -142,7 +162,7 @@ export function AIChatModule() {
       // Structure request payload matching Gemini Chat requirements
       const payload = {
         message: trimmedInput,
-        mode: activeMode,
+        mode: activeFeature,
         history: messages.map(m => ({
           role: m.role,
           content: m.content
@@ -188,62 +208,53 @@ export function AIChatModule() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Mode Selector */}
-      <div className="flex gap-2 p-1 bg-white/5 border border-white/10 rounded-2xl w-fit flex-wrap">
-        <button
-          onClick={() => setActiveMode("general")}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all ${
-            activeMode === "general"
-              ? "bg-purple-600 text-white shadow-md"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          General
-        </button>
-        <button
-          onClick={() => setActiveMode("conversation")}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all ${
-            activeMode === "conversation"
-              ? "bg-purple-600 text-white shadow-md"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          Conversation
-        </button>
-        <button
-          onClick={() => setActiveMode("grammar")}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all ${
-            activeMode === "grammar"
-              ? "bg-purple-600 text-white shadow-md"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          Grammar Check
-        </button>
-        <button
-          onClick={() => setActiveMode("pronunciation")}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all ${
-            activeMode === "pronunciation"
-              ? "bg-purple-600 text-white shadow-md"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          Pronunciation
-        </button>
-      </div>
+    <div className="space-y-6">
+      {!activeFeature ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {AICHAT_FEATURES.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <button
+                key={feature.id}
+                onClick={() => setActiveFeature(feature.id)}
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+              >
+                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${feature.bgColor} ${feature.borderColor} border transition-transform duration-300 group-hover:scale-110`}>
+                  <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
+                </div>
+                <span className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">
+                  {feature.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="space-y-6 max-w-4xl mx-auto">
+          <div className="flex items-center">
+            <button
+              onClick={() => {
+                setActiveFeature(null);
+                stopSpeechRecognition();
+              }}
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm"
+              aria-label="Back to AI Chat Options"
+            >
+              <ChevronLeft className="w-6 h-6 text-white" />
+            </button>
+          </div>
 
-      <LiquidGlassCard className="flex flex-col h-[550px] relative border-white/10" accentColor="#8b5cf6">
-        {/* Chat Header */}
-        <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
-              <Bot className="w-5 h-5 animate-pulse" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-white leading-tight capitalize">
-                {activeMode} Learning Partner
-              </h3>
+          <LiquidGlassCard className="flex flex-col h-[550px] relative border-white/10" accentColor="#8b5cf6">
+            {/* Chat Header */}
+            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
+                  <Bot className="w-5 h-5 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white leading-tight capitalize">
+                    {activeFeature} Learning Partner
+                  </h3>
               <p className="text-xs text-green-400 flex items-center gap-1 mt-0.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block animate-ping" />
                 Active and online
@@ -330,7 +341,7 @@ export function AIChatModule() {
             <span className="flex-shrink-0 text-purple-400 font-semibold flex items-center gap-1">
               <HelpCircle className="w-3.5 h-3.5" /> Suggestion:
             </span>
-            {activeMode === "grammar" && (
+            {activeFeature === "grammar" && (
               <button 
                 onClick={() => insertSuggestion("I has two brother")}
                 className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors flex-shrink-0"
@@ -338,7 +349,7 @@ export function AIChatModule() {
                 "I has two brother"
               </button>
             )}
-            {activeMode === "conversation" && (
+            {activeFeature === "conversation" && (
               <button 
                 onClick={() => insertSuggestion("What are your favorite hobbies?")}
                 className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors flex-shrink-0"
@@ -346,7 +357,7 @@ export function AIChatModule() {
                 "What are your hobbies?"
               </button>
             )}
-            {activeMode === "pronunciation" && (
+            {activeFeature === "pronunciation" && (
               <button 
                 onClick={() => insertSuggestion("How do I say thorough?")}
                 className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors flex-shrink-0"
@@ -400,6 +411,8 @@ export function AIChatModule() {
           </div>
         </div>
       </LiquidGlassCard>
+        </div>
+      )}
     </div>
   );
 }

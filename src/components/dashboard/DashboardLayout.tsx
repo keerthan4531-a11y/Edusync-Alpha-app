@@ -20,7 +20,8 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   const router = useRouter()
   const isHomePage = pathname === '/student-dashboard' || pathname === '/faculty-dashboard' || pathname === '/hod-dashboard'
   const isProfileRelated = pathname.startsWith('/student-dashboard/profile')
-  const hideBackButton = isHomePage || isProfileRelated
+  const isStage1 = pathname.startsWith('/student-dashboard/stage-1-communication')
+  const hideBackButton = isHomePage || isProfileRelated || isStage1
   
   const [isNavVisible, setIsNavVisible] = useState(true)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)

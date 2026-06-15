@@ -3,6 +3,7 @@
 import { signOut } from "next-auth/react"
 import { LogOut, User as UserIcon, Bell } from "lucide-react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,7 +68,19 @@ export function Topbar({ user }: TopbarProps) {
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between rounded-2xl border border-white/10 bg-[#080A10] px-4 md:px-6 mx-2 md:mx-6 mt-2 mb-2 backdrop-blur-xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] z-10 relative">
-      <div className="flex flex-1 items-center gap-4">
+      {/* Logo - Left Corner */}
+      <div className="flex items-center select-none pt-1">
+        <Image 
+          src="/images/edusync-logo.png" 
+          alt="EduSync Logo" 
+          width={150} 
+          height={40} 
+          className="object-contain"
+          priority
+        />
+      </div>
+
+      <div className="flex flex-1 items-center gap-4 justify-center">
         {/* We can add a mobile menu trigger here using Sheet later */}
       </div>
       

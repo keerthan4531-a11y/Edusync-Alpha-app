@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Stage1ContentDTO } from "@/types/communication";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { useWriting } from "../hooks/useWriting";
@@ -12,15 +12,16 @@ import {
   CheckCircle2, 
   XCircle, 
   RotateCcw,
-  BookOpen,
   ArrowRight,
-  Sparkles
+  Sparkles,
+  ChevronLeft
 } from "lucide-react";
 
 interface WritingModuleProps {
   content: Stage1ContentDTO | null;
   challenges?: Stage1ContentDTO[];
   onNext: () => void;
+  onSubFeatureOpen?: (isOpen: boolean) => void;
 }
 
 const NO_FILTER_PROMPTS = [
@@ -43,9 +44,21 @@ const NO_FILTER_PROMPTS = [
   }
 ];
 
-export function WritingModule({ content, challenges = [], onNext }: WritingModuleProps) {
-  const [activeTab, setActiveTab] = useState<"tutor" | "image" | "filter">("tutor");
+const WRITING_FEATURES = [
+  { id: "tutor" as const, label: "AI Writing Tutor", icon: PenTool, color: "text-emerald-400", bgColor: "bg-emerald-400/10", borderColor: "border-emerald-400/20" },
+  { id: "image" as const, label: "Image Describer", icon: ImageIcon, color: "text-blue-400", bgColor: "bg-blue-400/10", borderColor: "border-blue-400/20" },
+  { id: "filter" as const, label: "No-Filter Rewrite", icon: ShieldAlert, color: "text-orange-400", bgColor: "bg-orange-400/10", borderColor: "border-orange-400/20" },
+];
+
+export function WritingModule({ content, challenges = [], onNext, onSubFeatureOpen }: WritingModuleProps) {
+  const [activeFeature, setActiveFeature] = useState<"tutor" | "image" | "filter" | null>(null);
   const [tutorChallengeIdx, setTutorChallengeIdx] = useState(0);
+
+  useEffect(() => {
+    if (onSubFeatureOpen) {
+      onSubFeatureOpen(activeFeature !== null);
+    }
+  }, [activeFeature, onSubFeatureOpen]);
 
   // Filter writing challenges from challenges array
   const writingChallenges = challenges.filter(c => c.type === "WRITING");
@@ -148,42 +161,40 @@ export function WritingModule({ content, challenges = [], onNext }: WritingModul
 
   return (
     <div className="space-y-6">
-      {/* Sub tabs selector */}
-      <div className="flex gap-1.5 p-1 bg-white/5 border border-white/10 rounded-2xl overflow-x-auto no-scrollbar flex-nowrap w-full sm:w-fit">
-        <button
-          onClick={() => setActiveTab("tutor")}
-          className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            activeTab === "tutor"
-              ? "bg-purple-600 text-white shadow-md"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          AI Writing Tutor
-        </button>
-        <button
-          onClick={() => setActiveTab("image")}
-          className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            activeTab === "image"
-              ? "bg-purple-600 text-white shadow-md"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          Image Describer
-        </button>
-        <button
-          onClick={() => setActiveTab("filter")}
-          className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${
-            activeTab === "filter"
-              ? "bg-purple-600 text-white shadow-md"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          No-Filter Rewrite
-        </button>
-      </div>
+      {!activeFeature ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {WRITING_FEATURES.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <button
+                key={feature.id}
+                onClick={() => setActiveFeature(feature.id)}
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+              >
+                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${feature.bgColor} ${feature.borderColor} border transition-transform duration-300 group-hover:scale-110`}>
+                  <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
+                </div>
+                <span className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">
+                  {feature.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div>
+          <div className="mb-6 flex items-center">
+            <button
+              onClick={() => setActiveFeature(null)}
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm"
+              aria-label="Back to Writing Options"
+            >
+              <ChevronLeft className="w-6 h-6 text-white" />
+            </button>
+          </div>
 
-      {/* 1. RENDER TAB: AI WRITING TUTOR */}
-      {activeTab === "tutor" && activeTutorChallenge && (
+          {/* 1. RENDER TAB: AI WRITING TUTOR */}
+          {activeFeature === "tutor" && activeTutorChallenge && (
         <div className="space-y-6 animate-in fade-in">
           {/* Challenge list switcher */}
           {writingChallenges.length > 1 && (
@@ -297,7 +308,7 @@ export function WritingModule({ content, challenges = [], onNext }: WritingModul
       )}
 
       {/* 2. RENDER TAB: IMAGE DESCRIBER */}
-      {activeTab === "image" && (
+      {activeFeature === "image" && (
         <div className="space-y-6 animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
             <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
@@ -374,7 +385,7 @@ export function WritingModule({ content, challenges = [], onNext }: WritingModul
       )}
 
       {/* 3. RENDER TAB: NO-FILTER REWRITE */}
-      {activeTab === "filter" && (
+      {activeFeature === "filter" && (
         <div className="space-y-6 max-w-lg mx-auto animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
             <div className="flex justify-between items-center mb-4">
@@ -498,6 +509,8 @@ export function WritingModule({ content, challenges = [], onNext }: WritingModul
               </div>
             )}
           </LiquidGlassCard>
+        </div>
+      )}
         </div>
       )}
     </div>
