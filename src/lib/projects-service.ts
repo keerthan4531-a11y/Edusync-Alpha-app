@@ -2,13 +2,32 @@ import { db } from "./db";
 import { Prisma } from "@prisma/client";
 
 export async function createProject(name: string, description: string, ownerId: string, problemStatementId?: string) {
-  return await db.project.create({
-    data: {
-      name,
-      description,
-      ownerId,
-      problemStatementId
-    }
+  return await db.$transaction(async (tx) => {
+    const project = await tx.project.create({
+      data: {
+        name,
+        description,
+        ownerId,
+        problemStatementId
+      }
+    });
+
+    const team = await tx.team.create({
+      data: {
+        projectId: project.id,
+        name: `${name} Team`
+      }
+    });
+
+    await tx.teamMember.create({
+      data: {
+        teamId: team.id,
+        userId: ownerId,
+        roleInTeam: "LEADER"
+      }
+    });
+
+    return project;
   });
 }
 
@@ -30,7 +49,7 @@ export async function getProjectsByUser(userId: string) {
 }
 
 export async function getProjectById(projectId: string, userId: string) {
-  const project = await db.project.findUnique({
+  let project = await db.project.findUnique({
     where: { id: projectId },
     include: {
       files: {
@@ -55,6 +74,40 @@ export async function getProjectById(projectId: string, userId: string) {
 
   if (!isOwner && !isTeamMember) {
     throw new Error("Unauthorized access to project");
+  }
+
+  // Auto-repair: create team if missing
+  if (!project.team) {
+    const newTeam = await db.team.create({
+      data: {
+        projectId: project.id,
+        name: `${project.name} Team`
+      }
+    });
+    await db.teamMember.create({
+      data: {
+        teamId: newTeam.id,
+        userId: project.ownerId,
+        roleInTeam: "LEADER"
+      }
+    });
+    // Re-fetch project with team
+    project = await db.project.findUnique({
+      where: { id: projectId },
+      include: {
+        files: {
+          select: { id: true, path: true, language: true, updatedAt: true }
+        },
+        team: {
+          include: {
+            members: {
+              include: { user: { select: { name: true, email: true } } }
+            }
+          }
+        },
+        problemStatement: true
+      }
+    });
   }
 
   return project;
