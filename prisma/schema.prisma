@@ -28,6 +28,7 @@ model User {
   submissions      Submission[]
   badges           UserBadge[]
   stage1Activities Stage1Activity[]
+  stage4Activities Stage4Activity[] @relation("Stage4Activities")
   ownedProjects    Project[]       @relation("OwnedProjects")
   teamMemberships  TeamMember[]    @relation("TeamMemberships")
   teamMessages     Message[]       @relation("TeamMessages")
@@ -218,4 +219,36 @@ model DailyChallenge {
   xpReward   Int
   coinReward Int
   type       String   // e.g., "QUIZ", "CODING", "LISTENING"
+}
+
+// ==========================================
+// Phase E: Stage 4 Career Prep Models
+// ==========================================
+
+model AptitudeTest {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String   // e.g. "QUANTITATIVE", "LOGICAL", "VERBAL"
+  questions   String   // JSON string of questions and options
+  timeLimit   Int      // in minutes
+  isActive    Boolean  @default(true)
+  
+  activities  Stage4Activity[]
+}
+
+model Stage4Activity {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // "APTITUDE", "MOCK_INTERVIEW", "RESUME_SCORE"
+  score       Int      @default(0)
+  xpAwarded   Int      @default(0)
+  feedback    String?  // JSON string for interview evaluation or resume feedback
+  createdAt   DateTime @default(now())
+
+  user        User     @relation("Stage4Activities", fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Optional relation if it's an aptitude test
+  testId      String?
+  test        AptitudeTest? @relation(fields: [testId], references: [id], onDelete: SetNull)
 }
