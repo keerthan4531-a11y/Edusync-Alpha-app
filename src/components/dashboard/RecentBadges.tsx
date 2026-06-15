@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card"
 import { Award, Medal } from "lucide-react"
+import { BadgeIcon } from "./BadgeIcon"
 
 export async function RecentBadges({ userId }: { userId: string }) {
   const userBadges = await db.userBadge.findMany({
@@ -32,8 +33,8 @@ export async function RecentBadges({ userId }: { userId: string }) {
               key={ub.id} 
               className="flex-shrink-0 w-28 flex flex-col items-center gap-3 p-4 bg-black/20 rounded-2xl border border-white/5 hover:bg-white/5 transition-colors group cursor-default"
             >
-              <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_10px_rgba(0,0,0,0.3)] group-hover:scale-110 transition-transform duration-300">
-                <span className="text-2xl drop-shadow-md">{ub.badge.iconUrl}</span>
+              <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_10px_rgba(0,0,0,0.3)] group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                <BadgeIcon iconUrl={ub.badge.iconUrl} name={ub.badge.name} />
               </div>
               <div className="text-center">
                 <p className="text-sm font-semibold text-gray-200 leading-tight">{ub.badge.name}</p>
