@@ -23,7 +23,7 @@ interface TopbarProps {
 
 export function Topbar({ user }: TopbarProps) {
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between rounded-full border border-white/10 bg-white/5 px-6 mx-6 mt-4 mb-2 backdrop-blur-xl shadow-sm z-10">
+    <header className="flex h-16 shrink-0 items-center justify-between rounded-full border border-white/10 bg-white/5 px-4 mx-3 md:px-6 md:mx-6 mt-4 mb-2 backdrop-blur-xl shadow-sm z-10 relative">
       <div className="flex flex-1 items-center gap-4">
         {/* We can add a mobile menu trigger here using Sheet later */}
         <h2 className="text-lg font-semibold tracking-tight">
