@@ -27,7 +27,7 @@ export async function DailyChallengesWidget() {
 
       <div className="space-y-3">
         {challenges.map((challenge) => (
-          <div key={challenge.id} className="flex items-center justify-between p-4 rounded-xl bg-black/20 border border-white/5 hover:bg-white/5 transition-colors shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] group">
+          <div key={challenge.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 rounded-xl bg-black/20 border border-white/5 hover:bg-white/5 transition-colors shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] group gap-4">
             <div className="flex flex-col">
               <span className="font-medium text-gray-200 group-hover:text-white transition-colors">
                 {challenge.type} Challenge
@@ -36,7 +36,7 @@ export async function DailyChallengesWidget() {
                 Difficulty: <span className="text-gray-300 capitalize">{challenge.difficulty}</span>
               </span>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center justify-between w-full sm:w-auto gap-4">
               <div className="flex items-center gap-3 text-sm font-semibold">
                 <span className="flex items-center gap-1 text-yellow-500 drop-shadow-[0_0_5px_rgba(234,179,8,0.4)]">
                   <Coins className="w-4 h-4" /> {challenge.coinReward}
@@ -45,7 +45,7 @@ export async function DailyChallengesWidget() {
                   <Zap className="w-4 h-4" /> {challenge.xpReward} XP
                 </span>
               </div>
-              <button className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors border border-white/10">
+              <button className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors border border-white/10 shrink-0">
                 Start
               </button>
             </div>

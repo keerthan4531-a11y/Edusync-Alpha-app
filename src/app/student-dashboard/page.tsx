@@ -61,9 +61,9 @@ export default async function StudentDashboardPage() {
 
       {/* Gamification Top Stats */}
       <div className="grid gap-6 md:grid-cols-3">
-        <LiquidGlassCard className="md:col-span-2 p-6 flex items-center gap-6" accentColor="#3b82f6">
+        <LiquidGlassCard className="md:col-span-2 p-6 flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-4 sm:gap-6 text-center sm:text-left" accentColor="#3b82f6">
           <LevelBadge level={user.level} />
-          <div className="flex-1">
+          <div className="flex-1 w-full">
             <h3 className="text-lg font-bold text-white mb-2">Current Progress</h3>
             <XPBar xp={user.xp} level={user.level} />
           </div>

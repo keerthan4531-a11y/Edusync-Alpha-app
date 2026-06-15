@@ -2,11 +2,12 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, BookOpen, Code, Briefcase, GraduationCap, Users, BarChart, Mail, Languages, School, User } from "lucide-react"
+import { Home, LayoutDashboard, BookOpen, Code, Briefcase, GraduationCap, Users, BarChart, Mail, Languages, School, User, Map, Layers, Monitor, Compass } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface SidebarProps {
   role: string
+  isMobileNavVisible?: boolean
 }
 
 type StageColor = "stage1" | "stage2" | "stage3" | "stage4" | "default"
@@ -21,15 +22,11 @@ interface MenuItem {
 const getMenuByRole = (role: string): MenuItem[] => {
   if (role === "STUDENT") {
     return [
-      { name: "Dashboard", href: "/student-dashboard", icon: LayoutDashboard },
-      { name: "My Classrooms", href: "/student-dashboard/classrooms", icon: School },
-      { name: "Stage 1: Communication", href: "/student-dashboard/stage-1-communication", icon: BookOpen, stage: "stage1" },
-      { name: "Stage 2: Coding", href: "/student-dashboard/stage-2-coding", icon: Code, stage: "stage2" },
-      { name: "Stage 3: Projects", href: "/student-dashboard/stage-3-projects", icon: Briefcase, stage: "stage3" },
-      { name: "Stage 4: Career", href: "/student-dashboard/stage-4-career", icon: GraduationCap, stage: "stage4" },
-      { name: "Language Courses", href: "/student-dashboard/language-courses", icon: Languages },
-      { name: "Mail Box", href: "/student-dashboard/mail", icon: Mail },
-      { name: "Profile", href: "/student-dashboard/profile", icon: User },
+      { name: "Home", href: "/student-dashboard", icon: Home },
+      { name: "Stages", href: "/student-dashboard/stages", icon: Compass },
+      { name: "Learning Path", href: "/student-dashboard/learning-path", icon: Map },
+      { name: "Classrooms", href: "/student-dashboard/classrooms", icon: Monitor },
+      { name: "Courses", href: "/student-dashboard/courses", icon: GraduationCap },
     ]
   }
   if (role === "FACULTY") {
@@ -49,28 +46,30 @@ const getMenuByRole = (role: string): MenuItem[] => {
   return []
 }
 
-export function Sidebar({ role }: SidebarProps) {
+export function Sidebar({ role, isMobileNavVisible = true }: SidebarProps) {
   const menu = getMenuByRole(role)
   const pathname = usePathname()
 
   return (
-    <div className="flex md:h-full w-full md:w-64 flex-col border-b md:border-b-0 md:border-r border-white/10 bg-white/5 backdrop-blur-md shrink-0 z-50 order-2 md:order-1 sticky bottom-0 md:relative">
+    <div className={cn(
+      "flex md:h-full w-[calc(100%-1rem)] md:w-64 flex-col border md:border-t-0 md:border-b-0 md:border-l-0 md:border-r border-white/10 bg-[#080A10] md:bg-white/5 backdrop-blur-xl shrink-0 z-50 order-2 md:order-1 fixed bottom-2 left-2 right-2 md:bottom-auto md:left-auto md:right-auto rounded-2xl md:rounded-none shadow-[0_8px_30px_rgb(0,0,0,0.5)] md:shadow-none transition-transform duration-500 ease-in-out",
+      !isMobileNavVisible ? "translate-y-[150%] md:translate-y-0" : "translate-y-0"
+    )}>
       <div className="hidden md:flex h-16 items-center border-b border-white/10 px-6">
         <h1 className="text-xl font-bold tracking-tight text-white">EduSync 4.0</h1>
       </div>
-      <div className="flex-1 overflow-x-auto md:overflow-y-auto py-3 md:py-6 no-scrollbar">
-        <nav className="flex md:grid md:gap-2 px-4 gap-3 md:block whitespace-nowrap">
+      <div className="w-full md:flex-1 py-1 md:py-6 no-scrollbar">
+        <nav className="flex justify-around items-center md:grid md:gap-2 px-2 md:px-4 md:block whitespace-nowrap w-full h-[60px] md:h-auto">
           {menu.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = pathname === item.href || (item.href !== "/student-dashboard" && pathname.startsWith(item.href + '/'))
             
-            // Map stage colors to Tailwind classes
-            let activeClasses = "bg-white/10 text-white md:border-l-4 border-b-4 md:border-b-0"
+            let activeBg = "bg-white/10 text-white"
             if (isActive) {
-              if (item.stage === "stage1") activeClasses += " border-stage1 md:shadow-[inset_4px_0_15px_-5px_var(--color-stage1)] text-stage1 shadow-[inset_0_-4px_15px_-5px_var(--color-stage1)]"
-              else if (item.stage === "stage2") activeClasses += " border-stage2 md:shadow-[inset_4px_0_15px_-5px_var(--color-stage2)] text-stage2 shadow-[inset_0_-4px_15px_-5px_var(--color-stage2)]"
-              else if (item.stage === "stage3") activeClasses += " border-stage3 md:shadow-[inset_4px_0_15px_-5px_var(--color-stage3)] text-stage3 shadow-[inset_0_-4px_15px_-5px_var(--color-stage3)]"
-              else if (item.stage === "stage4") activeClasses += " border-stage4 md:shadow-[inset_4px_0_15px_-5px_var(--color-stage4)] text-stage4 shadow-[inset_0_-4px_15px_-5px_var(--color-stage4)]"
-              else activeClasses += " border-primary md:shadow-[inset_4px_0_15px_-5px_var(--color-primary)] text-primary shadow-[inset_0_-4px_15px_-5px_var(--color-primary)]"
+              if (item.stage === "stage1") activeBg = "bg-stage1/20 text-stage1"
+              else if (item.stage === "stage2") activeBg = "bg-stage2/20 text-stage2"
+              else if (item.stage === "stage3") activeBg = "bg-stage3/20 text-stage3"
+              else if (item.stage === "stage4") activeBg = "bg-stage4/20 text-stage4"
+              else activeBg = "bg-primary/20 text-primary"
             }
 
             return (
@@ -78,13 +77,14 @@ export function Sidebar({ role }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all hover:bg-white/10 hover:text-white md:border-l-4 border-b-4 border-transparent flex-shrink-0",
-                  isActive ? activeClasses : "text-muted-foreground"
+                  "flex items-center justify-center md:justify-start gap-2 md:gap-3 rounded-full md:rounded-md transition-all flex-shrink-0",
+                  isActive 
+                    ? `${activeBg} p-2.5 md:px-4 md:py-2.5 md:border-l-4 md:border-transparent font-bold` 
+                    : "text-muted-foreground hover:bg-white/5 hover:text-white p-2.5 md:px-3 md:py-2 font-medium"
                 )}
               >
-                <item.icon className={cn("h-5 w-5", isActive && "opacity-100")} />
-                <span className="hidden md:inline">{item.name}</span>
-                <span className="md:hidden">{item.name.split(':')[0]}</span>
+                <item.icon className={cn("h-6 w-6 md:h-5 md:w-5", isActive && "opacity-100")} />
+                <span className="hidden md:inline text-sm">{item.name}</span>
               </Link>
             )
           })}
