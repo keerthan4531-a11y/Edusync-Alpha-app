@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { getFileById, updateFileContent, deleteFile } from "@/lib/project-files-service";
 import { getProjectById } from "@/lib/projects-service";
 import { updateFileContentSchema } from "@/schemas/project-file";
+import { db } from "@/lib/db";
 
 export async function GET(req: Request, { params }: { params: Promise<{ projectId: string, fileId: string }> }) {
   try {
@@ -34,11 +35,22 @@ export async function PUT(req: Request, { params }: { params: Promise<{ projectI
     const validated = updateFileContentSchema.parse(body);
 
     const file = await updateFileContent(fileId, projectId, validated.content);
+
+    // Save historical file version
+    await db.fileVersion.create({
+      data: {
+        fileId,
+        content: validated.content,
+        updatedBy: session.user.name || "Student"
+      }
+    });
+
     return NextResponse.json(file);
   } catch (error) {
     return NextResponse.json({ error: "Failed to update file" }, { status: 400 });
   }
 }
+
 
 export async function DELETE(req: Request, { params }: { params: Promise<{ projectId: string, fileId: string }> }) {
   try {

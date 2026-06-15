@@ -12,6 +12,17 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const query = searchParams.get("query") || "";
+    const role = searchParams.get("role") || "STUDENT";
+
+    // If query is empty but role is FACULTY, return all faculty for the dropdown list
+    if (query.length === 0 && role === "FACULTY") {
+      const faculty = await db.user.findMany({
+        where: { role: "FACULTY" },
+        select: { id: true, name: true, email: true },
+        take: 20
+      });
+      return NextResponse.json(faculty);
+    }
 
     if (query.length < 2) {
       return NextResponse.json([]);
@@ -19,7 +30,7 @@ export async function GET(req: Request) {
 
     const users = await db.user.findMany({
       where: {
-        role: "STUDENT",
+        role: role,
         id: { not: session.user.id },
         OR: [
           { name: { contains: query } },
@@ -36,7 +47,8 @@ export async function GET(req: Request) {
 
     return NextResponse.json(users);
   } catch (error) {
-    console.error("Failed to search students:", error);
-    return NextResponse.json({ error: "Failed to search students" }, { status: 500 });
+    console.error("Failed to search users:", error);
+    return NextResponse.json({ error: "Failed to search users" }, { status: 500 });
   }
 }
+
