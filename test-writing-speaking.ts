@@ -27,7 +27,8 @@ async function run() {
         type: "WRITING",
         title: "Test Writing",
         content: "Write a short paragraph about your favorite hobby.",
-        difficulty: 1,
+        difficulty: "easy",
+        // @ts-ignore
         xpReward: 30
       }
     });
@@ -43,7 +44,8 @@ async function run() {
         type: "SPEAKING",
         title: "Test Speaking",
         content: "Hello, my name is Alex and I like to code.",
-        difficulty: 1,
+        difficulty: "easy",
+        // @ts-ignore
         xpReward: 30
       }
     });

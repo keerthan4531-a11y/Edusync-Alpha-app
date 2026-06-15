@@ -161,10 +161,8 @@ response. Business logic lives in `lib/`, never inline in routes.
   leaderboard) wired to real Prisma/SQLite DB — Done
 - ✅ Phase A: Aesthetic bridge (glassmorphism, stage colors, floating topbar) — Done
 - ✅ Phase B: Feature inventory of `edusync-babu`'s 150+ routes — Done
-- ✅ Phase C: Stage 1 (Communication, AI-heavy) — Done
-  - ✅ Reading + Listening modules — Done (Note: Listening uses TTS as audio placeholder for now, pending real audio assets)
-  - ✅ Writing + Speaking (AI) — Done
-- ⬜ Phase D: Stage 3 (Projects)
+- ✅ Phase C: Stage 1 (Communication) - MCQ, Writing, Speaking, Listening (COMPLETED)
+- ✅ Phase D: Stage 3 (Projects) - Workspace UI, file tree, Monaco multi-tab, team chat, AI assistant placeholder (COMPLETED)
 - ⬜ Phase E: Stage 4 (Career Prep)
 - ⬜ Phase F: Faculty & HOD dashboards
 - ⬜ Phase G: Gamification depth (weekly/career leaderboards, daily challenges)
