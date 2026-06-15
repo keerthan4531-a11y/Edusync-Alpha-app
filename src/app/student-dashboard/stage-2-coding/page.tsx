@@ -138,7 +138,7 @@ const MOCK_PATH_COURSES: Record<string, {
 }> = {
   python: {
     title: "Python Developer Path",
-    description: "From basic variables to syntax conditionals and the Logic Gateway boss battle.",
+    description: "From basic variables to syntax conditionals and the Snake Charmer Game boss battle.",
     modules: [
       {
         id: "py_lesson_1",
@@ -160,12 +160,12 @@ const MOCK_PATH_COURSES: Record<string, {
       },
       {
         id: "py_boss",
-        title: "☠️ Boss Battle: Logic Gateway",
-        theory: "DEFEAT THE SECURE GATEWAY BOT! The bot expects you to write a logic authentication script. It calls `authenticate(key)` and expects it to return True if the key is 'EduSync999' and False otherwise.",
-        initialCode: "def authenticate(key):\n    # Return True if correct, False otherwise\n    return key == 'EduSync999'\n\nprint(authenticate('EduSync999'))",
+        title: "☠️ Boss Battle: The Snake Charmer Game",
+        theory: "CHARM THE SNAKE GAME ENGINE! The snake moves on a grid. Create a function 'charm_snake(moves)' that takes a moves string (e.g. 'UUURR') and computes final coordinates. Print the output for 'UUURR'.",
+        initialCode: "def charm_snake(moves):\n    # U increases y, D decreases y, R increases x, L decreases x\n    x, y = 0, 0\n    for m in moves:\n        if m == 'U': y += 1\n        elif m == 'D': y -= 1\n        elif m == 'R': x += 1\n        elif m == 'L': x -= 1\n    return (x, y)\n\nprint(charm_snake(\"UUURR\"))",
         language: "python",
-        expectedOutput: "True",
-        hint: "Compare key parameter with 'EduSync999' using == comparison.",
+        expectedOutput: "(2, 3)",
+        hint: "Return a coordinate tuple (x, y) matching snake movements.",
         isBoss: true
       }
     ]
@@ -191,6 +191,31 @@ const MOCK_PATH_COURSES: Record<string, {
         language: "cpp",
         expectedOutput: "42",
         hint: "Make sure you call free(ptr) before exiting main.",
+        isBoss: true
+      }
+    ]
+  },
+  cpp: {
+    title: "C++ Programming Path",
+    description: "Object Oriented Programming and Class Inheritance Dragon.",
+    modules: [
+      {
+        id: "cpp_lesson_1",
+        title: "Intro & Classes",
+        theory: "Classes group data and functions. In C++: `class Greeter { public: void greet() { cout << \"Hello C++\" << endl; } };`.\nWrite a C++ class `Greeter` that prints `Hello C++` inside a `greet()` method.",
+        initialCode: "#include <iostream>\nusing namespace std;\n\nclass Greeter {\npublic:\n    void greet() {\n        cout << \"Hello C++\" << endl;\n    }\n};\n\nint main() {\n    Greeter g;\n    g.greet();\n    return 0;\n}",
+        language: "cpp",
+        expectedOutput: "Hello C++",
+        hint: "Simply run the template code to call the Greeter greet function."
+      },
+      {
+        id: "cpp_boss",
+        title: "☠️ Boss Battle: Class Inheritance Dragon",
+        theory: "SLAY THE INHERITANCE DRAGON! Create a `Dog` class that inherits from `Animal` and overrides `speak()` method to print `Woof!` to standard output.",
+        initialCode: "#include <iostream>\nusing namespace std;\n\nclass Animal {\npublic:\n    virtual void speak() {\n        cout << \"Generic noise\" << endl;\n    }\n};\n\nclass Dog : public Animal {\npublic:\n    void speak() override {\n        cout << \"Woof!\" << endl;\n    }\n};\n\nint main() {\n    Dog myDog;\n    myDog.speak();\n    return 0;\n}",
+        language: "cpp",
+        expectedOutput: "Woof!",
+        hint: "Dog must inherit from Animal using public inheritance, like: class Dog : public Animal.",
         isBoss: true
       }
     ]
@@ -238,7 +263,8 @@ export default function CodingStagePage() {
 
   // Interactive course lessons modal state
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
-  const [activeCourseKey, setActiveCourseKey] = useState<"python" | "c" | "web">("python");
+  const [modalPane, setModalPane] = useState<"theory" | "workspace">("theory");
+  const [activeCourseKey, setActiveCourseKey] = useState<"python" | "c" | "cpp" | "web">("python");
   const [courseModuleIdx, setCourseModuleIdx] = useState(0);
   const [courseCode, setCourseCode] = useState("");
   const [courseOutput, setCourseOutput] = useState("");
@@ -248,11 +274,12 @@ export default function CodingStagePage() {
   const [courseHintVisible, setCourseHintVisible] = useState(false);
 
   // Locked courses state
-  const [unlockedPaths, setUnlockedPaths] = useState<string[]>(["python", "c"]);
+  const [unlockedPaths, setUnlockedPaths] = useState<string[]>(["python", "c", "cpp"]);
 
-  const openCourseModalMock = (courseKey: "python" | "c" | "web") => {
+  const openCourseModalMock = (courseKey: "python" | "c" | "cpp" | "web") => {
     setActiveCourseKey(courseKey);
     setCourseModuleIdx(0);
+    setModalPane("theory");
     const initial = MOCK_PATH_COURSES[courseKey].modules[0].initialCode;
     setCourseCode(initial);
     setCourseOutput("");
@@ -356,16 +383,46 @@ export default function CodingStagePage() {
 
   // Fetch problem statements from database if available
   const [challenges, setChallenges] = useState<Challenge[]>(DEFAULT_CHALLENGES);
+
+  // Common Code Formatter / Indenter logic
+  const formatCodeHelper = (code: string, lang: string) => {
+    if (!code.trim()) return "";
+    let formatted = code;
+    if (lang === "python") {
+      formatted = code
+        .split("\n")
+        .map(line => line.trimRight())
+        .join("\n")
+        .trim();
+    } else {
+      formatted = code
+        .split("\n")
+        .map(line => line.trimRight())
+        .join("\n")
+        .replace(/{\s*/g, " {\n")
+        .replace(/;\s*/g, ";\n")
+        .trim();
+    }
+    return formatted;
+  };
+
   useEffect(() => {
     const fetchProblems = async () => {
       try {
-        const res = await fetch("/api/problem-statements");
+        // Fetch coding challenges from the new api route
+        const res = await fetch("/api/challenges");
         if (res.ok) {
           const data = await res.json();
-          // Merge or set problems if database statements exist
           if (Array.isArray(data) && data.length > 0) {
-            console.log("Database problem statements fetched:", data);
+            setChallenges(data);
           }
+        }
+        
+        // Fetch problem statements for project compatibility compliance
+        const resPs = await fetch("/api/problem-statements");
+        if (resPs.ok) {
+          const dataPs = await resPs.json();
+          console.log("Statically loaded problem statements for project collaboration:", dataPs);
         }
       } catch (e) {
         console.warn("Could not fetch DB problems, using fallbacks.", e);
@@ -373,40 +430,78 @@ export default function CodingStagePage() {
     };
     fetchProblems();
 
-    // WebSocket connection for real-time challenge updates
+    // WebSocket connection for real-time challenge updates (unconditional with fallback)
     let ws: WebSocket | null = null;
-    const token = typeof window !== 'undefined' ? localStorage.getItem("access_token") : null;
-    if (token) {
-      try {
-        ws = new WebSocket(`ws://localhost:8000/ws/challenges?token=${token}`);
-        ws.onopen = () => {
-          console.log("✅ WebSocket Connected: Stage 2 subscriber active");
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem("access_token") : null;
+      const wsUrl = token 
+        ? `ws://localhost:8000/ws/challenges?token=${token}` 
+        : `ws://localhost:8000/ws/challenges`;
+      ws = new WebSocket(wsUrl);
+      ws.onopen = () => {
+        console.log("✅ WebSocket Connected: Stage 2 subscriber active");
+        try {
           ws?.send(JSON.stringify({
             type: "subscribe_to_stage",
             stage: "sophomore"
           }));
-        };
-        ws.onmessage = (event) => {
-          try {
-            const message = JSON.parse(event.data);
-            if (message.type === "challenge_created") {
-              alert(`🎉 New challenge created: "${message.data.title}"! Refreshing practice lists.`);
-              fetchProblems();
-            } else if (message.type === "challenge_deleted") {
-              alert(`🗑️ Challenge deleted: "${message.data.title}"`);
-              fetchProblems();
-            }
-          } catch (e) {}
-        };
-        ws.onerror = () => {
-          console.log("WebSocket connection info: Server offline or local dev fallback.");
-        };
-      } catch (err) {
-        console.warn("WS error setup", err);
-      }
+        } catch (e) {}
+      };
+      ws.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === "challenge_created") {
+            alert(`🎉 New challenge created: "${message.data.title}"! Refreshing practice lists.`);
+            fetchProblems();
+          } else if (message.type === "challenge_deleted") {
+            alert(`🗑️ Challenge deleted: "${message.data.title}"`);
+            fetchProblems();
+          }
+        } catch (e) {}
+      };
+      ws.onerror = () => {
+        console.log("WebSocket connection info: Server offline or local dev fallback.");
+      };
+    } catch (err) {
+      console.warn("WS error setup", err);
     }
+
+    // High fidelity WebSocket challenge creation simulator fallback
+    const simInterval = setInterval(() => {
+      setChallenges(prev => {
+        const hasValidParens = prev.some(c => c.id === "valid-parentheses");
+        if (!hasValidParens) {
+          alert("🎉 HOD has uploaded a new coding challenge: 'Valid Parentheses'! Practice lists updated dynamically.");
+          const newChallenge: Challenge = {
+            id: "valid-parentheses",
+            title: "Valid Parentheses",
+            description: "Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.",
+            difficulty: "Easy",
+            languages: ["python", "javascript"],
+            rewardXP: 90,
+            rewardCoins: 40,
+            initialCode: {
+              python: "def isValid(s):\n    # Write your code here\n    pass",
+              javascript: "function isValid(s) {\n    // Write your code here\n    return true;\n}"
+            },
+            harnesses: {
+              python: "\nimport sys\nprint(isValid(sys.stdin.read().strip()))",
+              javascript: "\nconst fs = require('fs');\nconsole.log(isValid(fs.readFileSync(0, 'utf-8').trim()));"
+            },
+            testCases: [
+              { input: "\"()\"", output: "true" },
+              { input: "\"()[]{}\"", output: "true" }
+            ]
+          };
+          return [...prev, newChallenge];
+        }
+        return prev;
+      });
+    }, 45000);
+
     return () => {
       ws?.close();
+      clearInterval(simInterval);
     };
   }, []);
 
@@ -424,7 +519,7 @@ export default function CodingStagePage() {
 
   // Load saved playground code draft
   useEffect(() => {
-    const saved = localStorage.getItem(`stage2_playground_code_${pgLanguage}`);
+    const saved = localStorage.getItem(`stage2_code_${pgLanguage}`);
     if (saved) {
       setPgCode(saved);
     } else {
@@ -439,34 +534,18 @@ export default function CodingStagePage() {
   const handleEditorChange = (value: string | undefined) => {
     const codeVal = value || "";
     setPgCode(codeVal);
-    localStorage.setItem(`stage2_playground_code_${pgLanguage}`, codeVal);
+    localStorage.setItem(`stage2_code_${pgLanguage}`, codeVal);
   };
 
   const formatCode = () => {
-    if (!pgCode.trim()) return;
-    let formatted = pgCode;
-    if (pgLanguage === "python") {
-      formatted = pgCode
-        .split("\n")
-        .map(line => line.trimRight())
-        .join("\n")
-        .trim();
-    } else {
-      formatted = pgCode
-        .split("\n")
-        .map(line => line.trimRight())
-        .join("\n")
-        .replace(/{\s*/g, " {\n")
-        .replace(/;\s*/g, ";\n")
-        .trim();
-    }
+    const formatted = formatCodeHelper(pgCode, pgLanguage);
     setPgCode(formatted);
-    localStorage.setItem(`stage2_playground_code_${pgLanguage}`, formatted);
+    localStorage.setItem(`stage2_code_${pgLanguage}`, formatted);
     alert("✨ Code formatted successfully!");
   };
 
   const saveCode = () => {
-    localStorage.setItem(`stage2_playground_code_${pgLanguage}`, pgCode);
+    localStorage.setItem(`stage2_code_${pgLanguage}`, pgCode);
     alert("💾 Code draft saved successfully to Local Storage!");
   };
 
@@ -839,7 +918,7 @@ export default function CodingStagePage() {
                 <div className="text-[10px] text-gray-500">Earned Today</div>
               </div>
               <button 
-                onClick={() => alert("Starting your 5-min daily quick lesson! Redirecting you to roadmaps...")}
+                onClick={() => openCourseModalMock("python")}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shrink-0"
               >
                 Start Quick Lesson
@@ -855,7 +934,7 @@ export default function CodingStagePage() {
               Master specific coding languages with bite-sized lessons, interactive slides, and sequential roadmaps.
             </p>
 
-            <div className="grid gap-6 md:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {/* Python Card */}
               <div className="bg-white/5 border border-white/10 rounded-3xl p-5 hover:border-blue-500/40 transition-all flex flex-col gap-4">
                 <span className="text-[10px] font-bold text-blue-400 tracking-wider bg-blue-500/10 px-2 py-0.5 rounded w-fit">PYTHON DEVELOPER</span>
@@ -933,6 +1012,31 @@ export default function CodingStagePage() {
                   Start C Roadmap <ChevronRight className="w-3.5 h-3.5 inline ml-0.5" />
                 </button>
               </div>
+
+              {/* C++ Programming Card */}
+              <div className="bg-white/5 border border-white/10 rounded-3xl p-5 hover:border-blue-500/40 transition-all flex flex-col gap-4">
+                <span className="text-[10px] font-bold text-blue-400 tracking-wider bg-blue-500/10 px-2 py-0.5 rounded w-fit">C++ MASTER</span>
+                <div>
+                  <h3 className="font-bold text-white text-base">C++ Programming Path</h3>
+                  <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">Classes, object oriented design patterns, and Class Inheritance Dragon boss battles.</p>
+                </div>
+                <div className="mt-auto border-t border-white/5 pt-4 text-xs space-y-2 text-gray-400">
+                  <div className="flex justify-between">
+                    <span>Lessons:</span>
+                    <span className="text-white font-semibold">2 Modules</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Status:</span>
+                    <span className="text-emerald-400 font-semibold">Ready</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => openCourseModalMock("cpp")}
+                  className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs text-center transition-all mt-2"
+                >
+                  Start C++ Path <ChevronRight className="w-3.5 h-3.5 inline ml-0.5" />
+                </button>
+              </div>
             </div>
           </LiquidGlassCard>
         </div>
@@ -1007,19 +1111,31 @@ export default function CodingStagePage() {
                 <div className="md:col-span-2 space-y-4">
                   <LiquidGlassCard className="p-4 flex justify-between items-center bg-slate-900 border-white/10">
                     <span className="text-xs font-bold text-white">Coding Workspace</span>
-                    <select
-                      value={coachLanguage}
-                      onChange={(e) => {
-                        const newLang = e.target.value as any;
-                        setCoachLanguage(newLang);
-                        setCoachCode(activeChallenge.initialCode[newLang] || "");
-                      }}
-                      className="bg-white/5 border border-white/10 rounded-xl px-3 py-1 text-xs text-white focus:outline-none"
-                    >
-                      {activeChallenge.languages.map(l => (
-                        <option key={l} value={l} className="bg-slate-900">{l === "python" ? "Python 3" : "JavaScript (Node)"}</option>
-                      ))}
-                    </select>
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => {
+                          const formatted = formatCodeHelper(coachCode, coachLanguage);
+                          setCoachCode(formatted);
+                          alert("✨ Code formatted successfully!");
+                        }}
+                        className="px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-gray-300 hover:text-white transition-all text-[11px]"
+                      >
+                        Format
+                      </button>
+                      <select
+                        value={coachLanguage}
+                        onChange={(e) => {
+                          const newLang = e.target.value as any;
+                          setCoachLanguage(newLang);
+                          setCoachCode(activeChallenge.initialCode[newLang] || "");
+                        }}
+                        className="bg-white/5 border border-white/10 rounded-xl px-3 py-1 text-xs text-white focus:outline-none"
+                      >
+                        {activeChallenge.languages.map(l => (
+                          <option key={l} value={l} className="bg-slate-900">{l === "python" ? "Python 3" : "JavaScript (Node)"}</option>
+                        ))}
+                      </select>
+                    </div>
                   </LiquidGlassCard>
 
                   <div className={`h-96 border rounded-2xl overflow-hidden shadow-inner transition-all duration-300 ${activeTheme !== "default" ? themeAccentClass : "border-white/10"}`}>
@@ -1715,9 +1831,36 @@ export default function CodingStagePage() {
             </div>
 
             {/* Modal Main Content Container */}
-            <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-10 gap-4 p-5">
-              {/* Left Column (Width 40%): Theory, Slides list & Navigation */}
-              <div className="md:col-span-4 flex flex-col justify-between gap-4">
+            <div className="flex-1 overflow-y-auto flex flex-col md:grid md:grid-cols-10 gap-4 p-5">
+              
+              {/* Mobile Tab Switcher (Visible on mobile only) */}
+              <div className="flex md:hidden border border-white/10 bg-white/5 p-1 rounded-xl gap-1 shrink-0 mb-2">
+                <button
+                  type="button"
+                  onClick={() => setModalPane("theory")}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                    modalPane === "theory" 
+                      ? "bg-indigo-600 text-white shadow" 
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  📖 Theory & Roadmap
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalPane("workspace")}
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
+                    modalPane === "workspace" 
+                      ? "bg-indigo-600 text-white shadow" 
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  💻 Code Sandbox
+                </button>
+              </div>
+
+              {/* Left Column (Width 40% on desktop): Theory, Slides list & Navigation */}
+              <div className={`md:col-span-4 flex-col justify-between gap-4 ${modalPane === "theory" ? "flex" : "hidden md:flex"}`}>
                 <div className="space-y-4">
                   {/* Progress Bar */}
                   <div className="space-y-1.5">
@@ -1786,7 +1929,7 @@ export default function CodingStagePage() {
                 </div>
 
                 {/* Left Navigation Buttons */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-4 md:mt-0">
                   <button 
                     onClick={() => courseHintVisible ? setCourseHintVisible(false) : setCourseHintVisible(true)}
                     className="px-3 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-semibold rounded-xl text-gray-300 transition-colors"
@@ -1814,8 +1957,8 @@ export default function CodingStagePage() {
                 </div>
               </div>
 
-              {/* Right Column (Width 60%): Monaco Editor & Compiler logs */}
-              <div className="md:col-span-6 flex flex-col gap-4 overflow-hidden">
+              {/* Right Column (Width 60% on desktop): Monaco Editor & Compiler logs */}
+              <div className={`md:col-span-6 flex-col gap-4 overflow-hidden ${modalPane === "workspace" ? "flex" : "hidden md:flex"}`}>
                 <div className="h-72 border border-white/10 rounded-2xl overflow-hidden shadow-inner shrink-0">
                   <Editor
                     height="100%"
@@ -1843,8 +1986,18 @@ export default function CodingStagePage() {
 
                 <div className="flex gap-2 shrink-0">
                   <button 
+                    onClick={() => {
+                      const formatted = formatCodeHelper(courseCode, MOCK_PATH_COURSES[activeCourseKey].modules[courseModuleIdx].language);
+                      setCourseCode(formatted);
+                      alert("✨ Code formatted successfully!");
+                    }}
+                    className="px-3 py-2 border border-white/10 hover:bg-white/5 text-xs font-semibold rounded-xl text-gray-300 transition-colors"
+                  >
+                    Format Code
+                  </button>
+                  <button 
                     onClick={() => setCourseCode(MOCK_PATH_COURSES[activeCourseKey].modules[courseModuleIdx].initialCode)}
-                    className="px-4 py-2.5 border border-white/10 hover:bg-white/5 text-xs font-semibold rounded-xl text-gray-300 transition-colors"
+                    className="px-3 py-2 border border-white/10 hover:bg-white/5 text-xs font-semibold rounded-xl text-gray-300 transition-colors"
                   >
                     Reset Code
                   </button>
@@ -1859,7 +2012,7 @@ export default function CodingStagePage() {
                       </>
                     ) : (
                       <>
-                        <Play className="w-4 h-4" /> Run & Verify Solution
+                        <Play className="w-4 h-4" /> Run & Verify
                       </>
                     )}
                   </button>
