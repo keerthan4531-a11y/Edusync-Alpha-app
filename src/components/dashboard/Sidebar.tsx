@@ -26,7 +26,7 @@ const getMenuByRole = (role: string): MenuItem[] => {
       { name: "Stages", href: "/student-dashboard/stages", icon: Compass },
       { name: "Learning Path", href: "/student-dashboard/learning-path", icon: Map },
       { name: "Classrooms", href: "/student-dashboard/classrooms", icon: Monitor },
-      { name: "Courses", href: "/student-dashboard/courses", icon: GraduationCap },
+      { name: "Courses", href: "/student-dashboard/language-courses", icon: GraduationCap },
     ]
   }
   if (role === "FACULTY") {
