@@ -787,7 +787,7 @@ export default function Stage3ProjectsPage() {
                 ) : (
                   <div className="flex flex-col md:flex-row h-full border border-white/10 rounded-2xl overflow-hidden bg-black/30">
                     {/* Repository sidebar files & details */}
-                    <div className="w-full md:w-64 border-r border-white/10 flex flex-col h-[200px] md:h-full bg-black/40">
+                    <div className={`w-full md:w-64 border-r border-white/10 flex flex-col h-full md:h-full bg-black/40 ${repoActiveFileId ? "hidden md:flex" : "flex"}`}>
                       <div className="p-3 border-b border-white/10 flex items-center justify-between shrink-0">
                         <Button variant="ghost" size="sm" className="p-0 text-muted-foreground hover:text-foreground" onClick={() => setSelectedRepoId(null)}>
                           <ArrowLeft className="h-4 w-4 mr-1" /> Back
@@ -841,10 +841,20 @@ export default function Stage3ProjectsPage() {
                     </div>
 
                     {/* Repository main compiler screen */}
-                    <div className="flex-1 flex flex-col h-full bg-black/10">
+                    <div className={`flex-1 flex flex-col h-full bg-black/10 ${!repoActiveFileId ? "hidden md:flex" : "flex"}`}>
                       {/* Editor Toolbar */}
                       <div className="p-3 border-b border-white/10 bg-black/40 flex flex-wrap items-center justify-between gap-3 shrink-0">
                         <div className="flex items-center gap-2">
+                          {repoActiveFileId && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="md:hidden p-0 text-muted-foreground mr-2 hover:bg-transparent" 
+                              onClick={() => setRepoActiveFileId(null)}
+                            >
+                              <ArrowLeft className="h-4 w-4 mr-1" /> Files
+                            </Button>
+                          )}
                           <select 
                             value={repoActiveFileLanguage} 
                             onChange={(e) => setRepoActiveFileLanguage(e.target.value)}
@@ -908,7 +918,7 @@ export default function Stage3ProjectsPage() {
 
                         {/* File Version History Sidebar */}
                         {showHistory && (
-                          <div className="w-64 border-l border-white/10 bg-slate-950/80 p-3 overflow-y-auto space-y-4 absolute right-0 top-0 h-full z-10 backdrop-blur-md">
+                          <div className="w-full sm:w-64 border-l border-white/10 bg-slate-950/80 p-3 overflow-y-auto space-y-4 absolute right-0 top-0 h-full z-10 backdrop-blur-md">
                             <div className="flex items-center justify-between border-b border-white/5 pb-2">
                               <span className="text-xs font-bold text-stage3 flex items-center gap-1">
                                 <Clock className="h-3 w-3" /> History
@@ -1234,7 +1244,7 @@ export default function Stage3ProjectsPage() {
             {activeTab === "chat" && (
               <div className="flex flex-col md:flex-row h-[calc(100vh-16rem)] min-h-[450px] border border-white/10 rounded-2xl overflow-hidden bg-black/30">
                 {/* Active teams sidebar */}
-                <div className="w-full md:w-64 border-r border-white/10 flex flex-col h-[150px] md:h-full bg-black/40">
+                <div className={`w-full md:w-64 border-r border-white/10 flex flex-col h-full md:h-full bg-black/40 ${chatSelectedProjectId ? "hidden md:flex" : "flex"}`}>
                   <div className="p-4 border-b border-white/10 font-bold text-sm text-muted-foreground shrink-0 uppercase tracking-wider">
                     My Active Teams
                   </div>
@@ -1267,13 +1277,25 @@ export default function Stage3ProjectsPage() {
                 </div>
 
                 {/* Team chat window stream */}
-                <div className="flex-1 flex flex-col h-full bg-black/10">
+                <div className={`flex-1 flex flex-col h-full bg-black/10 ${!chatSelectedProjectId ? "hidden md:flex" : "flex"}`}>
                   <div className="p-4 border-b border-white/10 bg-black/40 flex items-center justify-between shrink-0">
-                    <h3 className="font-bold text-sm">
-                      {chatSelectedProjectId 
-                        ? projects.find(p => p.id === chatSelectedProjectId)?.name + " Message Board" 
-                        : "Select a Team to Chat"}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      {chatSelectedProjectId && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="md:hidden p-0 text-muted-foreground mr-2 hover:bg-transparent" 
+                          onClick={() => setChatSelectedProjectId(null)}
+                        >
+                          <ArrowLeft className="h-4 w-4 mr-1" /> Back
+                        </Button>
+                      )}
+                      <h3 className="font-bold text-sm">
+                        {chatSelectedProjectId 
+                          ? projects.find(p => p.id === chatSelectedProjectId)?.name + " Message Board" 
+                          : "Select a Team to Chat"}
+                      </h3>
+                    </div>
                     {chatSelectedProjectId && (
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 font-bold border border-emerald-400/20 animate-pulse">
                         Live Sync
