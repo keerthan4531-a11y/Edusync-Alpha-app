@@ -67,21 +67,21 @@ data table, how to set up Judge0, etc.), not feature definitions.
 
 ---
 
-## 4. Design System — "Dark Mode Glassmorphism" (Established in Phase A)
+## 4. Design System — "Dark Mode Glassmorphism" & "Liquid Glass" (Established in Phase A & Prelude E)
 
 - Background: `bg-app-gradient` → `linear-gradient(135deg, #020617, #0f172a)`, dark
   mode always on.
-- Cards: `GlassCard` component → `bg-white/5 backdrop-blur-md border border-white/10
-  rounded-xl`
-- Stage colors (use for active states, glows, borders):
+- Cards: 
+  - Standard (Legacy): `GlassCard` component (`bg-white/5 backdrop-blur-md...`)
+  - New Premium Standard: `LiquidGlassCard` component — utilizes Apple-style Liquid Glass effects (deep blur, `saturate-[1.5]`, layered specular border highlights, and optional `accentColor` inner glows). It features a mobile-performance fallback that gracefully downgrades to standard blur and removes SVG noise on viewports `< 768px`.
+- Stage colors (use for active states, glows, borders, and `LiquidGlassCard`'s `accentColor` prop):
   - Stage 1 (Communication): `#8b5cf6` (purple) — `text-stage1` / `border-stage1`
   - Stage 2 (Coding): `#3b82f6` (blue) — `text-stage2` / `border-stage2`
   - Stage 3 (Projects): `#10b981` (green) — `text-stage3` / `border-stage3`
   - Stage 4 (Career): `#f59e0b` (amber) — `text-stage4` / `border-stage4`
 - Topbar: floating pill (`rounded-full`, `backdrop-blur-xl`, detached with margin)
 - Sidebar: active item gets left border + inner glow in the current stage's color
-- **Every new page/component must use `GlassCard` and these tokens — no plain white
-  shadcn defaults.**
+- **New pages/components must use `GlassCard` (for Phase E) or `LiquidGlassCard` (future standard) and these tokens — no plain white shadcn defaults.**
 
 ---
 
