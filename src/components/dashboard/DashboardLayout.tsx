@@ -15,11 +15,11 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   return (
-    <div className="flex h-screen overflow-hidden bg-transparent">
+    <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-transparent relative">
       <Sidebar role={user.role} />
       <div className="flex flex-1 flex-col overflow-hidden bg-transparent">
         <Topbar user={user} />
-        <main className="flex-1 overflow-auto p-6 bg-transparent">
+        <main className="flex-1 overflow-auto p-4 md:p-6 bg-transparent">
           {children}
         </main>
       </div>

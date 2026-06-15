@@ -50,23 +50,23 @@ export function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname()
 
   return (
-    <div className="flex h-full w-64 flex-col border-r border-white/10 bg-white/5 backdrop-blur-md">
-      <div className="flex h-16 items-center border-b border-white/10 px-6">
+    <div className="flex md:h-full w-full md:w-64 flex-col border-b md:border-b-0 md:border-r border-white/10 bg-white/5 backdrop-blur-md shrink-0 z-50 order-2 md:order-1 sticky bottom-0 md:relative">
+      <div className="hidden md:flex h-16 items-center border-b border-white/10 px-6">
         <h1 className="text-xl font-bold tracking-tight text-white">EduSync 4.0</h1>
       </div>
-      <div className="flex-1 overflow-auto py-6">
-        <nav className="grid gap-2 px-4">
+      <div className="flex-1 overflow-x-auto md:overflow-y-auto py-3 md:py-6 no-scrollbar">
+        <nav className="flex md:grid md:gap-2 px-4 gap-3 md:block whitespace-nowrap">
           {menu.map((item) => {
             const isActive = pathname === item.href
             
             // Map stage colors to Tailwind classes
-            let activeClasses = "bg-white/10 text-white border-l-4"
+            let activeClasses = "bg-white/10 text-white md:border-l-4 border-b-4 md:border-b-0"
             if (isActive) {
-              if (item.stage === "stage1") activeClasses += " border-stage1 shadow-[inset_4px_0_15px_-5px_var(--color-stage1)] text-stage1"
-              else if (item.stage === "stage2") activeClasses += " border-stage2 shadow-[inset_4px_0_15px_-5px_var(--color-stage2)] text-stage2"
-              else if (item.stage === "stage3") activeClasses += " border-stage3 shadow-[inset_4px_0_15px_-5px_var(--color-stage3)] text-stage3"
-              else if (item.stage === "stage4") activeClasses += " border-stage4 shadow-[inset_4px_0_15px_-5px_var(--color-stage4)] text-stage4"
-              else activeClasses += " border-primary shadow-[inset_4px_0_15px_-5px_var(--color-primary)] text-primary"
+              if (item.stage === "stage1") activeClasses += " border-stage1 md:shadow-[inset_4px_0_15px_-5px_var(--color-stage1)] text-stage1 shadow-[inset_0_-4px_15px_-5px_var(--color-stage1)]"
+              else if (item.stage === "stage2") activeClasses += " border-stage2 md:shadow-[inset_4px_0_15px_-5px_var(--color-stage2)] text-stage2 shadow-[inset_0_-4px_15px_-5px_var(--color-stage2)]"
+              else if (item.stage === "stage3") activeClasses += " border-stage3 md:shadow-[inset_4px_0_15px_-5px_var(--color-stage3)] text-stage3 shadow-[inset_0_-4px_15px_-5px_var(--color-stage3)]"
+              else if (item.stage === "stage4") activeClasses += " border-stage4 md:shadow-[inset_4px_0_15px_-5px_var(--color-stage4)] text-stage4 shadow-[inset_0_-4px_15px_-5px_var(--color-stage4)]"
+              else activeClasses += " border-primary md:shadow-[inset_4px_0_15px_-5px_var(--color-primary)] text-primary shadow-[inset_0_-4px_15px_-5px_var(--color-primary)]"
             }
 
             return (
@@ -74,12 +74,13 @@ export function Sidebar({ role }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all hover:bg-white/10 hover:text-white border-l-4 border-transparent",
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all hover:bg-white/10 hover:text-white md:border-l-4 border-b-4 border-transparent flex-shrink-0",
                   isActive ? activeClasses : "text-muted-foreground"
                 )}
               >
                 <item.icon className={cn("h-5 w-5", isActive && "opacity-100")} />
-                {item.name}
+                <span className="hidden md:inline">{item.name}</span>
+                <span className="md:hidden">{item.name.split(':')[0]}</span>
               </Link>
             )
           })}
