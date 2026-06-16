@@ -478,12 +478,12 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
               <button
                 key={feature.id}
                 onClick={() => setActiveFeature(feature.id)}
-                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
               >
                 <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${feature.bgColor} ${feature.borderColor} border transition-transform duration-300 group-hover:scale-110`}>
                   <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
                 </div>
-                <span className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">
+                <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
                   {feature.label}
                 </span>
               </button>
@@ -495,10 +495,10 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
           <div className="mb-6 flex items-center">
             <button
               onClick={handleBackToOptions}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm"
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
               aria-label="Back to Speaking Options"
             >
-              <ChevronLeft className="w-6 h-6 text-white" />
+              <ChevronLeft className="w-6 h-6 text-foreground" />
             </button>
           </div>
 
@@ -506,20 +506,20 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
           {activeFeature === "read-aloud" && content && (
         <div className="space-y-6 animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
-            <h2 className="text-xl font-bold text-white mb-2">{content.title}</h2>
-            <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
-              <p className="text-gray-200 text-2xl font-medium leading-relaxed">
+            <h2 className="text-[22px] font-bold text-foreground mb-2">{content.title}</h2>
+            <div className="p-6 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/10 dark:border-white/10 text-center shadow-[inset_0_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+              <p className="text-zinc-600 dark:text-gray-200 text-[28px] font-medium leading-relaxed">
                 "{content.content}"
               </p>
             </div>
           </LiquidGlassCard>
 
           {!readAloudResult ? (
-            <LiquidGlassCard className="p-6 border-white/10 flex flex-col items-center" accentColor="#8b5cf6">
+            <LiquidGlassCard className="p-6 border-black/10 dark:border-white/10 flex flex-col items-center" accentColor="#8b5cf6">
               <div className="w-full flex justify-end mb-4">
                 <button 
                   onClick={() => setUseFallback(!useFallback)}
-                  className="text-sm text-gray-400 hover:text-white flex items-center gap-1 transition-colors"
+                  className="text-[15px] text-zinc-500 dark:text-gray-400 hover:text-foreground transition-colors flex items-center gap-1"
                 >
                   <Type className="w-4 h-4" />
                   {useFallback ? "Use Microphone" : "Keyboard Fallback"}
@@ -528,7 +528,7 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
 
               {useFallback ? (
                 <div className="w-full">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-[15px] font-medium text-zinc-600 dark:text-gray-300 mb-2">
                     Type what you would have said (Fallback Mode)
                   </label>
                   <textarea
@@ -536,7 +536,7 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                     onChange={(e) => setReadAloudText(e.target.value)}
                     disabled={isReadAloudSubmitting}
                     rows={4}
-                    className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-white focus:border-purple-500 transition-all resize-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"
+                    className="w-full bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-2xl p-4 text-[15px] text-foreground focus:border-purple-500 transition-all resize-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"
                   />
                 </div>
               ) : (
@@ -557,13 +557,13 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                     )}
                   </button>
                   
-                  <p className="text-gray-400 font-medium text-sm">
+                  <p className="text-zinc-500 dark:text-gray-400 font-medium text-[15px]">
                     {isReadAloudRecording ? "Recording... Click to stop." : "Click to start speaking"}
                   </p>
 
                   {readAloudText && (
-                    <div className="w-full p-4 bg-black/40 rounded-2xl border border-white/10 text-gray-300 text-sm">
-                      <span className="text-xs text-purple-400 font-semibold block mb-1">Heard:</span>
+                    <div className="w-full p-4 bg-black/5 dark:bg-black/40 rounded-2xl border border-black/10 dark:border-white/10 text-zinc-600 dark:text-gray-300 text-[15px]">
+                      <span className="text-[13px] text-purple-600 dark:text-purple-400 font-semibold block mb-1">Heard:</span>
                       {readAloudText}
                     </div>
                   )}
@@ -571,7 +571,7 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
               )}
 
               {readAloudError && (
-                <div className="w-full mt-4 text-red-400 text-sm font-medium bg-red-400/10 p-3 rounded-lg border border-red-400/20">
+                <div className="w-full mt-4 text-red-600 dark:text-red-400 text-[15px] font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
                   {readAloudError}
                 </div>
               )}
@@ -579,36 +579,36 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
               <button
                 onClick={submitReadAloud}
                 disabled={isReadAloudSubmitting || readAloudText.trim().length < 2}
-                className="w-full mt-6 py-3 rounded-2xl bg-purple-600 text-white font-semibold shadow-md hover:bg-purple-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full mt-6 py-3 rounded-2xl bg-purple-600 text-white font-semibold text-[17px] shadow-md hover:bg-purple-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isReadAloudSubmitting ? "AI is analyzing speech..." : "Submit Speech Evaluation"}
               </button>
             </LiquidGlassCard>
           ) : (
             <LiquidGlassCard className="p-6 border-purple-500/30 bg-purple-500/5" accentColor="#8b5cf6">
-              <h3 className="text-2xl font-bold text-white mb-4">Pronunciation Feedback</h3>
+              <h3 className="text-[28px] font-bold text-foreground mb-4">Pronunciation Feedback</h3>
               
               <div className="space-y-4">
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                  <h4 className="text-purple-400 font-semibold mb-1 text-sm">Coach's Notes</h4>
-                  <p className="text-gray-200 text-sm">{readAloudResult.evaluation.feedback}</p>
-                  <p className="text-gray-400 text-xs mt-2 italic">{readAloudResult.evaluation.tamilFeedback}</p>
+                <div className="p-4 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/10 dark:border-white/10">
+                  <h4 className="text-purple-600 dark:text-purple-400 font-semibold mb-1 text-[15px]">Coach's Notes</h4>
+                  <p className="text-zinc-600 dark:text-gray-200 text-[15px]">{readAloudResult.evaluation.feedback}</p>
+                  <p className="text-zinc-500 dark:text-gray-400 text-[13px] mt-2 italic">{readAloudResult.evaluation.tamilFeedback}</p>
                 </div>
 
                 {readAloudResult.evaluation.mispronouncedWords?.length > 0 ? (
                   <div className="p-4 bg-orange-500/10 rounded-2xl border border-orange-500/20">
-                    <h4 className="text-orange-400 font-semibold mb-2 text-sm">Words to Practice</h4>
+                    <h4 className="text-orange-600 dark:text-orange-400 font-semibold mb-2 text-[15px]">Words to Practice</h4>
                     <div className="flex flex-wrap gap-2">
                       {readAloudResult.evaluation.mispronouncedWords.map((word: string, idx: number) => (
-                        <span key={idx} className="px-3 py-1 bg-black/40 border border-orange-500/30 rounded-lg text-orange-200 text-xs">
+                        <span key={idx} className="px-3 py-1 bg-black/5 dark:bg-black/40 border border-orange-500/30 rounded-lg text-orange-600 dark:text-orange-200 text-[13px]">
                           {word}
                         </span>
                       ))}
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4 bg-green-500/10 rounded-2xl border border-green-500/20 text-sm">
-                    <p className="text-green-400 font-medium">Perfect pronunciation! No missed words detected.</p>
+                  <div className="p-4 bg-green-500/10 rounded-2xl border border-green-500/20 text-[15px]">
+                    <p className="text-green-600 dark:text-green-400 font-medium">Perfect pronunciation! No missed words detected.</p>
                   </div>
                 )}
               </div>
@@ -623,7 +623,7 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                 <div className="flex-1" />
                 <button
                   onClick={resetReadAloud}
-                  className="px-6 py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-white font-medium transition-all"
+                  className="px-6 py-2.5 rounded-xl border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-foreground font-medium transition-all"
                 >
                   Try Again
                 </button>
@@ -637,7 +637,7 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
       {activeFeature === "shadowing" && (
         <div className="space-y-6 max-w-xl mx-auto animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <h3 className="text-[17px] font-bold text-foreground mb-4 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-purple-400" /> Shadowing repetition practice
             </h3>
 
@@ -652,10 +652,10 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                     setShadowResult(null);
                     setShadowError(null);
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-[13px] font-semibold border transition-all ${
                     shadowSentenceIdx === idx
                       ? "bg-purple-600 border-purple-500 text-white"
-                      : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                      : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-zinc-500 dark:text-gray-400 hover:text-foreground"
                   }`}
                 >
                   {item.difficulty} Prompt
@@ -663,14 +663,14 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
               ))}
             </div>
 
-            <div className="p-5 bg-black/40 border border-white/10 rounded-2xl text-center space-y-4 mb-6">
-              <p className="text-gray-400 text-xs uppercase font-bold tracking-wider">Listen carefully & Shadow:</p>
-              <p className="text-white text-xl font-medium leading-relaxed">
+            <div className="p-5 bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-2xl text-center space-y-4 mb-6">
+              <p className="text-zinc-500 dark:text-gray-400 text-[13px] uppercase font-bold tracking-wider">Listen carefully & Shadow:</p>
+              <p className="text-foreground text-[22px] font-medium leading-relaxed">
                 "{activeShadow.text}"
               </p>
               <button
                 onClick={() => speakText(activeShadow.text, 0.85)}
-                className="mx-auto flex items-center gap-2 px-4 py-2 bg-purple-500/20 border border-purple-500/40 hover:bg-purple-500/30 text-purple-300 text-xs font-semibold rounded-xl transition-all"
+                className="mx-auto flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/40 hover:bg-purple-500/20 text-purple-600 dark:text-purple-300 text-[13px] font-semibold rounded-xl transition-all"
               >
                 <Volume2 className="w-4 h-4" /> Listen to Audio guide
               </button>
@@ -692,19 +692,19 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                   <Mic className="w-10 h-10 text-purple-400" />
                 )}
               </button>
-              <p className="text-xs text-gray-400 font-medium">
+              <p className="text-[13px] text-zinc-500 dark:text-gray-400 font-medium">
                 {isShadowRecording ? "Recording... repeat the phrase now." : "Click microphone and speak"}
               </p>
 
               {shadowTranscribed && (
-                <div className="w-full p-4 bg-black/30 border border-white/10 rounded-xl space-y-2">
-                  <span className="text-xs text-purple-400 font-semibold block">You said:</span>
-                  <p className="text-sm text-gray-300">"{shadowTranscribed}"</p>
+                <div className="w-full p-4 bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 rounded-xl space-y-2">
+                  <span className="text-[13px] text-purple-600 dark:text-purple-400 font-semibold block">You said:</span>
+                  <p className="text-[15px] text-zinc-600 dark:text-gray-300">"{shadowTranscribed}"</p>
                   
                   {!shadowResult && (
                     <button
                       onClick={evaluateShadowPractice}
-                      className="mt-3 px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold w-full transition-all"
+                      className="mt-3 px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-[13px] font-bold w-full transition-all"
                     >
                       Compare Pronunciation
                     </button>
@@ -713,7 +713,7 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
               )}
 
               {shadowError && (
-                <div className="text-xs text-red-400 bg-red-500/10 p-2.5 rounded-lg border border-red-500/20">
+                <div className="text-[13px] text-red-600 dark:text-red-400 bg-red-500/10 p-2.5 rounded-lg border border-red-500/20">
                   {shadowError}
                 </div>
               )}
@@ -722,22 +722,22 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
             {shadowResult && (
               <div className="mt-6 p-4 bg-purple-500/5 border border-purple-500/30 rounded-2xl space-y-3 animate-in slide-in-from-bottom-3">
                 <div className="flex justify-between items-center">
-                  <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-green-400" /> Accuracy Breakdown
+                  <h4 className="font-bold text-[15px] text-foreground flex items-center gap-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-green-500 dark:text-green-400" /> Accuracy Breakdown
                   </h4>
-                  <span className="px-2.5 py-0.5 bg-purple-500/20 text-purple-300 rounded-full text-xs font-bold border border-purple-500/30">
+                  <span className="px-2.5 py-0.5 bg-purple-500/10 text-purple-600 dark:text-purple-300 rounded-full text-[13px] font-bold border border-purple-500/30">
                     Match Score: {shadowResult.score}%
                   </span>
                 </div>
-                <p className="text-xs text-gray-300">{shadowResult.feedback}</p>
-                <p className="text-xs text-purple-300 italic">{shadowResult.tamilFeedback}</p>
+                <p className="text-[13px] text-zinc-600 dark:text-gray-300">{shadowResult.feedback}</p>
+                <p className="text-[13px] text-purple-600 dark:text-purple-300 italic">{shadowResult.tamilFeedback}</p>
 
                 {shadowResult.mispronounced.length > 0 && (
-                  <div className="text-xs space-y-1">
-                    <span className="text-orange-400 font-semibold">Focus pronunciation on:</span>
+                  <div className="text-[13px] space-y-1">
+                    <span className="text-orange-500 dark:text-orange-400 font-semibold">Focus pronunciation on:</span>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {shadowResult.mispronounced.map((word: string, i: number) => (
-                        <span key={i} className="px-2 py-0.5 bg-orange-500/10 border border-orange-500/20 text-orange-200 rounded">
+                        <span key={i} className="px-2 py-0.5 bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-200 rounded">
                           {word}
                         </span>
                       ))}
@@ -745,7 +745,7 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                   </div>
                 )}
                 
-                <div className="flex justify-between items-center text-xs text-yellow-500 font-bold pt-2">
+                <div className="flex justify-between items-center text-[13px] text-yellow-600 dark:text-yellow-500 font-bold pt-2">
                   <span>+{shadowResult.xpAwarded} XP Earned</span>
                   <button
                     onClick={() => {
@@ -767,10 +767,10 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
       {activeFeature === "analyzer" && (
         <div className="space-y-6 max-w-xl mx-auto animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
-            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+            <h3 className="text-[17px] font-bold text-foreground mb-2 flex items-center gap-2">
               <Activity className="w-5 h-5 text-cyan-400 animate-pulse" /> Speech Pitch & Pacing Analyzer
             </h3>
-            <p className="text-xs text-gray-400 mb-6 leading-relaxed">
+            <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-6 leading-relaxed">
               Read any academic or work sentence aloud. We will trace your voice frequency variations on the visualizer and analyze words-per-minute pacing.
             </p>
 
@@ -804,51 +804,51 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                   <Mic className="w-10 h-10 text-cyan-400" />
                 )}
               </button>
-              <p className="text-xs text-gray-400 font-medium">
+              <p className="text-[13px] text-zinc-500 dark:text-gray-400 font-medium">
                 {isAnalyzerRecording ? "Stop recording to generate metrics report" : "Click to start analyzing"}
               </p>
 
               {analyzerTranscribed && (
-                <div className="w-full p-3 bg-black/40 border border-white/10 rounded-xl">
-                  <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider block mb-1">Transcribed words:</span>
-                  <p className="text-xs text-gray-300">"{analyzerTranscribed}"</p>
+                <div className="w-full p-3 bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-xl">
+                  <span className="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold uppercase tracking-wider block mb-1">Transcribed words:</span>
+                  <p className="text-[13px] text-zinc-600 dark:text-gray-300">"{analyzerTranscribed}"</p>
                 </div>
               )}
             </div>
 
             {analyzerResult && (
-              <div className="mt-6 p-5 bg-cyan-500/5 border border-cyan-500/20 rounded-2xl space-y-4 animate-in slide-in-from-bottom-4">
-                <h4 className="font-bold text-sm text-cyan-400 flex items-center gap-2">
+              <div className="mt-6 p-5 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl space-y-4 animate-in slide-in-from-bottom-4">
+                <h4 className="font-bold text-[15px] text-cyan-600 dark:text-cyan-400 flex items-center gap-2">
                   <Activity className="w-4 h-4" /> Speaking metrics report
                 </h4>
 
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="p-3 bg-black/40 rounded-xl border border-white/5 text-center">
-                    <span className="text-lg font-extrabold text-white">{analyzerResult.wpm}</span>
-                    <span className="block text-[10px] text-gray-400 font-medium mt-0.5">Words/Min</span>
+                  <div className="p-3 bg-black/5 dark:bg-black/40 rounded-xl border border-black/10 dark:border-white/5 text-center">
+                    <span className="text-[22px] font-extrabold text-foreground">{analyzerResult.wpm}</span>
+                    <span className="block text-[10px] text-zinc-500 dark:text-gray-400 font-medium mt-0.5">Words/Min</span>
                   </div>
-                  <div className="p-3 bg-black/40 rounded-xl border border-white/5 text-center">
-                    <span className="text-lg font-extrabold text-white">{analyzerResult.fillerCount}</span>
-                    <span className="block text-[10px] text-gray-400 font-medium mt-0.5">Filler Words</span>
+                  <div className="p-3 bg-black/5 dark:bg-black/40 rounded-xl border border-black/10 dark:border-white/5 text-center">
+                    <span className="text-[22px] font-extrabold text-foreground">{analyzerResult.fillerCount}</span>
+                    <span className="block text-[10px] text-zinc-500 dark:text-gray-400 font-medium mt-0.5">Filler Words</span>
                   </div>
-                  <div className="p-3 bg-black/40 rounded-xl border border-white/5 text-center">
-                    <span className="text-lg font-extrabold text-cyan-400">{analyzerResult.fluencyScore}%</span>
-                    <span className="block text-[10px] text-gray-400 font-medium mt-0.5">Fluency Score</span>
+                  <div className="p-3 bg-black/5 dark:bg-black/40 rounded-xl border border-black/10 dark:border-white/5 text-center">
+                    <span className="text-[22px] font-extrabold text-cyan-600 dark:text-cyan-400">{analyzerResult.fluencyScore}%</span>
+                    <span className="block text-[10px] text-zinc-500 dark:text-gray-400 font-medium mt-0.5">Fluency Score</span>
                   </div>
                 </div>
 
-                <div className="space-y-2 text-xs">
+                <div className="space-y-2 text-[13px]">
                   <div>
-                    <span className="font-semibold text-gray-300">Pacing Feedback:</span>
-                    <p className="text-gray-400 leading-relaxed">{analyzerResult.paceFeedback}</p>
+                    <span className="font-semibold text-zinc-600 dark:text-gray-300">Pacing Feedback:</span>
+                    <p className="text-zinc-500 dark:text-gray-400 leading-relaxed">{analyzerResult.paceFeedback}</p>
                   </div>
 
                   {analyzerResult.fillersUsed.length > 0 && (
                     <div>
-                      <span className="font-semibold text-orange-400">Filler words detected:</span>
+                      <span className="font-semibold text-orange-500 dark:text-orange-400">Filler words detected:</span>
                       <div className="flex gap-1.5 mt-1.5">
                         {analyzerResult.fillersUsed.map((word: string, i: number) => (
-                          <span key={i} className="px-2 py-0.5 bg-orange-500/10 text-orange-200 border border-orange-500/20 rounded text-[10px]">
+                          <span key={i} className="px-2 py-0.5 bg-orange-500/10 text-orange-600 dark:text-orange-200 border border-orange-500/20 rounded text-[10px]">
                             {word}
                           </span>
                         ))}
@@ -881,16 +881,16 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
           {/* LOBBY MODE */}
           {roleplayMode === "lobby" && (
             <LiquidGlassCard className="p-6 max-w-lg mx-auto" accentColor="#8b5cf6">
-              <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+              <h3 className="text-[17px] font-bold text-foreground mb-2 flex items-center gap-2">
                 <MessageSquareCode className="w-5 h-5 text-purple-400" /> AI Conversational Roleplay Arena
               </h3>
-              <p className="text-xs text-gray-400 mb-6">
+              <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-6">
                 Test your communication adaptability by chatting with special AI characters in simulated scenarios.
               </p>
 
               {/* Character selection */}
               <div className="space-y-4 mb-6">
-                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">Select Roleplay Character:</label>
+                <label className="block text-[10px] font-bold text-zinc-600 dark:text-gray-300 uppercase tracking-wider">Select Roleplay Character:</label>
                 <div className="grid grid-cols-3 gap-3">
                   {(Object.keys(characterMeta) as Array<keyof typeof characterMeta>).map((char) => {
                     const meta = characterMeta[char];
@@ -901,12 +901,12 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                         onClick={() => setRoleplayCharacter(char)}
                         className={`p-4 rounded-xl border text-left transition-all ${
                           selected
-                            ? "bg-purple-600/20 border-purple-500 text-white shadow-md"
-                            : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                            ? "bg-purple-600/20 border-purple-500 text-purple-600 dark:text-white shadow-md"
+                            : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-zinc-500 dark:text-gray-400 hover:text-foreground"
                         }`}
                       >
-                        <span className="text-2xl block mb-1">{meta.icon}</span>
-                        <span className="text-xs font-bold block">{meta.name}</span>
+                        <span className="text-[28px] block mb-1">{meta.icon}</span>
+                        <span className="text-[13px] font-bold block">{meta.name}</span>
                       </button>
                     );
                   })}
@@ -915,16 +915,16 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
 
               {/* Difficulty selection */}
               <div className="space-y-2 mb-6">
-                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">Conversation Difficulty:</label>
+                <label className="block text-[10px] font-bold text-zinc-600 dark:text-gray-300 uppercase tracking-wider">Conversation Difficulty:</label>
                 <div className="flex gap-2">
                   {["easy", "medium", "hard"].map((diff) => (
                     <button
                       key={diff}
                       onClick={() => setRoleplayDifficulty(diff as any)}
-                      className={`flex-1 py-2 rounded-xl text-xs font-bold border capitalize transition-all ${
+                      className={`flex-1 py-2 rounded-xl text-[13px] font-bold border capitalize transition-all ${
                         roleplayDifficulty === diff
                           ? "bg-purple-600 text-white border-purple-500"
-                          : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                          : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-zinc-500 dark:text-gray-400 hover:text-foreground"
                       }`}
                     >
                       {diff}
@@ -946,21 +946,21 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
           {roleplayMode === "chat" && (
             <LiquidGlassCard className="p-6 max-w-2xl mx-auto flex flex-col h-[500px]" accentColor="#8b5cf6">
               {/* Header */}
-              <div className="flex justify-between items-center border-b border-white/10 pb-4 mb-4 select-none">
+              <div className="flex justify-between items-center border-b border-black/10 dark:border-white/10 pb-4 mb-4 select-none">
                 <div className="flex items-center gap-2">
-                  <span className="text-2xl">{characterMeta[roleplayCharacter].icon}</span>
+                  <span className="text-[28px]">{characterMeta[roleplayCharacter].icon}</span>
                   <div>
-                    <h4 className="font-bold text-sm text-white">{characterMeta[roleplayCharacter].name}</h4>
-                    <span className="text-[10px] text-gray-400 font-medium capitalize">Difficulty: {roleplayDifficulty}</span>
+                    <h4 className="font-bold text-[15px] text-foreground">{characterMeta[roleplayCharacter].name}</h4>
+                    <span className="text-[10px] text-zinc-500 dark:text-gray-400 font-medium capitalize">Difficulty: {roleplayDifficulty}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="px-2.5 py-0.5 bg-purple-500/10 text-purple-300 border border-purple-500/20 rounded-full text-[10px] font-bold">
+                  <span className="px-2.5 py-0.5 bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 rounded-full text-[10px] font-bold">
                     Turns: {roleplayTurns}/5
                   </span>
                   <button
                     onClick={() => evaluateRoleplaySession(roleplayHistory)}
-                    className="text-xs text-red-400 hover:underline font-bold"
+                    className="text-[13px] text-red-600 dark:text-red-400 hover:underline font-bold"
                   >
                     End Session
                   </button>
@@ -976,15 +976,15 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                       key={idx}
                       className={`flex gap-2.5 max-w-[85%] ${isUser ? "ml-auto flex-row-reverse" : "mr-auto"}`}
                     >
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs flex-shrink-0 ${
-                        isUser ? "bg-purple-600 text-white" : "bg-white/10 text-gray-200"
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] flex-shrink-0 ${
+                        isUser ? "bg-purple-600 text-white" : "bg-black/5 dark:bg-white/10 text-zinc-600 dark:text-gray-200"
                       }`}>
                         {isUser ? <User className="w-4 h-4" /> : characterMeta[roleplayCharacter].icon}
                       </div>
-                      <div className={`p-3.5 rounded-2xl text-xs leading-relaxed shadow ${
+                      <div className={`p-3.5 rounded-2xl text-[13px] leading-relaxed shadow ${
                         isUser 
                           ? "bg-purple-600 text-white rounded-tr-none" 
-                          : "bg-white/5 border border-white/10 text-gray-200 rounded-tl-none"
+                          : "bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-zinc-600 dark:text-gray-200 rounded-tl-none"
                       }`}>
                         {msg.content}
                       </div>
@@ -994,10 +994,10 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
 
                 {isRoleplayThinking && (
                   <div className="flex gap-2.5 max-w-[80%] mr-auto items-center">
-                    <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-xs">
+                    <div className="w-7 h-7 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center text-[13px]">
                       {characterMeta[roleplayCharacter].icon}
                     </div>
-                    <div className="p-3 bg-white/5 border border-white/10 rounded-2xl rounded-tl-none text-[11px] text-gray-400 animate-pulse">
+                    <div className="p-3 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl rounded-tl-none text-[11px] text-zinc-500 dark:text-gray-400 animate-pulse">
                       Typing response...
                     </div>
                   </div>
@@ -1005,13 +1005,13 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
               </div>
 
               {/* Input section */}
-              <div className="flex gap-2 items-center border-t border-white/10 pt-4">
+              <div className="flex gap-2 items-center border-t border-black/10 dark:border-white/10 pt-4">
                 <button
                   onClick={toggleRoleplayRecord}
                   className={`w-10 h-10 rounded-xl flex items-center justify-center border flex-shrink-0 transition-colors ${
                     isRoleplayRecording 
-                      ? "bg-red-500/20 border-red-500 text-red-400 animate-pulse" 
-                      : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                      ? "bg-red-500/20 border-red-500 text-red-600 dark:text-red-400 animate-pulse" 
+                      : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-zinc-500 dark:text-gray-400 hover:text-foreground"
                   }`}
                 >
                   <Mic className="w-4 h-4" />
@@ -1024,12 +1024,12 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                   onKeyDown={(e) => {
                     if (e.key === "Enter") sendRoleplayMessage();
                   }}
-                  className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
+                  className="flex-1 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-foreground placeholder:text-zinc-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
                 />
                 <button
                   onClick={sendRoleplayMessage}
                   disabled={!roleplayInput.trim() || isRoleplayThinking}
-                  className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow"
+                  className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-xl text-[13px] font-bold transition-all shadow"
                 >
                   Send
                 </button>
@@ -1040,38 +1040,38 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
           {/* REPORT SUMMARY MODE */}
           {roleplayMode === "report" && roleplayResult && (
             <LiquidGlassCard className="p-6 max-w-lg mx-auto" accentColor="#8b5cf6">
-              <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+              <h3 className="text-[22px] font-bold text-foreground mb-2 flex items-center gap-2">
                 <Crown className="w-6 h-6 text-yellow-500" /> Conversational Evaluation Report
               </h3>
-              <p className="text-xs text-gray-400 mb-6">
+              <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-6">
                 Your performance details and conversation analysis.
               </p>
 
               <div className="feature-card text-center p-6 bg-purple-500/5 border border-purple-500/30 rounded-2xl mb-6">
-                <div className="text-5xl font-extrabold text-purple-400 mb-2">{roleplayResult.overall}%</div>
-                <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">Overall Roleplay Grade</div>
+                <div className="text-[48px] font-extrabold text-purple-600 dark:text-purple-400 mb-2">{roleplayResult.overall}%</div>
+                <div className="text-[10px] text-zinc-500 dark:text-gray-400 font-bold uppercase tracking-wider">Overall Roleplay Grade</div>
               </div>
 
               {/* Stat list */}
-              <div className="space-y-3 mb-6 text-xs">
-                <div className="flex justify-between items-center py-1.5 border-b border-white/5">
-                  <span className="text-gray-400">Grammar & Structure:</span>
-                  <span className="font-semibold text-white">{roleplayResult.communication}%</span>
+              <div className="space-y-3 mb-6 text-[13px]">
+                <div className="flex justify-between items-center py-1.5 border-b border-black/5 dark:border-white/5">
+                  <span className="text-zinc-500 dark:text-gray-400">Grammar & Structure:</span>
+                  <span className="font-semibold text-foreground">{roleplayResult.communication}%</span>
                 </div>
-                <div className="flex justify-between items-center py-1.5 border-b border-white/5">
-                  <span className="text-gray-400">Confidence Vibe:</span>
-                  <span className="font-semibold text-white">{roleplayResult.confidence}%</span>
+                <div className="flex justify-between items-center py-1.5 border-b border-black/5 dark:border-white/5">
+                  <span className="text-zinc-500 dark:text-gray-400">Confidence Vibe:</span>
+                  <span className="font-semibold text-foreground">{roleplayResult.confidence}%</span>
                 </div>
-                <div className="flex justify-between items-center py-1.5 border-b border-white/5">
-                  <span className="text-gray-400">Vocabulary Variety:</span>
-                  <span className="font-semibold text-white">{roleplayResult.vocabulary}%</span>
+                <div className="flex justify-between items-center py-1.5 border-b border-black/5 dark:border-white/5">
+                  <span className="text-zinc-500 dark:text-gray-400">Vocabulary Variety:</span>
+                  <span className="font-semibold text-foreground">{roleplayResult.vocabulary}%</span>
                 </div>
               </div>
 
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2 mb-6">
-                <h4 className="text-xs font-bold text-purple-300">Feedback:</h4>
-                <p className="text-xs text-gray-300 leading-relaxed">{roleplayResult.feedback}</p>
-                <p className="text-xs text-purple-400 italic mt-2">{roleplayResult.tamilFeedback}</p>
+              <div className="p-4 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl space-y-2 mb-6">
+                <h4 className="text-[13px] font-bold text-purple-600 dark:text-purple-300">Feedback:</h4>
+                <p className="text-[13px] text-zinc-600 dark:text-gray-300 leading-relaxed">{roleplayResult.feedback}</p>
+                <p className="text-[13px] text-purple-600 dark:text-purple-400 italic mt-2">{roleplayResult.tamilFeedback}</p>
               </div>
 
               <div className="flex justify-between items-center">

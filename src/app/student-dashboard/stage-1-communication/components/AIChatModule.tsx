@@ -16,6 +16,12 @@ import {
   HelpCircle,
   ChevronLeft
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import rehypeHighlight from "rehype-highlight";
+import "katex/dist/katex.min.css";
+import "highlight.js/styles/github-dark.css";
 
 interface ChatMessage {
   id: string;
@@ -217,12 +223,12 @@ export function AIChatModule({ onSubFeatureOpen }: AIChatModuleProps) {
               <button
                 key={feature.id}
                 onClick={() => setActiveFeature(feature.id)}
-                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
               >
                 <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${feature.bgColor} ${feature.borderColor} border transition-transform duration-300 group-hover:scale-110`}>
                   <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
                 </div>
-                <span className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">
+                <span className="text-[17px] font-medium text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
                   {feature.label}
                 </span>
               </button>
@@ -232,31 +238,31 @@ export function AIChatModule({ onSubFeatureOpen }: AIChatModuleProps) {
       ) : (
         <div className="space-y-6 max-w-4xl mx-auto">
           <div className="flex items-center">
-            <button
-              onClick={() => {
-                setActiveFeature(null);
-                stopSpeechRecognition();
-              }}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm"
-              aria-label="Back to AI Chat Options"
-            >
-              <ChevronLeft className="w-6 h-6 text-white" />
-            </button>
-          </div>
+              <button
+                onClick={() => {
+                  setActiveFeature(null);
+                  stopSpeechRecognition();
+                }}
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
+                aria-label="Back to AI Chat Options"
+              >
+                <ChevronLeft className="w-6 h-6 text-foreground" />
+              </button>
+            </div>
 
-          <LiquidGlassCard className="flex flex-col h-[550px] relative border-white/10" accentColor="#8b5cf6">
-            {/* Chat Header */}
-            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-white/5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-400">
-                  <Bot className="w-5 h-5 animate-pulse" />
-                </div>
+            <LiquidGlassCard className="flex flex-col h-[550px] relative border-black/10 dark:border-white/10" accentColor="#8b5cf6">
+              {/* Chat Header */}
+              <div className="p-4 border-b border-black/10 dark:border-white/10 flex justify-between items-center bg-black/5 dark:bg-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 dark:bg-purple-500/20 border border-purple-500/20 dark:border-purple-500/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                    <Bot className="w-5 h-5 animate-pulse" />
+                  </div>
                 <div>
-                  <h3 className="text-sm font-bold text-white leading-tight capitalize">
+                  <h3 className="text-[15px] font-bold text-foreground leading-tight capitalize">
                     {activeFeature} Learning Partner
                   </h3>
-              <p className="text-xs text-green-400 flex items-center gap-1 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block animate-ping" />
+              <p className="text-[11px] text-green-600 dark:text-green-400 flex items-center gap-1 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500 dark:bg-green-400 inline-block animate-ping" />
                 Active and online
               </p>
             </div>
@@ -265,7 +271,7 @@ export function AIChatModule({ onSubFeatureOpen }: AIChatModuleProps) {
           <button
             onClick={clearChat}
             disabled={messages.length <= 1}
-            className="p-2 text-gray-400 hover:text-red-400 hover:bg-white/5 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="p-2 text-zinc-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             title="Clear conversation"
           >
             <Trash2 className="w-4 h-4" />
@@ -282,30 +288,29 @@ export function AIChatModule({ onSubFeatureOpen }: AIChatModuleProps) {
               }`}
             >
               {/* Avatar */}
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-bold border ${
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 text-[11px] font-bold border ${
                 msg.role === "user" 
-                  ? "bg-blue-600/20 border-blue-500/30 text-blue-300"
-                  : "bg-purple-600/20 border-purple-500/30 text-purple-300"
+                  ? "bg-blue-600/10 border-blue-500/20 text-blue-600 dark:text-blue-300"
+                  : "bg-purple-600/10 border-purple-500/20 text-purple-600 dark:text-purple-300"
               }`}>
                 {msg.role === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
               </div>
 
               {/* Text Bubble */}
-              <div className={`p-4 rounded-2xl text-sm leading-relaxed border shadow-md ${
+              <div className={`p-4 rounded-2xl text-[13px] leading-relaxed border shadow-md ${
                 msg.role === "user"
-                  ? "bg-blue-600/10 border-blue-500/20 text-white rounded-tr-none"
-                  : "bg-white/5 border-white/10 text-gray-200 rounded-tl-none"
+                  ? "bg-blue-600 text-white rounded-tr-none"
+                  : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-zinc-600 dark:text-gray-200 rounded-tl-none"
               }`}>
-                {/* Parse simple bold tags manually to match prototype */}
-                <p 
-                  className="whitespace-pre-wrap font-light"
-                  dangerouslySetInnerHTML={{
-                    __html: msg.content
-                      .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                      .replace(/\n/g, "<br/>")
-                  }}
-                />
-                <span className="block text-[10px] text-gray-500 text-right mt-2">
+                <div className="prose prose-sm dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:p-0 prose-pre:bg-transparent">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkMath]}
+                    rehypePlugins={[rehypeKatex, rehypeHighlight]}
+                  >
+                    {msg.content}
+                  </ReactMarkdown>
+                </div>
+                <span className={`block text-[10px] text-right mt-2 ${msg.role === "user" ? "text-blue-200" : "text-zinc-400 dark:text-gray-500"}`}>
                   {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
@@ -314,18 +319,18 @@ export function AIChatModule({ onSubFeatureOpen }: AIChatModuleProps) {
 
           {isThinking && (
             <div className="flex items-start gap-3 max-w-[80%]">
-              <div className="w-8 h-8 rounded-lg bg-purple-600/20 border border-purple-500/30 flex items-center justify-center text-purple-300">
+              <div className="w-8 h-8 rounded-lg bg-purple-600/10 border border-purple-500/20 flex items-center justify-center text-purple-600 dark:text-purple-300">
                 <Bot className="w-4 h-4" />
               </div>
-              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl text-sm rounded-tl-none text-gray-400 flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+              <div className="p-4 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl text-[13px] rounded-tl-none text-zinc-500 dark:text-gray-400 flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-purple-600 dark:text-purple-400" />
                 <span>AI Teacher is thinking...</span>
               </div>
             </div>
           )}
 
           {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-xs text-red-400 flex items-center gap-2 max-w-md mx-auto">
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-[11px] text-red-600 dark:text-red-400 flex items-center gap-2 max-w-md mx-auto">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{error}</span>
             </div>
@@ -335,16 +340,16 @@ export function AIChatModule({ onSubFeatureOpen }: AIChatModuleProps) {
         </div>
 
         {/* Input Area */}
-        <div className="p-4 border-t border-white/10 bg-white/5 space-y-3">
+        <div className="p-4 border-t border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 space-y-3">
           {/* Quick suggestions */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-xs text-gray-400 select-none">
-            <span className="flex-shrink-0 text-purple-400 font-semibold flex items-center gap-1">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 text-[11px] text-zinc-500 dark:text-gray-400 select-none">
+            <span className="flex-shrink-0 text-purple-600 dark:text-purple-400 font-semibold flex items-center gap-1">
               <HelpCircle className="w-3.5 h-3.5" /> Suggestion:
             </span>
             {activeFeature === "grammar" && (
               <button 
                 onClick={() => insertSuggestion("I has two brother")}
-                className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors flex-shrink-0"
+                className="px-2.5 py-1 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors flex-shrink-0"
               >
                 "I has two brother"
               </button>
@@ -352,7 +357,7 @@ export function AIChatModule({ onSubFeatureOpen }: AIChatModuleProps) {
             {activeFeature === "conversation" && (
               <button 
                 onClick={() => insertSuggestion("What are your favorite hobbies?")}
-                className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors flex-shrink-0"
+                className="px-2.5 py-1 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors flex-shrink-0"
               >
                 "What are your hobbies?"
               </button>
@@ -360,14 +365,14 @@ export function AIChatModule({ onSubFeatureOpen }: AIChatModuleProps) {
             {activeFeature === "pronunciation" && (
               <button 
                 onClick={() => insertSuggestion("How do I say thorough?")}
-                className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors flex-shrink-0"
+                className="px-2.5 py-1 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors flex-shrink-0"
               >
                 "How do I say thorough?"
               </button>
             )}
             <button 
               onClick={() => insertSuggestion("Tell me a brief English learning tip.")}
-              className="px-2.5 py-1 bg-white/5 border border-white/10 rounded-full hover:bg-white/10 transition-colors flex-shrink-0"
+              className="px-2.5 py-1 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/10 transition-colors flex-shrink-0"
             >
               "General tip"
             </button>
@@ -379,8 +384,8 @@ export function AIChatModule({ onSubFeatureOpen }: AIChatModuleProps) {
               onClick={toggleRecording}
               className={`p-3 border rounded-xl transition-all ${
                 isRecording 
-                  ? "bg-red-500/20 border-red-500 text-red-400 hover:bg-red-500/30"
-                  : "bg-white/5 border-white/10 text-gray-300 hover:bg-white/10"
+                  ? "bg-red-500/20 border-red-500 text-red-600 dark:text-red-400 hover:bg-red-500/30"
+                  : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-zinc-600 dark:text-gray-300 hover:bg-black/10 dark:hover:bg-white/10"
               }`}
               title={isRecording ? "Stop voice transcription" : "Voice message"}
             >
@@ -398,7 +403,7 @@ export function AIChatModule({ onSubFeatureOpen }: AIChatModuleProps) {
                   handleSendMessage();
                 }
               }}
-              className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-purple-500 disabled:opacity-50 transition-colors"
+              className="flex-1 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-[13px] text-foreground focus:outline-none focus:border-purple-500 disabled:opacity-50 transition-colors"
             />
 
             <button

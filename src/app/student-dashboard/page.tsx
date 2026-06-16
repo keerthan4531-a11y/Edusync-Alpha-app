@@ -50,8 +50,8 @@ export default async function StudentDashboardPage() {
     <div className="flex flex-col gap-8 max-w-5xl mx-auto pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-md">Student Dashboard</h1>
-          <p className="text-gray-400 mt-1">Welcome back! Here is your learning progress.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground drop-shadow-md">Student Dashboard</h1>
+          <p className="text-zinc-500 dark:text-gray-400 mt-1">Welcome back! Here is your learning progress.</p>
         </div>
         <StreakCounter streak={user.currentStreak} />
       </div>
@@ -64,17 +64,17 @@ export default async function StudentDashboardPage() {
         <LiquidGlassCard className="md:col-span-2 p-6 flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-4 sm:gap-6 text-center sm:text-left" accentColor="#3b82f6">
           <LevelBadge level={user.level} />
           <div className="flex-1 w-full">
-            <h3 className="text-lg font-bold text-white mb-2">Current Progress</h3>
+            <h3 className="text-lg font-bold text-foreground mb-2">Current Progress</h3>
             <XPBar xp={user.xp} level={user.level} />
           </div>
         </LiquidGlassCard>
         
         <LiquidGlassCard className="p-6 flex flex-col justify-center items-center text-center" accentColor="#eab308">
-          <h3 className="tracking-tight text-sm font-semibold text-gray-400 uppercase mb-2">Total Coins</h3>
-          <div className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-yellow-300 to-yellow-600 drop-shadow-[0_2px_10px_rgba(234,179,8,0.4)]">
+          <h3 className="tracking-tight text-sm font-semibold text-zinc-500 dark:text-gray-400 uppercase mb-2">Total Coins</h3>
+          <div className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 to-yellow-600 drop-shadow-[0_2px_10px_rgba(234,179,8,0.4)]">
             {user.coins}
           </div>
-          <p className="text-xs text-gray-500 mt-2 font-medium">Earn more by solving challenges!</p>
+          <p className="text-xs text-zinc-500 dark:text-gray-500 mt-2 font-medium">Earn more by solving challenges!</p>
         </LiquidGlassCard>
       </div>
 
@@ -86,8 +86,8 @@ export default async function StudentDashboardPage() {
 
       {/* Leaderboard Section */}
       <div>
-        <h2 className="text-xl font-bold tracking-tight text-white mb-4">College Leaderboard</h2>
-        <div className="bg-white/5 backdrop-blur-md rounded-3xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden">
+        <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">College Leaderboard</h2>
+        <div className="bg-white/70 dark:bg-white/5 backdrop-blur-2xl rounded-3xl border border-black/10 dark:border-white/10 shadow-xl shadow-black/5 dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden">
           <Leaderboard data={leaderboardData} />
         </div>
       </div>

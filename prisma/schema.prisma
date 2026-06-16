@@ -368,3 +368,49 @@ model FileVersion {
   createdAt DateTime @default(now())
 }
 
+// ==========================================
+// INIXA AI — Model Configuration & Logging
+// ==========================================
+
+model AIModelConfig {
+  id            String   @id @default(cuid())
+  stage         String   // "stage-1", "stage-2", "stage-3", "stage-4", "general"
+  role          String   // "STUDENT", "FACULTY", "HOD", "ALL"
+  feature       String   // "chat", "code-review", "writing-grade", "mock-interview", "resume-scorer", "idea-gen"
+  primaryModel  String   // e.g. "gemini-2.5-flash"
+  fallback1     String?
+  fallback2     String?
+  fallback3     String?
+  fallback4     String?
+  fallback5     String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([stage, role, feature])
+}
+
+model AIRequestLog {
+  id            String   @id @default(cuid())
+  userId        String
+  stage         String
+  feature       String
+  modelUsed     String
+  promptTokens  Int      @default(0)
+  responseTime  Int      @default(0)
+  success       Boolean  @default(true)
+  errorMessage  String?
+  proxyUsed     String?
+  createdAt     DateTime @default(now())
+}
+
+model AIAdminSettings {
+  id                String   @id @default(cuid())
+  g4fBaseUrl        String   @default("https://g4f.dev")
+  autoUpdateEnabled Boolean  @default(true)
+  lastG4fUpdate     DateTime?
+  proxyEnabled      Boolean  @default(true)
+  customProxies     String?  // JSON array of custom proxy URLs
+  updatedAt         DateTime @updatedAt
+}
+

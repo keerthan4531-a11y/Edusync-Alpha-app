@@ -47,15 +47,15 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
         <div className="mb-4 shrink-0">
           <button 
             onClick={() => router.back()}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
             aria-label="Go back"
           >
-            <ChevronLeft className="w-6 h-6 text-white" />
+            <ChevronLeft className="w-6 h-6 text-foreground" />
           </button>
         </div>
         <div>
-          <h1 className="text-4xl font-bold text-white tracking-tight mb-2">Stage 1: Communication</h1>
-          <p className="text-gray-400 text-lg">
+          <h1 className="text-[28px] md:text-[34px] leading-tight font-semibold text-foreground tracking-tight mb-2">Stage 1: Communication</h1>
+          <p className="text-zinc-500 dark:text-gray-400 text-[15px] md:text-[17px]">
             Master English through interactive reading, listening, writing, and speaking exercises powered by Inixa AI.
           </p>
         </div>
@@ -66,12 +66,12 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
             <button
               key={feature.id}
               onClick={() => setActiveTab(feature.id)}
-              className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+              className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
             >
               <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${feature.bgColor} ${feature.borderColor} border transition-transform duration-300 group-hover:scale-110`}>
                 <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
               </div>
-              <span className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">
+              <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
                 {feature.label}
               </span>
             </button>
@@ -89,10 +89,10 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
         <div className="flex items-center justify-between p-2">
           <button 
             onClick={() => setActiveTab(null)}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
             aria-label="Go back"
           >
-            <ChevronLeft className="w-6 h-6 text-white" />
+            <ChevronLeft className="w-6 h-6 text-foreground" />
           </button>
         </div>
       )}

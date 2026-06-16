@@ -20,13 +20,13 @@ export async function POST(req: Request) {
 
     if (mode === "code-review") {
       const validated = codeReviewRequestSchema.parse(body.data);
-      result = await performCodeReview(validated.fileContent, validated.language, validated.fileName);
+      result = await performCodeReview(validated.fileContent, validated.language, validated.fileName, session.user.id, session.user.role);
     } else if (mode === "architecture") {
       // In a real app, this would take the whole project context (e.g. file tree stringified)
-      result = await getArchitectureSuggestions(body.data?.projectContext || "");
+      result = await getArchitectureSuggestions(body.data?.projectContext || "", session.user.id, session.user.role);
     } else if (mode === "idea-gen") {
       const validated = ideaGenRequestSchema.parse(body.data || {});
-      result = await generateProjectIdeas(validated.problemStatementId, validated.currentIdea);
+      result = await generateProjectIdeas(validated.problemStatementId, validated.currentIdea, session.user.id, session.user.role);
     } else {
       return NextResponse.json({ error: "Invalid mode" }, { status: 400 });
     }

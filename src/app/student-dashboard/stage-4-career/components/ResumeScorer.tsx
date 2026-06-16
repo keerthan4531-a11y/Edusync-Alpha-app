@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { GlassCard } from "@/components/ui/glass-card";
+import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { Upload, FileText, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
 
 export function ResumeScorer() {
@@ -20,8 +20,6 @@ export function ResumeScorer() {
     setIsScoring(true);
 
     try {
-      // TODO: AI INTEGRATION POINT
-      // In real app, we'd use formData to upload the PDF.
       const res = await fetch("/api/ai/resume-scorer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -37,18 +35,21 @@ export function ResumeScorer() {
   };
 
   return (
-    <GlassCard className="p-6">
-      <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
-        <FileText className="text-stage4" />
-        AI Resume Scorer
-      </h2>
+    <div className="space-y-6 animate-in fade-in duration-500">
+      <div>
+        <h2 className="text-[22px] font-semibold text-foreground flex items-center gap-3">
+          <FileText className="text-stage4 w-6 h-6" />
+          AI Resume Scorer
+        </h2>
+        <p className="text-[15px] text-zinc-500 dark:text-gray-400 mt-1">Check your resume's ATS alignment and readability metrics.</p>
+      </div>
 
       {!result ? (
-        <div className="space-y-6">
-          <div className="border-2 border-dashed border-stage4/30 rounded-xl p-8 text-center hover:border-stage4/60 transition-colors">
-            <Upload className="w-12 h-12 text-stage4 mx-auto mb-4" />
-            <p className="text-zinc-300 mb-2">Upload your resume for AI evaluation</p>
-            <p className="text-sm text-zinc-500 mb-6">PDF or Word document (Max 5MB)</p>
+        <LiquidGlassCard className="p-6 space-y-6 animate-in fade-in duration-500" accentColor="#f59e0b">
+          <div className="border-2 border-dashed border-stage4/30 hover:border-stage4/65 rounded-2xl p-8 text-center transition-colors">
+            <Upload className="w-12 h-12 text-stage4 mx-auto mb-4 animate-bounce" />
+            <p className="text-foreground font-semibold text-[15px] mb-1">Upload your resume for AI evaluation</p>
+            <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-6 font-medium">PDF or Word document (Max 5MB)</p>
             
             <input
               type="file"
@@ -59,7 +60,7 @@ export function ResumeScorer() {
             />
             <label
               htmlFor="resume-upload"
-              className="bg-stage4/20 text-stage4 px-6 py-2 rounded-lg cursor-pointer hover:bg-stage4/30 font-medium transition-colors"
+              className="bg-stage4/20 text-stage4 border border-stage4/30 px-6 py-3 rounded-xl cursor-pointer hover:bg-stage4/35 font-semibold text-sm transition-all shadow-sm"
             >
               {file ? file.name : "Select File"}
             </label>
@@ -68,7 +69,7 @@ export function ResumeScorer() {
           <button
             onClick={handleScore}
             disabled={!file || isScoring}
-            className="w-full bg-stage4 text-black font-semibold py-3 rounded-lg hover:bg-amber-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-stage4 hover:bg-amber-500 text-white font-semibold py-3.5 rounded-xl transition-all shadow-[0_4px_12px_rgba(245,158,11,0.3)] hover:-translate-y-0.5 active:translate-y-0 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isScoring ? (
               <>
@@ -79,50 +80,50 @@ export function ResumeScorer() {
               "Get ATS Score"
             )}
           </button>
-        </div>
+        </LiquidGlassCard>
       ) : (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="flex items-center gap-6 p-6 bg-stage4/10 rounded-xl border border-stage4/20">
-            <div className="text-center">
-              <div className="text-5xl font-bold text-stage4 mb-1">{result.score}</div>
-              <div className="text-sm text-zinc-400">ATS Score</div>
+        <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
+          <LiquidGlassCard className="p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6" accentColor="#f59e0b">
+            <div className="text-center sm:border-r border-black/10 dark:border-white/10 sm:pr-8 shrink-0">
+              <div className="text-[50px] font-semibold tracking-tight text-stage4 leading-none mb-1">{result.score}</div>
+              <div className="text-[12px] text-zinc-500 dark:text-gray-500 uppercase tracking-wider font-bold">ATS Score</div>
             </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-lg text-white mb-2">Evaluation Complete</h3>
-              <p className="text-zinc-300 text-sm">
-                Your resume scored higher than 75% of applicants. You earned <span className="text-stage4 font-bold">+{result.xpAwarded} XP</span>!
+            <div className="flex-1 space-y-2">
+              <h3 className="font-semibold text-[17px] text-foreground">Evaluation Complete</h3>
+              <p className="text-zinc-600 dark:text-gray-300 text-[15px] leading-relaxed">
+                Your resume scored higher than 75% of similar engineering applicants. You earned <span className="text-stage4 font-bold">+{result.xpAwarded} XP</span>!
               </p>
             </div>
-          </div>
+          </LiquidGlassCard>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <h4 className="font-medium text-emerald-400 flex items-center gap-2">
+            <LiquidGlassCard className="p-6" accentColor="#10b981">
+              <h4 className="font-semibold text-[17px] text-emerald-500 flex items-center gap-2 mb-3">
                 <CheckCircle2 className="w-5 h-5" /> Strengths
               </h4>
-              <ul className="space-y-2">
+              <ul className="text-[15px] text-zinc-600 dark:text-gray-300 space-y-2.5">
                 {result.strengths.map((s: string, i: number) => (
-                  <li key={i} className="text-sm text-zinc-300 flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
                     {s}
                   </li>
                 ))}
               </ul>
-            </div>
+            </LiquidGlassCard>
             
-            <div className="space-y-4">
-              <h4 className="font-medium text-amber-400 flex items-center gap-2">
+            <LiquidGlassCard className="p-6" accentColor="#f59e0b">
+              <h4 className="font-semibold text-[17px] text-amber-500 flex items-center gap-2 mb-3">
                 <AlertTriangle className="w-5 h-5" /> Recommendations
               </h4>
-              <ul className="space-y-2">
+              <ul className="text-[15px] text-zinc-600 dark:text-gray-300 space-y-2.5">
                 {result.recommendations.map((r: string, i: number) => (
-                  <li key={i} className="text-sm text-zinc-300 flex items-start gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-2 shrink-0" />
                     {r}
                   </li>
                 ))}
               </ul>
-            </div>
+            </LiquidGlassCard>
           </div>
 
           <button
@@ -130,12 +131,12 @@ export function ResumeScorer() {
               setResult(null);
               setFile(null);
             }}
-            className="w-full bg-white/10 text-white font-semibold py-3 rounded-lg hover:bg-white/20 transition-colors"
+            className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 text-foreground font-semibold py-3.5 rounded-xl transition-all text-sm"
           >
             Upload New Resume
           </button>
         </div>
       )}
-    </GlassCard>
+    </div>
   );
 }

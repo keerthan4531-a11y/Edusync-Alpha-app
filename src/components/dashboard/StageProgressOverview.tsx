@@ -55,14 +55,14 @@ export async function StageProgressOverview({ userId }: { userId: string }) {
               </div>
             </div>
             
-            <h3 className="font-semibold text-white mb-1">{p.stage.name}</h3>
+            <h3 className="font-semibold text-foreground mb-1">{p.stage.name}</h3>
             
             <div className="mt-auto pt-4 space-y-2">
-              <div className="flex justify-between text-xs text-gray-400 font-medium">
+              <div className="flex justify-between text-xs text-zinc-500 dark:text-gray-400 font-medium">
                 <span>{isLocked ? "Locked" : isCompleted ? "Completed" : "In Progress"}</span>
                 <span>{isCompleted ? "100%" : isLocked ? "0%" : "45%"}</span> {/* Stub progress % for active */}
               </div>
-              <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
+              <div className="h-1.5 w-full bg-black/10 dark:bg-black/40 rounded-full overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
                 <div 
                   className={`h-full rounded-full transition-all duration-1000 ${colorClass.split(' ')[0]}`}
                   style={{ width: isCompleted ? '100%' : isLocked ? '0%' : '45%' }}

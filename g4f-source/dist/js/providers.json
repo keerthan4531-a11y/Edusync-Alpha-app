@@ -1,0 +1,68 @@
+{
+    "providers": {
+        "default": {"baseUrl": "https://g4f.space/v1", "backupUrl": "https://g4f.space/v1", "quotaEndpoint": null},
+        "pollinations": {"backupUrl": "https://g4f.space/api/gen.pollinations", "label": "pollinations.ai", "tags": "🎨 👓", "provider": "PollinationsAI"},
+        "api.airforce": {"baseUrl": "https://api.airforce/v1", "tags": "🎨 👓", "sleep": 60000},
+        "master": {"label": "master by api.airforce", "baseUrl": "https://g4f.space/api/api.airforce", "backupUrl": "https://g4f.space/api/api.airforce", "tags": "🎨 👓", "sleep": 10000},
+        "audio": {"label": "audio by g4f.dev", "baseUrl": "https://g4f.space/api/audio", "backupUrl": "https://g4f.space/api/audio", "tags": "🎧", "sleep": 10000},
+        "deepinfra": {"baseUrl": "https://api.deepinfra.com/v1/openai", "tags": "🎨 👓", "modelsEndpoint": "https://api.deepinfra.com/models/featured"},
+        "gemini": {"baseUrl": "https://generativelanguage.googleapis.com/v1beta/openai", "backupUrl": "https://g4f.space/api/gemini-v1beta", "tags": "👓"},
+        "gpt4free.pro": {"baseUrl": "https://gpt4free.pro/v1", "tags": "😎"},
+        "groq": {"baseUrl": "https://api.groq.com/openai/v1", "backupUrl": "https://g4f.space/api/groq", "tags": ""},
+        "huggingface": {"baseUrl": "https://router.huggingface.co/v1", "tags": "🤗", "provider": "HuggingFace"},
+        "nvidia": {"baseUrl": "https://integrate.api.nvidia.com/v1", "backupUrl": "https://g4f.space/api/nvidia", "tags": "📟"},
+        "ollama": {"baseUrl": "https://ollama.g4f-dev.workers.dev", "backupUrl": "https://g4f.space/api/ollama", "tags": "🦙"},
+        "ollama.pro": {"baseUrl": "https://ollama.g4f-dev.workers.dev", "backupUrl": "https://g4f.space/api/ollama.pro", "tags": "🦙 👑"},
+        "ollama.swarm": {"baseUrl": "https://ollama-swarm.g4f-dev.workers.dev", "tags": "🦙 🐝"},
+        "openrouter": {"baseUrl": "https://openrouter.ai/api/v1", "backupUrl": "https://g4f.space/api/openrouter", "tags": "👓"},
+        "puter": {"baseUrl": "https://puter.g4f-dev.workers.dev", "tags": "👓", "provider": "PuterJS"},
+        "perplexity": {"baseUrl": "https://perplexity.g4f-dev.workers.dev", "tags": "🔎"},
+        "qwen": {"baseUrl": "https://qwen.g4f-dev.workers.dev", "tags": "💡", "provider": "Qwen"},
+        "crowllm": {"baseUrl": "https://crowllm.com/v1", "backupUrl": "https://g4f.space/api/crowllm.com", "tags": "🦅"}
+    },
+    "defaultModels": {
+        "default": "auto",
+        "pollinations": "openai-fast",
+        "api.airforce": "gpt-4o-mini",
+        "master": "gpt-4o-mini",
+        "azure": "model-router",
+        "gemini": "models/gemini-3-flash-preview",
+        "openrouter": "nvidia/nemotron-3-super-120b-a12b:free",
+        "nvidia": "nvidia/nemotron-3-nano-30b-a3b",
+        "ollama": "nemotron-3-nano:30b",
+        "ollama.pro": "deepseek-v4-pro",
+        "ollama.swarm": "deepseek-v4-pro:cloud",
+        "groq": "openai/gpt-oss-120b",
+        "puter": "anthropic:anthropic/claude-opus-4-7",
+        "perplexity": "turbo",
+        "deepinfra": "google/gemma-4-26B-A4B-it",
+        "qwen": "qwen3.6-plus",
+        "crowllm": "grok-4.3"
+    },
+    "providerLocalStorage": {
+        "api.airforce": "ApiAirforce-api_key",
+        "deepinfra": "DeepInfra-api_key",
+        "huggingface": "HuggingFace-api_key",
+        "gemini": "GeminiPro-api_key",
+        "nvidia": "Nvidia-api_key",
+        "ollama": "Ollama-api_key",
+        "ollama.pro": "Ollama-api_key",
+        "openrouter": "OpenRouter-api_key",
+        "pollinations": "PollinationsAI-api_key",
+        "together": "Together-api_key",
+        "puter": "puter.auth.token",
+        "custom": "Custom-api_key"
+    },
+    "checkUrls": {
+        "pollinations": "https://gen.pollinations.ai/account/balance",
+        "gemini": "https://generativelanguage.googleapis.com/v1beta/models",
+        "puter": "https://api.puter.com/metering/usage",
+        "huggingface": "https://huggingface.co/api/whoami-v2",
+        "groq": "https://api.groq.com/openai/v1/models"
+    },
+    "loginButtons": {
+        "huggingface": "huggingface",
+        "api.airforce": "airforce",
+        "pollinations": "pollinations"
+    }
+}

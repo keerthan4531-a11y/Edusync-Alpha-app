@@ -21,7 +21,7 @@ export function ReadingModule({ content, onNext }: ReadingModuleProps) {
 
   if (!content) {
     return (
-      <LiquidGlassCard className="p-8 text-center text-gray-400">
+      <LiquidGlassCard className="p-8 text-center text-zinc-500 dark:text-gray-400">
         No reading challenges available right now.
       </LiquidGlassCard>
     );
@@ -30,17 +30,17 @@ export function ReadingModule({ content, onNext }: ReadingModuleProps) {
   return (
     <div className="space-y-6">
       <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
-        <h2 className="text-xl font-bold text-stage1 mb-4">{content.title}</h2>
-        <div className="prose prose-invert max-w-none">
-          <p className="text-gray-300 leading-relaxed text-lg">{content.content}</p>
+        <h2 className="text-[22px] font-bold text-stage1 mb-4">{content.title}</h2>
+        <div className="prose dark:prose-invert max-w-none">
+          <p className="text-zinc-600 dark:text-gray-300 leading-relaxed text-[17px]">{content.content}</p>
         </div>
       </LiquidGlassCard>
 
       <div className="space-y-6">
-        <h3 className="text-lg font-semibold text-white">Comprehension Questions</h3>
+        <h3 className="text-[17px] font-semibold text-foreground">Comprehension Questions</h3>
         {content.questions?.map((q: Question) => (
           <LiquidGlassCard key={q.id} className="p-5 border-stage1/20" accentColor="#8b5cf6">
-            <p className="text-white mb-4 font-medium">{q.question}</p>
+            <p className="text-foreground mb-4 font-medium text-[17px]">{q.question}</p>
             <div className="space-y-3">
               {q.options?.map((opt: string, idx: number) => {
                 const isSelected = answers[q.id] === idx;
@@ -48,14 +48,14 @@ export function ReadingModule({ content, onNext }: ReadingModuleProps) {
                 const isCorrect = isSubmitted && idx === q.correctIndex;
                 const isWrongSelection = isSubmitted && isSelected && idx !== q.correctIndex;
 
-                let btnClass = "border-white/10 hover:bg-white/5 text-gray-300";
+                let btnClass = "border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-zinc-600 dark:text-gray-300";
                 
                 if (isSelected && !isSubmitted) {
-                  btnClass = "border-stage1 bg-stage1/10 text-white shadow-[inset_0_0_10px_rgba(139,92,246,0.3)]";
+                  btnClass = "border-stage1 bg-stage1/10 text-stage1 shadow-[inset_0_0_10px_rgba(139,92,246,0.1)] dark:shadow-[inset_0_0_10px_rgba(139,92,246,0.3)]";
                 } else if (isCorrect) {
-                  btnClass = "border-green-500 bg-green-500/10 text-green-400 shadow-[inset_0_0_10px_rgba(34,197,94,0.3)]";
+                  btnClass = "border-green-500 bg-green-500/10 text-green-600 dark:text-green-400 shadow-[inset_0_0_10px_rgba(34,197,94,0.1)] dark:shadow-[inset_0_0_10px_rgba(34,197,94,0.3)]";
                 } else if (isWrongSelection) {
-                  btnClass = "border-red-500 bg-red-500/10 text-red-400 shadow-[inset_0_0_10px_rgba(239,68,68,0.3)]";
+                  btnClass = "border-red-500 bg-red-500/10 text-red-600 dark:text-red-400 shadow-[inset_0_0_10px_rgba(239,68,68,0.1)] dark:shadow-[inset_0_0_10px_rgba(239,68,68,0.3)]";
                 }
 
                 return (
@@ -63,7 +63,7 @@ export function ReadingModule({ content, onNext }: ReadingModuleProps) {
                     key={idx}
                     onClick={() => !isSubmitted && handleOptionSelect(q.id, idx)}
                     disabled={isSubmitted}
-                    className={`w-full text-left p-3 rounded-xl border transition-all duration-300 ${btnClass}`}
+                    className={`w-full text-left p-3 rounded-xl border transition-all duration-300 ${btnClass} text-[15px]`}
                   >
                     {opt}
                   </button>
@@ -80,10 +80,10 @@ export function ReadingModule({ content, onNext }: ReadingModuleProps) {
 
       {result ? (
         <LiquidGlassCard className="p-6 border-stage1 bg-stage1/5" accentColor="#8b5cf6">
-          <h3 className="text-xl font-bold text-white mb-2">Results</h3>
-          <p className="text-gray-300 mb-2">{result.feedback}</p>
+          <h3 className="text-[22px] font-bold text-foreground mb-2">Results</h3>
+          <p className="text-zinc-600 dark:text-gray-300 mb-2 text-[17px]">{result.feedback}</p>
           {result.tamilFeedback && (
-            <p className="text-gray-400 text-sm mb-4">{result.tamilFeedback}</p>
+            <p className="text-zinc-500 dark:text-gray-400 text-[15px] mb-4">{result.tamilFeedback}</p>
           )}
           <div className="flex items-center gap-4">
             <span className="px-3 py-1 rounded-full bg-stage1/20 text-stage1 font-semibold border border-stage1/50 shadow-[0_0_10px_rgba(139,92,246,0.5)]">
@@ -105,7 +105,7 @@ export function ReadingModule({ content, onNext }: ReadingModuleProps) {
         <button
           onClick={submitAnswers}
           disabled={isSubmitting}
-          className="w-full py-3 rounded-2xl bg-stage1 text-white font-semibold text-lg shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_15px_rgba(139,92,246,0.4)] hover:bg-stage1/90 transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
+          className="w-full py-3 rounded-2xl bg-stage1 text-white font-semibold text-[17px] shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_15px_rgba(139,92,246,0.2)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_15px_rgba(139,92,246,0.4)] hover:bg-stage1/90 transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100"
         >
           {isSubmitting ? "Submitting..." : "Submit Answers"}
         </button>

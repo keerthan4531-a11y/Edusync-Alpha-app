@@ -4,6 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Bot, Lightbulb, Code2, Network, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import rehypeHighlight from "rehype-highlight";
+import "katex/dist/katex.min.css";
+import "highlight.js/styles/github-dark.css";
 
 interface Props {
   activeFileContent?: string;
@@ -75,7 +80,12 @@ export function AIAssistantPanel({ activeFileContent, activeLanguage, activeFile
           </div>
         ) : response ? (
           <div className="prose prose-invert prose-sm max-w-none prose-pre:bg-black/50 prose-pre:border prose-pre:border-white/10">
-            <ReactMarkdown>{response}</ReactMarkdown>
+            <ReactMarkdown
+              remarkPlugins={[remarkMath]}
+              rehypePlugins={[rehypeKatex, rehypeHighlight]}
+            >
+              {response}
+            </ReactMarkdown>
           </div>
         ) : (
           <div className="text-center text-muted-foreground text-sm mt-10">

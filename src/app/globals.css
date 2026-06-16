@@ -9,7 +9,7 @@
   --color-stage2: #3b82f6;
   --color-stage3: #10b981;
   --color-stage4: #f59e0b;
-  --background-image-app-gradient: linear-gradient(135deg, #050510, #0a0a1a);
+  --background-image-app-gradient: var(--app-gradient);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-poppins);
@@ -54,6 +54,7 @@
 }
 
 :root {
+  --app-gradient: linear-gradient(135deg, #f8fafc, #e2e8f0);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -89,6 +90,7 @@
 }
 
 .dark {
+  --app-gradient: linear-gradient(135deg, #050510, #0a0a1a);
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

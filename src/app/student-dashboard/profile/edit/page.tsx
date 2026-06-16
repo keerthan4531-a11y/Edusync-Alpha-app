@@ -158,7 +158,7 @@ export default function StudentEditProfilePage() {
   }
 
   return (
-    <div className="flex flex-col h-full max-w-2xl mx-auto text-white pb-24">
+    <div className="flex flex-col h-full max-w-2xl mx-auto text-foreground pb-24">
       {/* Toast Notification */}
       {statusMessage.type && (
         <div className={cn(
@@ -174,9 +174,9 @@ export default function StudentEditProfilePage() {
       <div className="flex items-center justify-between mb-8 px-2 md:px-0">
         <button 
           onClick={() => router.push('/student-dashboard/profile')} 
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors backdrop-blur-md"
         >
-          <ChevronLeft className="w-6 h-6 text-gray-300" />
+          <ChevronLeft className="w-6 h-6 text-zinc-600 dark:text-gray-300" />
         </button>
         <h1 className="text-xl font-bold tracking-wide">Edit Profile</h1>
         <div className="w-10 h-10"></div> {/* Spacer to perfectly center the title */}
@@ -186,7 +186,7 @@ export default function StudentEditProfilePage() {
       <div className="flex flex-col items-center justify-center mb-10">
         <div className="relative group cursor-pointer transition-transform hover:scale-105 duration-300">
           <label htmlFor="avatar-upload" className="block cursor-pointer">
-            <div className="w-28 h-28 rounded-full bg-[#080A10] flex items-center justify-center text-4xl font-black text-white overflow-hidden shadow-xl border border-white/10">
+            <div className="w-28 h-28 rounded-full bg-white/70 dark:bg-[#080A10] flex items-center justify-center text-4xl font-black text-foreground overflow-hidden shadow-xl border border-black/10 dark:border-white/10 backdrop-blur-xl">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
@@ -209,8 +209,8 @@ export default function StudentEditProfilePage() {
 
       {/* SECTION 1: PERSONAL DETAILS */}
       <div className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <h2 className="text-2xl font-bold text-white mb-6 px-4 md:px-2">Personal Details</h2>
-        <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 md:p-8 backdrop-blur-xl shadow-2xl mx-2 md:mx-0">
+        <h2 className="text-2xl font-bold text-foreground mb-6 px-4 md:px-2">Personal Details</h2>
+        <div className="bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-[32px] p-6 md:p-8 backdrop-blur-2xl shadow-2xl mx-2 md:mx-0">
           <form onSubmit={handleSave} className="space-y-5">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-gray-300">Full Name</label>
@@ -238,8 +238,8 @@ export default function StudentEditProfilePage() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-300">Bio</label>
-              <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="Tell us about yourself..." className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none" />
+              <label className="text-sm font-semibold text-zinc-600 dark:text-gray-300">Bio</label>
+              <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="Tell us about yourself..." className="w-full bg-black/5 dark:bg-transparent border border-black/20 dark:border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none" />
             </div>
 
             <Button type="submit" disabled={saving} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-6 mt-6 rounded-2xl text-base shadow-[0_4px_20px_rgba(59,130,246,0.3)] transition-all">
@@ -251,8 +251,8 @@ export default function StudentEditProfilePage() {
 
       {/* SECTION 2: EDUCATION (Contains Education, Skills, Achievements, Badges) */}
       <div className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <h2 className="text-2xl font-bold text-white mb-6 px-4 md:px-2">Education</h2>
-        <div className="bg-white/5 border border-white/10 rounded-[32px] p-6 md:p-8 backdrop-blur-xl shadow-2xl mx-2 md:mx-0 space-y-12">
+        <h2 className="text-2xl font-bold text-foreground mb-6 px-4 md:px-2">Education</h2>
+        <div className="bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-[32px] p-6 md:p-8 backdrop-blur-2xl shadow-2xl mx-2 md:mx-0 space-y-12">
           
           {/* Sub-section: Education */}
           <div>
@@ -361,15 +361,15 @@ export default function StudentEditProfilePage() {
             </h3>
             
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-black/20 p-6 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors cursor-pointer group">
-                <Trophy className="w-10 h-10 text-indigo-400 mb-3 group-hover:scale-110 transition-transform" />
-                <span className="text-base font-bold text-white">Achievements</span>
-                <span className="text-xs text-indigo-300/70 mt-1 font-semibold tracking-wide">View History</span>
+              <div className="bg-black/5 dark:bg-black/20 p-6 rounded-2xl border border-black/5 dark:border-white/5 flex flex-col items-center justify-center text-center hover:bg-black/10 dark:hover:bg-white/5 transition-colors cursor-pointer group backdrop-blur-md">
+                <Trophy className="w-10 h-10 text-indigo-500 dark:text-indigo-400 mb-3 group-hover:scale-110 transition-transform" />
+                <span className="text-base font-bold text-foreground">Achievements</span>
+                <span className="text-xs text-indigo-600/70 dark:text-indigo-300/70 mt-1 font-semibold tracking-wide">View History</span>
               </div>
-              <div className="bg-black/20 p-6 rounded-2xl border border-white/5 flex flex-col items-center justify-center text-center hover:bg-white/5 transition-colors cursor-pointer group">
-                <Award className="w-10 h-10 text-yellow-400 mb-3 group-hover:scale-110 transition-transform" />
-                <span className="text-base font-bold text-white">Badges</span>
-                <span className="text-xs text-yellow-300/70 mt-1 font-semibold tracking-wide">View Collection</span>
+              <div className="bg-black/5 dark:bg-black/20 p-6 rounded-2xl border border-black/5 dark:border-white/5 flex flex-col items-center justify-center text-center hover:bg-black/10 dark:hover:bg-white/5 transition-colors cursor-pointer group backdrop-blur-md">
+                <Award className="w-10 h-10 text-yellow-500 dark:text-yellow-400 mb-3 group-hover:scale-110 transition-transform" />
+                <span className="text-base font-bold text-foreground">Badges</span>
+                <span className="text-xs text-yellow-600/70 dark:text-yellow-300/70 mt-1 font-semibold tracking-wide">View Collection</span>
               </div>
             </div>
           </div>

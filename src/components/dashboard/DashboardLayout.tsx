@@ -71,10 +71,10 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
             <div className="mb-4 shrink-0">
               <button 
                 onClick={() => router.back()}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm"
+                className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
                 aria-label="Go back"
               >
-                <ChevronLeft className="w-6 h-6 text-white" />
+                <ChevronLeft className="w-6 h-6 text-foreground" />
               </button>
             </div>
           )}

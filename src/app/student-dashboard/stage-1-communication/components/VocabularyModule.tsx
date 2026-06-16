@@ -23,6 +23,7 @@ import {
   Award,
   ChevronLeft
 } from "lucide-react";
+import { AdvancedFlashcards } from "./AdvancedFlashcards";
 
 interface SavedWord {
   word: string;
@@ -33,6 +34,9 @@ interface SavedWord {
   category: string;
   dateAdded: string;
   mastered: boolean;
+  seen?: number;
+  correct?: number;
+  flagged?: boolean;
 }
 
 interface VocabularyModuleProps {
@@ -68,8 +72,6 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
 
   // Flashcards State
   const [isFlashcardsOpen, setIsFlashcardsOpen] = useState(false);
-  const [flashcardIndex, setFlashcardIndex] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
 
   // Quizzes State
   const [quizActive, setQuizActive] = useState(false);
@@ -158,7 +160,10 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
       notes: formNotes.trim(),
       category: "my-words",
       dateAdded: new Date().toISOString(),
-      mastered: false
+      mastered: false,
+      seen: 0,
+      correct: 0,
+      flagged: false
     };
 
     let updated: SavedWord[];
@@ -220,25 +225,21 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
       notes: "Saved from daily word list",
       category: "my-words",
       dateAdded: new Date().toISOString(),
-      mastered: false
+      mastered: false,
+      seen: 0,
+      correct: 0,
+      flagged: false
     };
     saveMyWordsToStorage([newWord, ...myWords]);
     alert(`"${wordObj.word}" has been saved to your dictionary!`);
   };
 
-  // Flashcards navigation
-  const nextFlashcard = () => {
-    setIsFlipped(false);
-    setTimeout(() => {
-      setFlashcardIndex((prev) => (prev + 1) % (myWords.length > 0 ? myWords.length : 1));
-    }, 200);
-  };
-
-  const prevFlashcard = () => {
-    setIsFlipped(false);
-    setTimeout(() => {
-      setFlashcardIndex((prev) => (prev - 1 + myWords.length) % (myWords.length > 0 ? myWords.length : 1));
-    }, 200);
+  // Advanced Flashcards Handlers
+  const handleUpdateFlashcardWord = (originalWord: string, updates: Partial<SavedWord>) => {
+    const updated = myWords.map(w => 
+      w.word === originalWord ? { ...w, ...updates } : w
+    );
+    saveMyWordsToStorage(updated);
   };
 
   // Quiz launcher
@@ -364,12 +365,12 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                   setQuizActive(false);
                   setQuizFinished(false);
                 }}
-                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
               >
                 <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${feature.bgColor} ${feature.borderColor} border transition-transform duration-300 group-hover:scale-110`}>
                   <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
                 </div>
-                <span className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">
+                <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
                   {feature.label}{feature.id === "dictionary" && ` (${myWords.length})`}
                 </span>
               </button>
@@ -385,10 +386,10 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                 setQuizActive(false);
                 setQuizFinished(false);
               }}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm"
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
               aria-label="Back to Vocabulary Options"
             >
-              <ChevronLeft className="w-6 h-6 text-white" />
+              <ChevronLeft className="w-6 h-6 text-foreground" />
             </button>
           </div>
 
@@ -406,29 +407,29 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
             </div>
 
             {loadingDaily ? (
-              <div className="py-16 text-center text-gray-400">Loading daily vocabulary...</div>
+              <div className="py-16 text-center text-zinc-500 dark:text-gray-400">Loading daily vocabulary...</div>
             ) : activeDailyWord ? (
               <div className="text-center space-y-6">
                 <div>
-                  <h1 className="text-5xl font-extrabold text-white tracking-tight capitalize select-all">
+                  <h1 className="text-[48px] font-extrabold text-foreground tracking-tight capitalize select-all">
                     {activeDailyWord.word}
                   </h1>
-                  <p className="text-gray-400 text-lg mt-2 font-mono">
+                  <p className="text-zinc-500 dark:text-gray-400 text-[17px] mt-2 font-mono">
                     {activeDailyWord.pronunciation || "/.../"}
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left max-w-3xl mx-auto">
-                  <div className="p-5 bg-white/5 rounded-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
-                    <span className="text-xs text-purple-400 font-semibold block mb-1">Meaning (பொருள்)</span>
-                    <p className="text-white text-base leading-relaxed">{activeDailyWord.meaning}</p>
+                  <div className="p-5 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/10 dark:border-white/10 shadow-[inset_0_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                    <span className="text-[13px] text-purple-600 dark:text-purple-400 font-semibold block mb-1">Meaning (பொருள்)</span>
+                    <p className="text-foreground text-[15px] leading-relaxed">{activeDailyWord.meaning}</p>
                     {activeDailyWord.tamil && (
-                      <p className="text-purple-300 italic text-sm mt-2">{activeDailyWord.tamil}</p>
+                      <p className="text-purple-600 dark:text-purple-300 italic text-[13px] mt-2">{activeDailyWord.tamil}</p>
                     )}
                   </div>
-                  <div className="p-5 bg-white/5 rounded-2xl border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
-                    <span className="text-xs text-purple-400 font-semibold block mb-1">Example usage</span>
-                    <p className="text-gray-300 text-base italic leading-relaxed">
+                  <div className="p-5 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/10 dark:border-white/10 shadow-[inset_0_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                    <span className="text-[13px] text-purple-600 dark:text-purple-400 font-semibold block mb-1">Example usage</span>
+                    <p className="text-zinc-600 dark:text-gray-300 text-[15px] italic leading-relaxed">
                       "{activeDailyWord.example}"
                     </p>
                   </div>
@@ -437,7 +438,7 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                 <div className="flex justify-center items-center gap-3 pt-4">
                   <button
                     onClick={() => speakWord(activeDailyWord.word)}
-                    className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 text-white transition-colors"
+                    className="p-3 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl hover:bg-black/10 dark:hover:bg-white/10 text-foreground transition-colors"
                     title="Listen Pronunciation"
                   >
                     <Volume2 className="w-5 h-5" />
@@ -450,7 +451,7 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                   </button>
                   <button
                     onClick={() => setCurrentDailyWordIndex((prev) => (prev + 1) % dailyWords.length)}
-                    className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 text-white transition-colors"
+                    className="p-3 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl hover:bg-black/10 dark:hover:bg-white/10 text-foreground transition-colors"
                     title="Next word"
                   >
                     <ArrowRight className="w-5 h-5" />
@@ -458,7 +459,7 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                 </div>
               </div>
             ) : (
-              <div className="py-16 text-center text-gray-400">
+              <div className="py-16 text-center text-zinc-500 dark:text-gray-400">
                 No daily vocabulary words available.
               </div>
             )}
@@ -477,24 +478,24 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                 type="text"
                 placeholder="Search word, meaning, or translation..."
                 value={searchQuery}
+                className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl pl-11 pr-4 py-2.5 text-[15px] text-foreground focus:outline-none focus:border-blue-500 transition-colors"
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
               />
             </div>
             
             <div className="flex gap-2">
               <button
                 onClick={handleOpenAddModal}
-                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-all shadow-md"
+                className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[15px] font-semibold transition-all shadow-md"
               >
                 <Plus className="w-4 h-4" /> Add Word
               </button>
               <button
                 disabled={myWords.length === 0}
-                onClick={() => { setFlashcardIndex(0); setIsFlipped(false); setIsFlashcardsOpen(true); }}
-                className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-xl text-sm font-semibold hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setIsFlashcardsOpen(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-foreground rounded-xl text-[15px] font-semibold hover:bg-black/10 dark:hover:bg-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Layers className="w-4 h-4 text-blue-400" /> Study Flashcards
+                <Layers className="w-4 h-4 text-blue-500 dark:text-blue-400" /> Study Flashcards
               </button>
             </div>
           </div>
@@ -506,28 +507,28 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                 <LiquidGlassCard key={idx} className="p-5 hover:-translate-y-1" accentColor="#3b82f6">
                   <div className="flex justify-between items-start gap-4 mb-3">
                     <div>
-                      <h3 className="text-xl font-bold text-white capitalize">{word.word}</h3>
-                      {word.notes && <p className="text-xs text-gray-500 mt-0.5">{word.notes}</p>}
+                      <h3 className="text-[22px] font-bold text-foreground capitalize">{word.word}</h3>
+                      {word.notes && <p className="text-[11px] text-zinc-500 dark:text-gray-500 mt-0.5">{word.notes}</p>}
                     </div>
                     
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => speakWord(word.word)}
-                        className="p-2 bg-white/5 border border-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors"
+                        className="p-2 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-zinc-600 dark:text-gray-300 rounded-lg transition-colors"
                         title="Pronounce"
                       >
                         <Volume2 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleOpenEditModal(idx)}
-                        className="p-2 bg-white/5 border border-white/5 hover:bg-white/10 text-gray-300 rounded-lg transition-colors"
+                        className="p-2 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-zinc-600 dark:text-gray-300 rounded-lg transition-colors"
                         title="Edit"
                       >
                         <Edit className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteWord(idx)}
-                        className="p-2 bg-white/5 border border-white/5 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors"
+                        className="p-2 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 hover:bg-red-500/20 text-red-600 dark:text-red-400 rounded-lg transition-colors"
                         title="Delete"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -535,21 +536,21 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                     </div>
                   </div>
 
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-[15px]">
                     <div>
-                      <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider block">Meaning</span>
-                      <p className="text-gray-200">{word.meaning}</p>
+                      <span className="text-[11px] text-zinc-500 dark:text-gray-500 font-semibold uppercase tracking-wider block">Meaning</span>
+                      <p className="text-zinc-600 dark:text-gray-200">{word.meaning}</p>
                     </div>
                     {word.tamil && (
                       <div>
-                        <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider block">Tamil Meaning</span>
-                        <p className="text-blue-300 italic">{word.tamil}</p>
+                        <span className="text-[11px] text-zinc-500 dark:text-gray-500 font-semibold uppercase tracking-wider block">Tamil Meaning</span>
+                        <p className="text-blue-600 dark:text-blue-300 italic">{word.tamil}</p>
                       </div>
                     )}
                     {word.example && (
-                      <div className="pt-2 border-t border-white/5">
-                        <span className="text-xs text-gray-500 font-semibold uppercase tracking-wider block">Example</span>
-                        <p className="text-gray-400 italic font-light">"{word.example}"</p>
+                      <div className="pt-2 border-t border-black/5 dark:border-white/5">
+                        <span className="text-[11px] text-zinc-500 dark:text-gray-500 font-semibold uppercase tracking-wider block">Example</span>
+                        <p className="text-zinc-500 dark:text-gray-400 italic font-light">"{word.example}"</p>
                       </div>
                     )}
                   </div>
@@ -557,8 +558,8 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
               ))}
             </div>
           ) : (
-            <div className="py-16 text-center text-gray-400 bg-white/5 border border-white/10 rounded-2xl">
-              <BookOpen className="w-10 h-10 mx-auto text-gray-600 mb-3" />
+            <div className="py-16 text-center text-zinc-500 dark:text-gray-400 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl">
+              <BookOpen className="w-10 h-10 mx-auto text-zinc-500 dark:text-gray-600 mb-3" />
               {searchQuery ? "No matching words found." : "No words saved yet. Click 'Add Word' to start building your glossary!"}
             </div>
           )}
@@ -569,45 +570,45 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
       {activeFeature === "quiz" && !quizActive && !quizFinished && (
         <div className="max-w-2xl mx-auto space-y-6">
           <LiquidGlassCard className="p-6 md:p-8" accentColor="#10b981">
-            <h2 className="text-xl font-bold text-green-400 mb-2 flex items-center gap-2">
+            <h2 className="text-[22px] font-bold text-green-600 dark:text-green-400 mb-2 flex items-center gap-2">
               <HelpCircle className="w-5 h-5" /> Quiz Arena
             </h2>
-            <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+            <p className="text-zinc-500 dark:text-gray-400 text-[13px] mb-6 leading-relaxed">
               Complete today's daily meaning quiz and fill-in-the-blank challenge to earn credits and boost your learning streak.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-5 bg-white/5 border border-white/10 rounded-2xl space-y-4 hover:border-green-500/30 transition-all flex flex-col justify-between">
+              <div className="p-5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl space-y-4 hover:border-green-500/30 transition-all flex flex-col justify-between">
                 <div className="space-y-2">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-purple-400" /> Meaning Quiz
+                  <h3 className="text-[17px] font-bold text-foreground flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" /> Meaning Quiz
                   </h3>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-[13px] text-zinc-500 dark:text-gray-400">
                     Test your understanding of vocabulary definitions. Select the correct option.
                   </p>
                 </div>
                 <button
                   disabled={isLoadingQuiz}
                   onClick={() => handleStartQuiz("meaning")}
-                  className="w-full py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-green-950/20"
+                  className="w-full py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-[13px] font-semibold rounded-xl transition-all shadow-lg shadow-green-950/20"
                 >
                   {isLoadingQuiz ? "Loading..." : "Start Meaning Quiz"}
                 </button>
               </div>
 
-              <div className="p-5 bg-white/5 border border-white/10 rounded-2xl space-y-4 hover:border-green-500/30 transition-all flex flex-col justify-between">
+              <div className="p-5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl space-y-4 hover:border-green-500/30 transition-all flex flex-col justify-between">
                 <div className="space-y-2">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Edit className="w-4 h-4 text-blue-400" /> Fill in the Blanks
+                  <h3 className="text-[17px] font-bold text-foreground flex items-center gap-2">
+                    <Edit className="w-4 h-4 text-blue-600 dark:text-blue-400" /> Fill in the Blanks
                   </h3>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-[13px] text-zinc-500 dark:text-gray-400">
                     Complete context sentences using the appropriate vocabulary word.
                   </p>
                 </div>
                 <button
                   disabled={isLoadingQuiz}
                   onClick={() => handleStartQuiz("fill")}
-                  className="w-full py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-green-950/20"
+                  className="w-full py-2.5 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-[13px] font-semibold rounded-xl transition-all shadow-lg shadow-green-950/20"
                 >
                   {isLoadingQuiz ? "Loading..." : "Start Fill in Blanks"}
                 </button>
@@ -622,17 +623,17 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
         <div className="max-w-2xl mx-auto space-y-6">
           <LiquidGlassCard className="p-6 md:p-8" accentColor="#10b981">
             {/* Quiz progress */}
-            <div className="flex justify-between items-center mb-4 text-sm">
-              <span className="text-gray-400">
-                Question <span className="font-semibold text-white">{currentQuizIndex + 1}/{quizQuestions.length}</span>
+            <div className="flex justify-between items-center mb-4 text-[13px]">
+              <span className="text-zinc-500 dark:text-gray-400">
+                Question <span className="font-semibold text-foreground">{currentQuizIndex + 1}/{quizQuestions.length}</span>
               </span>
-              <span className="text-gray-400">
-                Score: <span className="font-semibold text-green-400">{Math.round((quizScore / (currentQuizIndex || 1)) * 100)}%</span>
+              <span className="text-zinc-500 dark:text-gray-400">
+                Score: <span className="font-semibold text-green-600 dark:text-green-400">{Math.round((quizScore / (currentQuizIndex || 1)) * 100)}%</span>
               </span>
             </div>
 
             {/* Progress bar */}
-            <div className="w-full h-2 bg-white/5 border border-white/5 rounded-full overflow-hidden mb-6">
+            <div className="w-full h-2 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/5 rounded-full overflow-hidden mb-6">
               <div 
                 className="h-full bg-green-500 rounded-full transition-all duration-300"
                 style={{ width: `${((currentQuizIndex) / quizQuestions.length) * 100}%` }}
@@ -640,19 +641,19 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
             </div>
 
             {/* Question Card */}
-            <div className="p-6 bg-white/5 border border-white/10 rounded-2xl mb-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+            <div className="p-6 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl mb-6 shadow-[inset_0_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
               {quizType === "meaning" ? (
                 <div>
-                  <span className="text-xs text-green-400 font-semibold block mb-1">What is the correct meaning of:</span>
-                  <h3 className="text-2xl font-bold text-white capitalize">"{quizQuestions[currentQuizIndex].word}"</h3>
+                  <span className="text-[13px] text-green-600 dark:text-green-400 font-semibold block mb-1">What is the correct meaning of:</span>
+                  <h3 className="text-[28px] font-bold text-foreground capitalize">"{quizQuestions[currentQuizIndex].word}"</h3>
                 </div>
               ) : (
                 <div>
-                  <span className="text-xs text-green-400 font-semibold block mb-1">Complete the sentence:</span>
-                  <p className="text-lg text-white font-medium leading-relaxed">
+                  <span className="text-[13px] text-green-600 dark:text-green-400 font-semibold block mb-1">Complete the sentence:</span>
+                  <p className="text-[17px] text-foreground font-medium leading-relaxed">
                     {quizQuestions[currentQuizIndex].sentence.replace("______", "_____")}
                   </p>
-                  <p className="text-xs text-gray-500 italic mt-2">Hint: {quizQuestions[currentQuizIndex].hint}</p>
+                  <p className="text-[11px] text-zinc-500 dark:text-gray-500 italic mt-2">Hint: {quizQuestions[currentQuizIndex].hint}</p>
                 </div>
               )}
             </div>
@@ -661,17 +662,17 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
             {quizType === "meaning" ? (
               <div className="grid grid-cols-1 gap-3">
                 {quizQuestions[currentQuizIndex].options.map((option: string, idx: number) => {
-                  let optionStyle = "border-white/10 hover:bg-white/10 text-white";
+                  let optionStyle = "border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/10 text-foreground";
                   if (isSubmitted) {
                     if (idx === quizQuestions[currentQuizIndex].correct) {
-                      optionStyle = "bg-green-500/20 border-green-500 text-green-300 pointer-events-none";
+                      optionStyle = "bg-green-500/20 border-green-500 text-green-700 dark:text-green-300 pointer-events-none";
                     } else if (idx === selectedAnswerIndex) {
-                      optionStyle = "bg-red-500/20 border-red-500 text-red-300 pointer-events-none";
+                      optionStyle = "bg-red-500/20 border-red-500 text-red-700 dark:text-red-300 pointer-events-none";
                     } else {
-                      optionStyle = "border-white/5 text-gray-500 pointer-events-none opacity-40";
+                      optionStyle = "border-black/5 dark:border-white/5 text-zinc-500 dark:text-gray-500 pointer-events-none opacity-40";
                     }
                   } else if (selectedAnswerIndex === idx) {
-                    optionStyle = "bg-blue-600/20 border-blue-500 text-blue-300";
+                    optionStyle = "bg-blue-600/20 border-blue-500 text-blue-700 dark:text-blue-300";
                   }
 
                   return (
@@ -679,9 +680,9 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                       key={idx}
                       onClick={() => handleSelectMCQ(idx)}
                       disabled={isSubmitted}
-                      className={`w-full p-4 border rounded-xl text-left text-sm font-medium transition-all ${optionStyle}`}
+                      className={`w-full p-4 border rounded-xl text-left text-[13px] font-medium transition-all ${optionStyle}`}
                     >
-                      <span className="inline-block w-6 h-6 rounded-full text-center leading-6 text-xs font-bold bg-white/10 text-gray-300 mr-3">
+                      <span className="inline-block w-6 h-6 rounded-full text-center leading-6 text-[11px] font-bold bg-black/5 dark:bg-white/10 text-zinc-600 dark:text-gray-300 mr-3">
                         {String.fromCharCode(65 + idx)}
                       </span>
                       {option}
@@ -698,7 +699,7 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                   value={fillAnswer}
                   onChange={(e) => setFillAnswer(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") handleConfirmFill(); }}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-green-500 disabled:opacity-50 transition-colors"
+                  className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-foreground focus:outline-none focus:border-green-500 disabled:opacity-50 transition-colors"
                 />
               </div>
             )}
@@ -719,8 +720,8 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
               <div className="mt-6 space-y-4 animate-in fade-in duration-300">
                 <div className={`p-4 rounded-xl border flex items-start gap-3 ${
                   isCorrect 
-                    ? "bg-green-500/10 border-green-500/20 text-green-300"
-                    : "bg-red-500/10 border-red-500/20 text-red-300"
+                    ? "bg-green-500/10 border-green-500/20 text-green-700 dark:text-green-300"
+                    : "bg-red-500/10 border-red-500/20 text-red-700 dark:text-red-300"
                 }`}>
                   {isCorrect ? (
                     <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
@@ -728,8 +729,8 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                     <XCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                   )}
                   <div>
-                    <h4 className="font-bold text-sm">{isCorrect ? "Excellent!" : "Not quite right"}</h4>
-                    <p className="text-xs text-gray-300 mt-1">
+                    <h4 className="font-bold text-[13px]">{isCorrect ? "Excellent!" : "Not quite right"}</h4>
+                    <p className="text-[11px] text-zinc-600 dark:text-gray-300 mt-1">
                       {isCorrect 
                         ? "You identified the correct vocabulary word choice." 
                         : `The correct answer was: "${quizQuestions[currentQuizIndex].word}".`}
@@ -739,12 +740,12 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
 
                 <button
                   onClick={handleNextQuizQuestion}
-                  className="w-full py-3 bg-white/10 border border-white/10 text-white font-semibold rounded-xl hover:bg-white/20 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/10 text-foreground font-semibold rounded-xl hover:bg-black/10 dark:hover:bg-white/20 transition-all flex items-center justify-center gap-2"
                 >
                   {currentQuizIndex < quizQuestions.length - 1 ? (
                     <>Next Question <ArrowRight className="w-4 h-4" /></>
                   ) : (
-                    <>Finish & See Results <Award className="w-4 h-4 text-yellow-400" /></>
+                    <>Finish & See Results <Award className="w-4 h-4 text-yellow-500 dark:text-yellow-400" /></>
                   )}
                 </button>
               </div>
@@ -757,18 +758,18 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
       {quizFinished && (
         <div className="max-w-md mx-auto">
           <LiquidGlassCard className="p-8 text-center" accentColor="#10b981">
-            <div className="w-16 h-16 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-6 text-green-400 font-bold text-2xl">
+            <div className="w-16 h-16 bg-green-500/20 border border-green-500/30 rounded-full flex items-center justify-center mx-auto mb-6 text-green-600 dark:text-green-400 font-bold text-[28px]">
               100%
             </div>
             
-            <h2 className="text-2xl font-bold text-white mb-2">Quiz Finished!</h2>
-            <p className="text-gray-400 text-sm mb-6">
-              You scored <span className="text-white font-semibold">{quizScore}/{quizQuestions.length}</span> correct answers. 
-              Awarded <span className="text-green-400 font-semibold">+25 XP</span>.
+            <h2 className="text-[28px] font-bold text-foreground mb-2">Quiz Finished!</h2>
+            <p className="text-zinc-500 dark:text-gray-400 text-[13px] mb-6">
+              You scored <span className="text-foreground font-semibold">{quizScore}/{quizQuestions.length}</span> correct answers. 
+              Awarded <span className="text-green-600 dark:text-green-400 font-semibold">+25 XP</span>.
             </p>
 
             {bonusEarned && (
-              <div className="p-4 bg-green-500/10 border border-green-500/25 rounded-2xl text-green-300 font-medium text-sm flex items-center justify-center gap-2 mb-6 animate-pulse">
+              <div className="p-4 bg-green-500/10 border border-green-500/25 rounded-2xl text-green-700 dark:text-green-300 font-medium text-[13px] flex items-center justify-center gap-2 mb-6 animate-pulse">
                 <Sparkles className="w-4 h-4" /> Today's Challenge Bonus Earned (+50 XP / +5 Coins!)
               </div>
             )}
@@ -776,13 +777,13 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
             <div className="flex gap-2">
               <button
                 onClick={() => handleStartQuiz(quizType || "meaning")}
-                className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white text-[13px] font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
               >
                 <RotateCcw className="w-4 h-4" /> Try Again
               </button>
               <button
                 onClick={() => setQuizFinished(false)}
-                className="flex-1 py-2.5 bg-white/5 border border-white/10 text-white text-sm font-semibold rounded-xl hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-foreground text-[13px] font-semibold rounded-xl hover:bg-black/10 dark:hover:bg-white/10 transition-colors flex items-center justify-center gap-2"
               >
                 <Home className="w-4 h-4" /> End Arena
               </button>
@@ -791,129 +792,28 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
         </div>
       )}
 
-      {/* 3D FLASHCARDS PANEL MODAL */}
+      {/* ADVANCED 3D FLASHCARDS PANEL */}
       {isFlashcardsOpen && (
-        <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-lg space-y-6">
-            <div className="flex justify-between items-center text-white">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <Layers className="w-5 h-5 text-blue-400" /> Vocabulary Flashcards
-              </h2>
-              <button 
-                onClick={() => setIsFlashcardsOpen(false)}
-                className="p-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {myWords.length > 0 ? (
-              <div className="space-y-6">
-                {/* 3D card wrapper */}
-                <div 
-                  onClick={() => setIsFlipped(!isFlipped)}
-                  className="w-full h-[320px] cursor-pointer"
-                  style={{ perspective: "1000px" }}
-                >
-                  <div 
-                    className="relative w-full h-full duration-500 rounded-3xl"
-                    style={{ 
-                      transformStyle: "preserve-3d",
-                      transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)"
-                    }}
-                  >
-                    {/* Front */}
-                    <div 
-                      className="absolute inset-0 bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between items-center text-center shadow-2xl"
-                      style={{ backfaceVisibility: "hidden" }}
-                    >
-                      <div className="opacity-0" />
-                      <div>
-                        <h1 className="text-4xl font-extrabold text-blue-400 capitalize">
-                          {myWords[flashcardIndex].word}
-                        </h1>
-                        <p className="text-gray-500 text-sm mt-2 font-mono">Click to flip card</p>
-                      </div>
-                      <div className="text-xs text-gray-500 uppercase tracking-widest font-semibold flex items-center gap-1">
-                        <Volume2 className="w-3.5 h-3.5" /> Pronunciation guide active
-                      </div>
-                    </div>
-
-                    {/* Back */}
-                    <div 
-                      className="absolute inset-0 bg-gradient-to-br from-blue-950/20 to-indigo-950/20 border border-white/15 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between text-left shadow-2xl overflow-y-auto"
-                      style={{ 
-                        backfaceVisibility: "hidden", 
-                        transform: "rotateY(180deg)" 
-                      }}
-                    >
-                      <div className="space-y-4">
-                        <div>
-                          <span className="text-xs text-blue-400 font-bold block mb-1">Meaning</span>
-                          <p className="text-white text-base leading-relaxed">
-                            {myWords[flashcardIndex].meaning}
-                          </p>
-                        </div>
-                        {myWords[flashcardIndex].tamil && (
-                          <div>
-                            <span className="text-xs text-blue-400 font-bold block mb-1">Tamil translation</span>
-                            <p className="text-gray-300 text-sm italic">{myWords[flashcardIndex].tamil}</p>
-                          </div>
-                        )}
-                        {myWords[flashcardIndex].example && (
-                          <div className="pt-3 border-t border-white/10">
-                            <span className="text-xs text-blue-400 font-bold block mb-1">Example context</span>
-                            <p className="text-gray-400 text-sm italic">
-                              "{myWords[flashcardIndex].example}"
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                      <div className="text-center text-xs text-gray-500 font-semibold pt-3 select-none">
-                        Click card to show term
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Navigation panel */}
-                <div className="flex justify-between items-center text-white bg-white/5 border border-white/10 px-5 py-3 rounded-2xl">
-                  <button 
-                    onClick={prevFlashcard}
-                    className="p-2 hover:bg-white/10 rounded-xl transition-colors"
-                  >
-                    <ArrowLeft className="w-5 h-5" />
-                  </button>
-                  
-                  <span className="text-sm font-semibold text-gray-400">
-                    Card {flashcardIndex + 1} of {myWords.length}
-                  </span>
-
-                  <button 
-                    onClick={nextFlashcard}
-                    className="p-2 hover:bg-white/10 rounded-xl transition-colors"
-                  >
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </div>
+        <AdvancedFlashcards 
+          words={myWords}
+          onClose={() => setIsFlashcardsOpen(false)}
+          onUpdateWord={handleUpdateFlashcardWord}
+          speakWord={speakWord}
+        />
       )}
 
       {/* ADD / EDIT CUSTOM WORD MODAL */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-[1000] bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[1000] bg-black/40 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <LiquidGlassCard className="w-full max-w-md p-6" accentColor="#3b82f6">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Book className="w-5 h-5 text-blue-400" />
+              <h3 className="text-[17px] font-bold text-foreground flex items-center gap-2">
+                <Book className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 {editingIndex !== null ? "Modify Word Info" : "Add Vocabulary Word"}
               </h3>
               <button 
                 onClick={handleCloseModal}
-                className="p-1.5 bg-white/5 hover:bg-white/10 rounded-full transition-colors text-white"
+                className="p-1.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded-full transition-colors text-foreground"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -921,7 +821,7 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
 
             <form onSubmit={handleSaveWord} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                <label className="block text-[11px] font-semibold text-zinc-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                   Vocabulary Word (ஆங்கில வார்த்தை) *
                 </label>
                 <input
@@ -930,12 +830,12 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                   placeholder="e.g. eloquent"
                   value={formWord}
                   onChange={(e) => setFormWord(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-foreground focus:outline-none focus:border-blue-500 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                <label className="block text-[11px] font-semibold text-zinc-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                   English Meaning (பொருள் விளக்கம்) *
                 </label>
                 <input
@@ -944,12 +844,12 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                   placeholder="e.g. fluent or persuasive in speaking"
                   value={formMeaning}
                   onChange={(e) => setFormMeaning(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-foreground focus:outline-none focus:border-blue-500 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                <label className="block text-[11px] font-semibold text-zinc-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                   Tamil Translation (தமிழ் அர்த்தம்) *
                 </label>
                 <input
@@ -958,24 +858,24 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                   placeholder="e.g. சொல்லாற்றல் மிக்க"
                   value={formTamil}
                   onChange={(e) => setFormTamil(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-foreground focus:outline-none focus:border-blue-500 transition-colors"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                <label className="block text-[11px] font-semibold text-zinc-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                   Example Sentence (உதாரண வாக்கியம்)
                 </label>
                 <textarea
                   placeholder="e.g. He gave an eloquent presentation."
                   value={formExample}
                   onChange={(e) => setFormExample(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors h-20 resize-none"
+                  className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-foreground focus:outline-none focus:border-blue-500 transition-colors h-20 resize-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                <label className="block text-[11px] font-semibold text-zinc-500 dark:text-gray-400 uppercase tracking-wider mb-2">
                   Short Notes
                 </label>
                 <input
@@ -983,21 +883,21 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                   placeholder="e.g. adj. used for speaking"
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-foreground focus:outline-none focus:border-blue-500 transition-colors"
                 />
               </div>
 
-              <div className="flex gap-2 pt-4 border-t border-white/5">
+              <div className="flex gap-2 pt-4 border-t border-black/10 dark:border-white/5">
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="flex-1 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl text-sm font-semibold transition-colors"
+                  className="flex-1 py-2.5 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 border border-black/10 dark:border-white/10 text-foreground rounded-xl text-[13px] font-semibold transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-colors shadow-md"
+                  className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[13px] font-semibold transition-colors shadow-md"
                 >
                   {editingIndex !== null ? "Update Word" : "Save Word"}
                 </button>

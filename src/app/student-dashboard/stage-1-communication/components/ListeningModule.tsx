@@ -396,48 +396,48 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-2">
           <button
             onClick={() => { setActiveFeature("mcq"); stopAudio(); }}
-            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
           >
             <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-purple-400/10 border-purple-400/20 border transition-transform duration-300 group-hover:scale-110">
               <HelpCircle className="w-10 h-10 text-purple-400" strokeWidth={1.5} />
             </div>
-            <span className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">
+            <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
               Passage MCQ
             </span>
           </button>
           
           <button
             onClick={() => { setActiveFeature("fill"); stopAudio(); }}
-            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
           >
             <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-emerald-400/10 border-emerald-400/20 border transition-transform duration-300 group-hover:scale-110">
               <PenTool className="w-10 h-10 text-emerald-400" strokeWidth={1.5} />
             </div>
-            <span className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">
+            <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
               Fill the Beats
             </span>
           </button>
           
           <button
             onClick={() => { setActiveFeature("directions"); stopAudio(); }}
-            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
           >
             <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-blue-400/10 border-blue-400/20 border transition-transform duration-300 group-hover:scale-110">
               <Compass className="w-10 h-10 text-blue-400" strokeWidth={1.5} />
             </div>
-            <span className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">
+            <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
               Direction Follower
             </span>
           </button>
           
           <button
             onClick={() => { setActiveFeature("tone"); stopAudio(); }}
-            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
           >
             <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-orange-400/10 border-orange-400/20 border transition-transform duration-300 group-hover:scale-110">
               <Smile className="w-10 h-10 text-orange-400" strokeWidth={1.5} />
             </div>
-            <span className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">
+            <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
               Tone Analyzer
             </span>
           </button>
@@ -447,10 +447,10 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
           <div className="mb-6 flex items-center">
             <button
               onClick={() => { setActiveFeature(null); stopAudio(); }}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm"
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
               aria-label="Back to Listening Options"
             >
-              <ChevronLeft className="w-6 h-6 text-white" />
+              <ChevronLeft className="w-6 h-6 text-foreground" />
             </button>
           </div>
 
@@ -458,7 +458,7 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
           {activeFeature === "mcq" && (
         <div className="space-y-6">
           <LiquidGlassCard className="p-8 flex flex-col items-center justify-center border-purple-500/20" accentColor="#8b5cf6">
-            <h2 className="text-xl font-bold text-white mb-6">
+            <h2 className="text-[22px] font-bold text-foreground mb-6">
               {mcqChallenge?.title || "Daily Routine Listening Practice"}
             </h2>
             
@@ -481,34 +481,34 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
                 <Play className="h-10 w-10 text-purple-400 ml-1" />
               )}
             </button>
-            <p className="mt-4 text-gray-400 font-medium">
+            <p className="mt-4 text-zinc-500 dark:text-gray-400 font-medium">
               {isPlaying ? "Playing audio..." : "Click to play the audio passage"}
             </p>
           </LiquidGlassCard>
 
           {/* Render MCQ Questions */}
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-white">Listen & Answer</h3>
+            <h3 className="text-[17px] font-semibold text-foreground">Listen & Answer</h3>
             {Array.isArray(mcqChallenge?.questions) && mcqChallenge.questions.map((q) => {
               const isSelected = mcqAnswers[q.id] !== undefined;
               const isSubmitted = mcqResult !== null;
               
               return (
-                <LiquidGlassCard key={q.id} className="p-5 border-white/10 animate-in fade-in" accentColor="#8b5cf6">
-                  <p className="text-white mb-4 font-medium">{q.question}</p>
+                <LiquidGlassCard key={q.id} className="p-5 border-black/10 dark:border-white/10 animate-in fade-in" accentColor="#8b5cf6">
+                  <p className="text-foreground mb-4 font-medium text-[17px]">{q.question}</p>
                   <div className="space-y-3">
                     {q.options?.map((opt: string, idx: number) => {
                       const isOptionSelected = mcqAnswers[q.id] === idx;
                       const isCorrect = isSubmitted && idx === q.correctIndex;
                       const isWrong = isSubmitted && isOptionSelected && idx !== q.correctIndex;
 
-                      let btnStyle = "border-white/10 hover:bg-white/5 text-gray-300";
+                      let btnStyle = "border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-zinc-600 dark:text-gray-300";
                       if (isOptionSelected && !isSubmitted) {
-                        btnStyle = "border-purple-500 bg-purple-500/10 text-white";
+                        btnStyle = "border-purple-500 bg-purple-500/10 text-purple-600 dark:text-white";
                       } else if (isCorrect) {
-                        btnStyle = "border-green-500 bg-green-500/10 text-green-300";
+                        btnStyle = "border-green-500 bg-green-500/10 text-green-600 dark:text-green-300";
                       } else if (isWrong) {
-                        btnStyle = "border-red-500 bg-red-500/10 text-red-300";
+                        btnStyle = "border-red-500 bg-red-500/10 text-red-600 dark:text-red-300";
                       }
 
                       return (
@@ -516,7 +516,7 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
                           key={idx}
                           disabled={isSubmitted}
                           onClick={() => handleMCQOptionSelect(q.id, idx)}
-                          className={`w-full text-left p-3 rounded-xl border transition-all duration-300 ${btnStyle}`}
+                          className={`w-full text-left p-3 rounded-xl border transition-all duration-300 ${btnStyle} text-[15px]`}
                         >
                           {opt}
                         </button>
@@ -532,10 +532,10 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
 
           {mcqResult ? (
             <LiquidGlassCard className="p-6 border-purple-500 bg-purple-500/5 animate-in slide-in-from-bottom" accentColor="#8b5cf6">
-              <h3 className="text-xl font-bold text-white mb-2">Results</h3>
-              <p className="text-gray-300 mb-2">{mcqResult.feedback}</p>
+              <h3 className="text-[22px] font-bold text-foreground mb-2">Results</h3>
+              <p className="text-zinc-600 dark:text-gray-300 mb-2 text-[17px]">{mcqResult.feedback}</p>
               {mcqResult.tamilFeedback && (
-                <p className="text-purple-300 text-sm italic mb-4">{mcqResult.tamilFeedback}</p>
+                <p className="text-purple-600 dark:text-purple-300 text-[15px] italic mb-4">{mcqResult.tamilFeedback}</p>
               )}
               <div className="flex items-center gap-4">
                 <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/50">
@@ -557,7 +557,7 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
             <button
               onClick={submitMCQAnswers}
               disabled={isMCQSubmitting}
-              className="w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold text-lg rounded-xl transition-all"
+              className="w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold text-[17px] rounded-xl transition-all shadow-md"
             >
               {isMCQSubmitting ? "Evaluating..." : "Submit MCQ Answers"}
             </button>
@@ -569,8 +569,8 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
       {activeFeature === "fill" && (
         <div className="space-y-6">
           <LiquidGlassCard className="p-6 text-center" accentColor="#8b5cf6">
-            <h2 className="text-xl font-bold text-white mb-4">Transcription practice</h2>
-            <p className="text-gray-400 text-sm mb-6">
+            <h2 className="text-[22px] font-bold text-foreground mb-4">Transcription practice</h2>
+            <p className="text-zinc-500 dark:text-gray-400 text-[15px] mb-6">
               Listen to the daily routine statement and transcribe details to fill the gaps.
             </p>
 
@@ -586,10 +586,10 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
           </LiquidGlassCard>
 
           <div className="space-y-4">
-            <LiquidGlassCard className="p-6 border-white/10" accentColor="#8b5cf6">
+            <LiquidGlassCard className="p-6 border-black/10 dark:border-white/10" accentColor="#8b5cf6">
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  <label className="block text-[15px] font-semibold text-zinc-600 dark:text-gray-300 mb-2">
                     1. What time does the speaker wake up? (e.g. 7 AM)
                   </label>
                   <input
@@ -598,7 +598,7 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
                     placeholder="Enter time details..."
                     value={gapAnswers[1] || ""}
                     onChange={(e) => handleGapAnswerChange(1, e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500"
                   />
                   {isGapSubmitted && (
                     <div className="mt-2 text-xs flex items-center gap-1.5 font-medium">
@@ -612,7 +612,7 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                  <label className="block text-[15px] font-semibold text-zinc-600 dark:text-gray-300 mb-2">
                     2. What does the speaker eat and drink for breakfast? (e.g. cereal and coffee)
                   </label>
                   <input
@@ -621,7 +621,7 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
                     placeholder="Enter breakfast items..."
                     value={gapAnswers[2] || ""}
                     onChange={(e) => handleGapAnswerChange(2, e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-purple-500"
+                    className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500"
                   />
                   {isGapSubmitted && (
                     <div className="mt-2 text-xs flex items-center gap-1.5 font-medium">
@@ -638,10 +638,10 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
 
             {isGapSubmitted ? (
               <LiquidGlassCard className="p-6 border-green-500/30 bg-green-500/5" accentColor="#22c55e">
-                <h3 className="text-lg font-bold text-white mb-2">Quiz Summary</h3>
-                <p className="text-gray-300 text-sm mb-4">{gapResult.feedback}</p>
+                <h3 className="text-[17px] font-bold text-foreground mb-2">Quiz Summary</h3>
+                <p className="text-zinc-500 dark:text-gray-300 text-[15px] mb-4">{gapResult.feedback}</p>
                 <div className="flex gap-4 items-center">
-                  <span className="px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-300 rounded-full text-xs font-bold">
+                  <span className="px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-300 rounded-full text-[13px] font-bold">
                     Score: {gapResult.score}%
                   </span>
                   <span className="px-3 py-1 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 rounded-full text-xs font-bold">
@@ -674,15 +674,15 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
         <div className="space-y-6">
           <LiquidGlassCard className="p-6 md:p-8" accentColor="#8b5cf6">
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <h3 className="text-[17px] font-bold text-foreground flex items-center gap-2">
                 <Compass className="w-5 h-5 text-purple-400" /> Direction Follower Map
               </h3>
-              <span className="px-3 py-1 bg-purple-500/10 text-purple-300 border border-purple-500/20 rounded-full text-xs font-semibold">
+              <span className="px-3 py-1 bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 rounded-full text-[13px] font-semibold">
                 Grid Size: {gridSize}x{gridSize}
               </span>
             </div>
 
-            <p className="text-sm text-gray-400 mb-6 leading-relaxed">
+            <p className="text-[15px] text-zinc-500 dark:text-gray-400 mb-6 leading-relaxed">
               Listen to the directions, then click the grid junctions sequentially to trace the pathway.
             </p>
 
@@ -783,11 +783,11 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
       {activeFeature === "tone" && toneChallenge && (
         <div className="space-y-6 max-w-lg mx-auto">
           <LiquidGlassCard className="p-6 md:p-8" accentColor="#8b5cf6">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+            <h3 className="text-[17px] font-bold text-foreground mb-4 flex items-center gap-2">
               <Smile className="w-5 h-5 text-purple-400" /> Speech Tone analysis
             </h3>
 
-            <p className="text-gray-400 text-sm mb-6">
+            <p className="text-zinc-500 dark:text-gray-400 text-[15px] mb-6">
               Listen to the speech statement below. Can you identify the emotional tone of the speaker?
             </p>
 
@@ -803,18 +803,18 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
 
             <div className="grid grid-cols-1 gap-3">
               {parsedTone.options.map((option: string, idx: number) => {
-                let btnStyle = "border-white/10 hover:bg-white/5 text-gray-300";
+                let btnStyle = "border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-zinc-600 dark:text-gray-300";
                 
                 if (isToneSubmitted) {
                   if (idx === parsedTone.correctIndex) {
-                    btnStyle = "bg-green-500/20 border-green-500 text-green-300 pointer-events-none";
+                    btnStyle = "bg-green-500/10 border-green-500 text-green-600 dark:text-green-300 pointer-events-none";
                   } else if (idx === toneSelectedIdx) {
-                    btnStyle = "bg-red-500/20 border-red-500 text-red-300 pointer-events-none";
+                    btnStyle = "bg-red-500/10 border-red-500 text-red-600 dark:text-red-300 pointer-events-none";
                   } else {
-                    btnStyle = "border-white/5 text-gray-500 pointer-events-none opacity-45";
+                    btnStyle = "border-black/5 dark:border-white/5 text-zinc-400 dark:text-gray-500 pointer-events-none opacity-45";
                   }
                 } else if (toneSelectedIdx === idx) {
-                  btnStyle = "bg-purple-600/20 border-purple-500 text-purple-300";
+                  btnStyle = "bg-purple-600/10 border-purple-500 text-purple-600 dark:text-purple-300";
                 }
 
                 return (
@@ -839,8 +839,8 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
                 Submit Selection
               </button>
             ) : (
-              <div className="mt-6 p-4 bg-white/5 border border-white/10 rounded-2xl space-y-3">
-                <p className="text-xs text-gray-300 leading-relaxed font-light">{toneResult.feedback}</p>
+              <div className="mt-6 p-4 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl space-y-3">
+                <p className="text-[13px] text-zinc-600 dark:text-gray-300 leading-relaxed font-light">{toneResult.feedback}</p>
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-semibold text-purple-300">XP Awarded: +{toneResult.xpAwarded}</span>
                   <button 

@@ -169,12 +169,12 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
               <button
                 key={feature.id}
                 onClick={() => setActiveFeature(feature.id)}
-                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/5 backdrop-blur-sm border border-white/10 rounded-[2rem] hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/20"
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
               >
                 <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${feature.bgColor} ${feature.borderColor} border transition-transform duration-300 group-hover:scale-110`}>
                   <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
                 </div>
-                <span className="text-lg font-medium text-gray-300 group-hover:text-white transition-colors">
+                <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
                   {feature.label}
                 </span>
               </button>
@@ -186,10 +186,10 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
           <div className="mb-6 flex items-center">
             <button
               onClick={() => setActiveFeature(null)}
-              className="flex items-center justify-center w-10 h-10 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm"
+              className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
               aria-label="Back to Writing Options"
             >
-              <ChevronLeft className="w-6 h-6 text-white" />
+              <ChevronLeft className="w-6 h-6 text-foreground" />
             </button>
           </div>
 
@@ -219,15 +219,15 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
           )}
 
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
-            <h2 className="text-xl font-bold text-white mb-2">{activeTutorChallenge.title}</h2>
-            <div className="prose prose-invert max-w-none">
-              <p className="text-gray-300 text-base">{activeTutorChallenge.content}</p>
+            <h2 className="text-[22px] font-bold text-foreground mb-2">{activeTutorChallenge.title}</h2>
+            <div className="prose dark:prose-invert max-w-none">
+              <p className="text-zinc-600 dark:text-gray-300 text-[17px]">{activeTutorChallenge.content}</p>
             </div>
           </LiquidGlassCard>
 
           {!tutorResult ? (
-            <LiquidGlassCard className="p-6 border-white/10" accentColor="#8b5cf6">
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+            <LiquidGlassCard className="p-6 border-black/10 dark:border-white/10" accentColor="#8b5cf6">
+              <label className="block text-[15px] font-medium text-zinc-600 dark:text-gray-300 mb-2">
                 Your Paragraph Submission
               </label>
               <textarea
@@ -236,11 +236,11 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                 disabled={isTutorSubmitting}
                 rows={6}
                 placeholder="Start typing your paragraph response here..."
-                className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500 transition-all resize-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"
+                className="w-full bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-2xl p-4 text-[17px] text-foreground placeholder:text-zinc-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-purple-500 transition-all resize-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"
               />
               
               {tutorError && (
-                <div className="mt-4 text-red-400 text-sm font-medium bg-red-400/10 p-3 rounded-lg border border-red-400/20">
+                <div className="mt-4 text-red-600 dark:text-red-400 text-[15px] font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
                   {tutorError}
                 </div>
               )}
@@ -248,20 +248,20 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
               <button
                 onClick={submitTutor}
                 disabled={isTutorSubmitting || tutorText.trim().length < 5}
-                className="w-full mt-6 py-3 rounded-2xl bg-purple-600 text-white font-semibold text-lg shadow-md hover:bg-purple-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                className="w-full mt-6 py-3 rounded-2xl bg-purple-600 text-white font-semibold text-[17px] shadow-md hover:bg-purple-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isTutorSubmitting ? "AI is grading..." : "Submit for AI Evaluation"}
               </button>
             </LiquidGlassCard>
           ) : (
             <LiquidGlassCard className="p-6 border-purple-500 bg-purple-500/5 animate-in slide-in-from-bottom" accentColor="#8b5cf6">
-              <h3 className="text-2xl font-bold text-white mb-4">AI Feedback</h3>
+              <h3 className="text-[28px] font-bold text-foreground mb-4">AI Feedback</h3>
               
               <div className="space-y-4">
-                <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                  <h4 className="text-purple-400 font-semibold mb-1 text-sm">General Review</h4>
-                  <p className="text-gray-200 text-sm">{tutorResult.evaluation.feedback}</p>
-                  <p className="text-gray-400 text-xs mt-2 italic">{tutorResult.evaluation.tamilFeedback}</p>
+                <div className="p-4 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/10 dark:border-white/10">
+                  <h4 className="text-purple-600 dark:text-purple-400 font-semibold mb-1 text-[15px]">General Review</h4>
+                  <p className="text-zinc-600 dark:text-gray-200 text-[15px]">{tutorResult.evaluation.feedback}</p>
+                  <p className="text-zinc-500 dark:text-gray-400 text-[13px] mt-2 italic">{tutorResult.evaluation.tamilFeedback}</p>
                 </div>
 
                 {tutorResult.evaluation.grammarIssues?.length > 0 && (
@@ -311,10 +311,10 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
       {activeFeature === "image" && (
         <div className="space-y-6 animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
-            <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
+            <h3 className="text-[17px] font-bold text-foreground mb-2 flex items-center gap-2">
               <ImageIcon className="w-5 h-5 text-purple-400" /> Creative Scene Describer
             </h3>
-            <p className="text-xs text-gray-400 mb-6">
+            <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-6">
               Study the scenery prompt below. Write a creative summary describing its mood, weather, lights, and items in at least 15 words.
             </p>
 
@@ -334,11 +334,11 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                   disabled={isImageSubmitting}
                   rows={4}
                   placeholder="Describe the cozy library cafe room, rainy streets, coffee cup details..."
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-purple-500 transition-all resize-none"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-2xl p-4 text-[13px] text-foreground placeholder:text-zinc-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-purple-500 transition-all resize-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"
                 />
 
                 {imageError && (
-                  <div className="text-xs text-red-400 bg-red-500/10 p-2.5 rounded-lg border border-red-500/20">
+                  <div className="text-[13px] text-red-600 dark:text-red-400 bg-red-500/10 p-2.5 rounded-lg border border-red-500/20">
                     {imageError}
                   </div>
                 )}
@@ -353,11 +353,11 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
               </div>
             ) : (
               <div className="p-5 bg-purple-500/5 border border-purple-500/25 rounded-2xl space-y-3">
-                <h4 className="font-bold text-sm text-white flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-green-400" /> Summary Grade
+                <h4 className="font-bold text-[15px] text-foreground flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-green-500 dark:text-green-400" /> Summary Grade
                 </h4>
-                <p className="text-xs text-gray-300 leading-relaxed">{imageResult.feedback}</p>
-                <p className="text-xs text-purple-300 italic">{imageResult.tamilFeedback}</p>
+                <p className="text-[13px] text-zinc-600 dark:text-gray-300 leading-relaxed">{imageResult.feedback}</p>
+                <p className="text-[13px] text-purple-600 dark:text-purple-300 italic">{imageResult.tamilFeedback}</p>
 
                 {imageResult.sensoryMatches.length > 0 && (
                   <div className="text-xs">
@@ -389,7 +389,7 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
         <div className="space-y-6 max-w-lg mx-auto animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+              <h3 className="text-[17px] font-bold text-foreground flex items-center gap-2">
                 <ShieldAlert className="w-5 h-5 text-orange-400 animate-pulse" /> No-Filter Constraints
               </h3>
               <div className="flex gap-1">
@@ -403,7 +403,7 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                     className={`w-5 h-5 rounded text-[10px] font-bold border transition-colors ${
                       filterIdx === i 
                         ? "bg-purple-600 border-purple-500 text-white" 
-                        : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
+                        : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-zinc-500 dark:text-gray-400 hover:text-foreground"
                     }`}
                   >
                     {i + 1}
@@ -412,13 +412,13 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
               </div>
             </div>
 
-            <p className="text-xs text-gray-400 mb-6 leading-relaxed">
-              Rewrite the simple sentence below. Make it engaging, but you <strong className="text-orange-400 font-semibold">cannot use basic filter words</strong>.
+            <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-6 leading-relaxed">
+              Rewrite the simple sentence below. Make it engaging, but you <strong className="text-orange-500 dark:text-orange-400 font-semibold">cannot use basic filter words</strong>.
             </p>
 
-            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl space-y-2 mb-6">
-              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Boring Sentence:</span>
-              <p className="text-white text-base font-semibold">"{activeFilterPrompt.original}"</p>
+            <div className="p-4 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl space-y-2 mb-6">
+              <span className="text-[10px] text-zinc-500 dark:text-gray-400 font-bold uppercase tracking-wider block">Boring Sentence:</span>
+              <p className="text-foreground text-[15px] font-semibold">"{activeFilterPrompt.original}"</p>
             </div>
 
             {/* Banned word tokens */}
@@ -453,11 +453,11 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                   onChange={(e) => setFilterText(e.target.value)}
                   rows={3}
                   placeholder="Enter your advanced rewrite here..."
-                  className="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-xs text-white focus:outline-none focus:border-purple-500 transition-all resize-none"
+                  className="w-full bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-2xl p-4 text-[13px] text-foreground focus:outline-none focus:border-purple-500 transition-all resize-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"
                 />
 
                 {/* Real time validations */}
-                <div className="space-y-2 p-3 bg-black/30 rounded-xl border border-white/5 text-[11px]">
+                <div className="space-y-2 p-3 bg-black/5 dark:bg-black/30 rounded-xl border border-black/10 dark:border-white/5 text-[11px]">
                   <div className="flex items-center gap-1.5">
                     {violatedWords.length === 0 ? (
                       <Check className="w-4 h-4 text-green-400" />
@@ -492,15 +492,15 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
               </div>
             ) : (
               <div className="p-4 bg-green-500/10 border border-green-500/25 rounded-2xl space-y-3">
-                <h4 className="font-bold text-sm text-green-400 flex items-center gap-2">
+                <h4 className="font-bold text-[15px] text-green-600 dark:text-green-400 flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4" /> Rewrite Approved!
                 </h4>
-                <p className="text-xs text-gray-200 leading-relaxed">
+                <p className="text-[13px] text-zinc-600 dark:text-gray-200 leading-relaxed">
                   {filterResult.feedback}
                 </p>
-                <p className="text-xs text-purple-300 italic">{filterResult.tamilFeedback}</p>
+                <p className="text-[13px] text-purple-600 dark:text-purple-300 italic">{filterResult.tamilFeedback}</p>
 
-                <div className="flex justify-between items-center text-xs text-yellow-500 font-bold pt-3 border-t border-white/5">
+                <div className="flex justify-between items-center text-[13px] text-yellow-600 dark:text-yellow-500 font-bold pt-3 border-t border-black/5 dark:border-white/5">
                   <span>+{filterResult.xpAwarded} XP Earned</span>
                   <button onClick={resetFilterRewrite} className="text-purple-400 hover:underline">
                     Try another sentence
