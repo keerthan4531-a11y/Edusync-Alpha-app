@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { generateResponse, type INIXAMessage } from "@/lib/inixa-ai";
+import { generateResponseTurbo, type INIXAMessage } from "@/lib/inixa-ai";
 
 export async function POST(req: Request) {
   try {
@@ -39,27 +39,37 @@ Schema:
       { role: "user", content: `Evaluate my description: "${userDescription}"` }
     ];
 
-    const aiRes = await generateResponse(
+    const aiRes = await generateResponseTurbo(
       messages,
       {
         stage: "stage-1",
         feature: "creative-expression",
         role: session.user.role || "STUDENT",
         userId: session.user.id
-      }
+      },
+      0.7
     );
+
+    if (!aiRes.success) {
+      console.error("Turbo AI Failed to evaluate:", aiRes.error);
+      return NextResponse.json({ error: "Evaluation failed" }, { status: 500 });
+    }
 
     let result = {
       score: 75,
       feedback: "Good try! You identified the main objects, but check your verb tenses.",
       tamilFeedback: "நல்ல முயற்சி! படத்தில் உள்ளதை சரியாக சொல்லியிருக்கிறீர்கள், ஆனால் grammar-ஐ கவனிக்கவும்.",
-      improvedVersion: "A beautiful scenery based on the image..."
+      improvedVersion: "A beautiful scenery based on the image...",
+      xpAwarded: 15
     };
 
     try {
       const cleanJson = aiRes.response.replace(/```json|```/gi, "").trim();
       const parsed = JSON.parse(cleanJson);
-      if (parsed.score !== undefined) result = parsed;
+      if (parsed.score !== undefined) {
+        result = parsed;
+        result.xpAwarded = Math.floor(parsed.score * 0.2); // Calculate dynamic XP based on score
+      }
     } catch (e) {
       console.error("Failed to parse evaluation AI response", aiRes.response);
     }

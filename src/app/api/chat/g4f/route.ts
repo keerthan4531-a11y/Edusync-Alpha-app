@@ -14,14 +14,14 @@ interface ScrapedKeyEntry { key: string; model: string; category: string; }
 let cachedScrapedKeys: ScrapedKeyEntry[] = [];
 let lastScrapeTime = 0;
 const SCRAPE_URL = 'https://raw.githubusercontent.com/alistaitsacle/free-llm-api-keys/main/README.md';
-const SCRAPE_INTERVAL = 5 * 60 * 1000; 
+const SCRAPE_INTERVAL = 5 * 60 * 1000;
 
 async function scrapeKeys(): Promise<ScrapedKeyEntry[]> {
   try {
     const res = await nodeFetch(SCRAPE_URL);
     const text = await res.text();
     const entries: ScrapedKeyEntry[] = [];
-    
+
     let currentCategory = '';
     const lines = text.split('\n');
     for (const line of lines) {
@@ -32,7 +32,7 @@ async function scrapeKeys(): Promise<ScrapedKeyEntry[]> {
       else if (line.startsWith('### Multi-Model')) currentCategory = 'smart-chat';
       else if (line.startsWith('### Kimi')) currentCategory = 'kimi-k2.5';
       else if (line.startsWith('### Image')) currentCategory = 'text-embedding';
-      
+
       const match = /\|\s*`(sk-[a-zA-Z0-9_-]+)`\s*\|\s*([a-zA-Z0-9._-]+)\s*\|/.exec(line);
       if (match) {
         entries.push({
@@ -71,21 +71,21 @@ async function refreshProxyPool() {
       const psRes = await nodeFetch('https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks5&timeout=4000&country=all');
       const psText = await psRes.text();
       psText.split('\n').filter((l: string) => l.trim().length > 0).forEach((p: string) => newProxies.add(`socks5://${p.trim()}`));
-    } catch(e) {}
+    } catch (e) { }
 
     // Source 2: ProxyScrape SOCKS4
     try {
       const psRes4 = await nodeFetch('https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks4&timeout=4000&country=all');
       const psText4 = await psRes4.text();
       psText4.split('\n').filter((l: string) => l.trim().length > 0).forEach((p: string) => newProxies.add(`socks4://${p.trim()}`));
-    } catch(e) {}
+    } catch (e) { }
 
     // Source 3: ProxyScrape HTTP (High Quality)
     try {
       const psResH = await nodeFetch('https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=4000&country=all&ssl=yes&anonymity=anonymous,elite');
       const psTextH = await psResH.text();
       psTextH.split('\n').filter((l: string) => l.trim().length > 0).forEach((p: string) => newProxies.add(`http://${p.trim()}`));
-    } catch(e) {}
+    } catch (e) { }
 
     // Source 4: Geonode API SOCKS & HTTP
     try {
@@ -93,10 +93,10 @@ async function refreshProxyPool() {
       const geoData = (await geoRes.json()) as any;
       if (geoData && geoData.data) {
         geoData.data
-          .filter((p: any) => p.speed < 3000) 
+          .filter((p: any) => p.speed < 3000)
           .forEach((p: any) => newProxies.add(`${p.protocols[0]}://${p.ip}:${p.port}`));
       }
-    } catch(e) {}
+    } catch (e) { }
 
     if (newProxies.size > 0) {
       // Shuffle the set
@@ -113,7 +113,7 @@ async function refreshProxyPool() {
     const lines = fallbackText.split('\n').filter((l: string) => l.trim().length > 0);
     const shuffled = lines.sort(() => 0.5 - Math.random()).slice(0, 100);
     shuffled.forEach((p: string) => newProxies.add(`socks5://${p.trim()}`));
-    
+
     // Source 6: Fallback TheSpeedX HTTP
     try {
       const fallbackHRes = await nodeFetch('https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/http.txt');
@@ -121,7 +121,7 @@ async function refreshProxyPool() {
       const hLines = fallbackHText.split('\n').filter((l: string) => l.trim().length > 0);
       const hShuffled = hLines.sort(() => 0.5 - Math.random()).slice(0, 100);
       hShuffled.forEach((p: string) => newProxies.add(`http://${p.trim()}`));
-    } catch(e) {}
+    } catch (e) { }
 
     proxyPool = Array.from(newProxies).sort(() => 0.5 - Math.random());
     lastProxyScrape = now;
@@ -150,12 +150,12 @@ function checkRateLimit(ip: string): boolean {
   const now = Date.now();
   const limitInfo = ipRateLimit.get(ip);
   const limit = adminStats.getRateLimit();
-  
+
   if (!limitInfo || now > limitInfo.resetTime) {
     ipRateLimit.set(ip, { count: 1, resetTime: now + 60 * 1000 }); // 60s window
     return true;
   }
-  if (limitInfo.count >= limit) { 
+  if (limitInfo.count >= limit) {
     return false;
   }
   limitInfo.count++;
@@ -165,20 +165,20 @@ function checkRateLimit(ip: string): boolean {
 export async function POST(req: Request) {
   // Disable strict SSL verification to bypass expired proxy certificates
   process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-  
+
   try {
     // 1. IP Rate Limiting & Banning
     const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-    
+
     if (adminStats.isIpBanned(ip)) {
       return NextResponse.json({ ok: false, error: 'Forbidden: IP Banned' }, { status: 403 });
     }
-    
+
     adminStats.logRequest(ip);
 
     let authHeader = req.headers.get('authorization');
     const SERVER_SECRET = process.env.INIXA_PROXY_SECRET; // No hardcoded fallback
-    
+
     const hasValidServerSecret = SERVER_SECRET && authHeader && authHeader.includes(SERVER_SECRET);
     const isInternalRequest = req.headers.get('x-internal-request') === 'true';
 
@@ -193,10 +193,10 @@ export async function POST(req: Request) {
     const origin = req.headers.get('origin') || req.headers.get('referer') || '';
     const host = req.headers.get('host') || '';
     const allowedOrigins = ['localhost', '127.0.0.1', 'ai-studio-inixa.vercel.app', 'inixa.vercel.app'];
-    
+
     // Check if origin matches allowed domains or matches current host
     const isOriginAllowed = allowedOrigins.some(allowed => origin.includes(allowed)) || (host && origin.includes(host));
-    
+
     const isScrapedKeyRequest = authHeader && (authHeader.includes('sk-') || authHeader.includes('g4f_'));
 
     if (!isOriginAllowed && !hasValidServerSecret && !isScrapedKeyRequest && !isInternalRequest) {
@@ -217,18 +217,18 @@ export async function POST(req: Request) {
     if (authHeader && !authHeader.includes('g4f_') && (!SERVER_SECRET || !authHeader.includes(SERVER_SECRET))) {
       const isScrapedKeyRequest = authHeader.includes('sk-');
       let targetUrl = 'http://localhost:20128/v1/chat/completions';
-      
+
       if (isScrapedKeyRequest && model !== 'g4f/gpt-4o') {
         const now = Date.now();
         if (now - lastScrapeTime > SCRAPE_INTERVAL || cachedScrapedKeys.length === 0) {
           cachedScrapedKeys = await scrapeKeys();
           lastScrapeTime = now;
         }
-        
+
         let matchingKeys = cachedScrapedKeys;
         if (model === 'gpt-5.5') matchingKeys = cachedScrapedKeys.filter((k: any) => k.category === 'gpt-5.5');
         else if (model === 'claude-opus-4.7') matchingKeys = cachedScrapedKeys.filter((k: any) => k.category === 'claude-opus-4-7');
-        
+
         if (matchingKeys.length > 0) {
           const randomKey = matchingKeys[Math.floor(Math.random() * matchingKeys.length)];
           authHeader = `Bearer ${randomKey.key}`;
@@ -267,7 +267,7 @@ export async function POST(req: Request) {
     if (model.startsWith('g4f/') || model.startsWith('deepinfra/') || model.startsWith('qwen_worker/')) {
       let g4fModel = model;
       let targetEndpoint = 'https://g4f.space/v1/chat/completions';
-      
+
       if (model.startsWith('deepinfra/')) {
         // Skip deepinfra directly to prevent DNS getaddrinfo ENOTFOUND blocks
         g4fModel = model.replace('deepinfra/', '');
@@ -279,7 +279,7 @@ export async function POST(req: Request) {
       } else {
         g4fModel = model.replace('g4f/', '');
       }
-      
+
       // 1. Direct Fetch from server/user IP
       console.log(`[Route] Trying direct fetch from server/user IP first for model: ${g4fModel} at ${targetEndpoint}`);
       let directSucceeded = false;
@@ -287,16 +287,16 @@ export async function POST(req: Request) {
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-        
+
         if (req.signal) {
           req.signal.addEventListener('abort', () => {
             console.log(`[Route] Direct fetch aborted by client for model ${g4fModel}`);
             controller.abort();
           });
         }
-        
-        const fakeIP = `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
-        
+
+        const fakeIP = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+
         const directHeaders: any = {
           'Content-Type': 'application/json',
           'Accept': stream ? 'text/event-stream' : 'application/json',
@@ -328,6 +328,13 @@ export async function POST(req: Request) {
         }
       } catch (e: any) {
         console.warn(`[Route] Direct fetch failed/timed out: ${e.message || e}`);
+        if (e.name === 'AbortError' || (e.message && e.message.includes('aborted')) || req.signal?.aborted) {
+          return new Response("Aborted by client", { status: 499 });
+        }
+      }
+
+      if (req.signal?.aborted) {
+        return new Response("Aborted by client", { status: 499 });
       }
 
       if (directSucceeded && directRes) {
@@ -348,9 +355,13 @@ export async function POST(req: Request) {
       }
 
       // 2. Proxy-Race (if direct fetch fails)
+      if (req.signal?.aborted) {
+        return new Response("Aborted by client", { status: 499 });
+      }
+
       console.log(`[Route] Direct fetch failed. Falling back to Proxy-Race...`);
       await refreshProxyPool();
-      
+
       let proxySucceeded = false;
       let winningRes: any = null;
       let proxyRaceErrors = '';
@@ -358,12 +369,12 @@ export async function POST(req: Request) {
       if (proxyPool.length > 0) {
         const numToRace = Math.min(12, proxyPool.length);
         const proxiesToTry = [];
-        for(let i = 0; i < numToRace; i++) {
+        for (let i = 0; i < numToRace; i++) {
           proxiesToTry.push(getNextProxy());
         }
 
         console.log(`[ProxyPool] Racing ${numToRace} proxies for model: ${g4fModel} at ${targetEndpoint}`);
-        
+
         const controllers = proxiesToTry.map(() => new AbortController());
 
         if (req.signal) {
@@ -376,7 +387,7 @@ export async function POST(req: Request) {
         const racePromises = proxiesToTry.map((proxyUrl, index) => {
           return new Promise(async (resolve, reject) => {
             if (!proxyUrl) return reject(new Error('Empty proxy'));
-            
+
             const controller = controllers[index];
             const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
@@ -391,8 +402,8 @@ export async function POST(req: Request) {
               } else {
                 agent = proxyUrl.startsWith('https') ? new HttpsProxyAgent(proxyUrl) : new HttpProxyAgent(proxyUrl);
               }
-              const fakeIP = `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
-              
+              const fakeIP = `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
+
               const requestBody: any = { ...body, model: g4fModel };
               if (body.provider) {
                 requestBody.provider = body.provider;
@@ -414,7 +425,7 @@ export async function POST(req: Request) {
                 agent: agent,
                 signal: controller.signal as any
               });
-              
+
               clearTimeout(timeoutId);
 
               if (g4fRes.ok) {
@@ -468,8 +479,12 @@ export async function POST(req: Request) {
       }
 
       // 3. Fallbacks: Pollinations -> LLM7.io -> DDG (for deepseek)
+      if (req.signal?.aborted) {
+        return new Response("Aborted by client", { status: 499 });
+      }
+
       const formattedMessages = body.messages || [{ role: 'user', content: body.message || '' }];
-      
+
       console.log(`[Route] Proxy-Race failed/unavailable. Trying Pollinations fallback...`);
       try {
         const pollRes = await nodeFetch('https://text.pollinations.ai/openai', {
@@ -481,6 +496,7 @@ export async function POST(req: Request) {
             stream: stream === true,
             temperature: 0.7,
           }),
+          signal: req.signal as any
         });
 
         if (pollRes.ok) {
@@ -516,6 +532,7 @@ export async function POST(req: Request) {
             stream: stream === true,
             temperature: 0.7,
           }),
+          signal: req.signal as any
         });
 
         if (llm7Res.ok) {
@@ -552,7 +569,8 @@ export async function POST(req: Request) {
               'x-vqd-accept': '1',
               'Referer': 'https://duckduckgo.com/',
               'Origin': 'https://duckduckgo.com',
-            }
+            },
+            signal: req.signal as any
           });
           const vqd = statusRes.headers.get('x-vqd-4');
           if (!vqd) throw new Error(`VQD token fetch failed (HTTP ${statusRes.status})`);
@@ -573,6 +591,7 @@ export async function POST(req: Request) {
               'x-vqd-4': vqd,
             },
             body: JSON.stringify({ model: 'deepseek-r1', messages: ddgMessages }),
+            signal: req.signal as any
           });
 
           if (!chatRes.ok) throw new Error(`DDG chat error: HTTP ${chatRes.status}`);
@@ -602,7 +621,7 @@ export async function POST(req: Request) {
                           const openaiChunk = { id: `chatcmpl-ddg-${Date.now()}`, object: 'chat.completion.chunk', created: Math.floor(Date.now() / 1000), model: 'deepseek-r1', choices: [{ index: 0, delta: { content: parsed.message }, finish_reason: null }] };
                           controller.enqueue(encoder.encode(`data: ${JSON.stringify(openaiChunk)}\n\n`));
                         }
-                      } catch {}
+                      } catch { }
                     }
                   }
                 });
@@ -622,7 +641,7 @@ export async function POST(req: Request) {
               try {
                 const parsed = JSON.parse(line.slice(6));
                 if (parsed.message) content += parsed.message;
-              } catch {}
+              } catch { }
             }
           }
           if (content) {
@@ -649,7 +668,7 @@ export async function POST(req: Request) {
 
     // 3. Fallback Route
     throw new Error(`Invalid model prefix. Must start with g4f/ or use valid API key. Model: ${model}`);
-    
+
   } catch (error: any) {
     console.error('Master API Error:', error);
     return NextResponse.json(

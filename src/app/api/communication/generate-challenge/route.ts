@@ -130,11 +130,12 @@ export async function POST(req: Request) {
         break;
       case "WRITING_IMAGE":
         promptText = `Generate a ${difficulty} level picture description prompt. Provide a detailed descriptive text-to-image prompt that will be rendered for the student, and write the matching description outline they must replicate.
+        IMPORTANT: Create a COMPLETELY RANDOM, unique scene every time! (e.g., sci-fi city, bustling alien market, underwater base, peaceful snowy forest, medieval castle). DO NOT just use the cozy cafe example!
         Output MUST be strictly valid JSON in this exact format:
         {
           "title": "Creative Scene Describer",
-          "content": "A detailed descriptive prompt describing a visual scene, e.g., 'A cozy library cafe on a rainy day, steaming coffee, glowing warm lights'",
-          "imagePrompt": "The text-to-image prompt to use, e.g., 'A cozy library cafe on a rainy day, steaming coffee, glowing warm lights'"
+          "content": "A detailed descriptive prompt describing the visual scene you imagined.",
+          "imagePrompt": "The text-to-image prompt to use to generate the image."
         }`;
         break;
       case "WRITING_REWRITE":
@@ -272,7 +273,8 @@ export async function POST(req: Request) {
         landmarks: parsedData.landmarks || null,
         correctPath: parsedData.correctPath || null
       },
-      modelUsed: result.modelUsed
+      modelUsed: result.modelUsed,
+      responseTime: result.responseTime
     });
 
   } catch (error: any) {

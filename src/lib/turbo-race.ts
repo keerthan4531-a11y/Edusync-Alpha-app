@@ -42,35 +42,50 @@ interface RaceModel {
  * - Direct APIs: Pollinations, LLM7 (2 models)
  */
 const RACE_MODELS: RaceModel[] = [
-  // ── Tier: Frontier — Top-tier models, slightly slower but highest quality ──
-  { id: 'g4f-gpt-5-5-pollinations',     label: 'GPT-5.5 (Poll)',         tier: 'frontier',   timeout: 8000 },
-  { id: 'g4f-grok-4-pollinations',       label: 'Grok 4 (Poll)',          tier: 'frontier',   timeout: 8000 },
-  { id: 'g4f-deepseek-v4-pro-nvidia',    label: 'DeepSeek V4 Pro (Nv)',   tier: 'frontier',   timeout: 8000 },
-  { id: 'g4f-qwen-3.7-max',             label: 'Qwen 3.7 Max',           tier: 'frontier',   timeout: 8000 },
+  // ── Gemini Models (Not Gemma) ──
+  { id: 'g4f-gemini-3.1-flash-lite-v1beta', label: 'Gemini 3.1 Flash-Lite', tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-gemini-3.1-flash-lite-preview-v1beta', label: 'Gemini 3.1 Preview', tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-gemini-2.5-flash-v1beta', label: 'Gemini 2.5 Flash', tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-gemini-2.5-flash-lite-v1beta', label: 'Gemini 2.5 Flash-Lite', tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-gemini-flash-lite-latest-v1beta', label: 'Gemini Flash-Lite Latest', tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-gemini-3.5-flash-v1beta', label: 'Gemini 3.5 Flash', tier: 'frontier', timeout: 45000 },
 
-  // ── Tier: Mid-High — Strong, generally faster response times ──
-  { id: 'g4f-gemini-3.5-flash-v1beta',  label: 'Gemini 3.5 Flash',       tier: 'mid-high',   timeout: 6000 },
-  { id: 'g4f-glm-5.2-pollinations',     label: 'GLM 5.2 (Poll)',         tier: 'mid-high',   timeout: 6000 },
-  { id: 'g4f-kimi-k2.6-nvidia',         label: 'Kimi k2.6 (Nv)',         tier: 'mid-high',   timeout: 6000 },
-  { id: 'g4f-deepseek-v4-flash-nvidia',  label: 'DeepSeek V4 Flash (Nv)', tier: 'mid-high',   timeout: 6000 },
-  { id: 'g4f-grok-4.3-crowllm',         label: 'Grok 4.3 (CrowLLM)',     tier: 'mid-high',   timeout: 6000 },
-  { id: 'g4f-nemotron-super-120b-nvidia', label: 'Nemotron 120B (Nv)',    tier: 'mid-high',   timeout: 6000 },
+  // ── Grok Models ──
+  { id: 'g4f-grok-4-pollinations', label: 'Grok 4 (Pollinations)', tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-grok', label: 'Grok (Proxy Pool)', tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-grok-4.3-crowllm', label: 'Grok 4.3 (CrowLLM)', tier: 'frontier', timeout: 45000 },
 
-  // ── Tier: Fast — Smaller/faster models for guaranteed quick response ──
-  { id: 'g4f-gpt-4o-mini-airforce',     label: 'GPT-4o mini (AF)',       tier: 'fast',       timeout: 5000 },
+  // ── DeepSeek Frontier Models ──
+  { id: 'g4f-deepseek-v4-flash-nvidia', label: 'DeepSeek V4 Flash (Nv)', tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-deepseek-v4-pro-nvidia', label: 'DeepSeek V4 Pro (Nv)', tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-deepseek-v3.2', label: 'DeepSeek V3.2', tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-deepseek-v4-pro', label: 'DeepSeek V4 Pro', tier: 'frontier', timeout: 45000 },
 
-  // ── Tier: Direct APIs — Different infrastructure, no g4f rate limits ──
-  { id: 'pollination-gptoss',           label: 'Pollinations Direct',     tier: 'direct-api', timeout: 10000 },
-  { id: 'llm7-models',                  label: 'LLM7 Direct',            tier: 'direct-api', timeout: 10000 },
-  { id: 'gemini-3.5-flash',             label: 'Gemini CF Worker',        tier: 'direct-api', timeout: 8000 },
+  // ── Kimi Models ──
+  { id: 'g4f-kimi-k2.6-nvidia', label: 'Kimi k2.6 (Nv)', tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-kimi-k2.6', label: 'Kimi k2.6 (Proxy Pool)', tier: 'frontier', timeout: 45000 },
+
+  // ── Mistral & Large Llama Models (>50B) ──
+  { id: 'g4f-mistral-large-675b', label: 'Mistral Large 675B (Nv)', tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-mistral-small-119b',                   label: 'Mistral Small 119B (Nv)', tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-llama-3.3-70b-groq',                   label: 'Llama 3.3 70B (Groq)',    tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-llama-3.3-70b-nvidia',                 label: 'Llama 3.3 70B (Nv)',      tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-nemotron-super-120b-nvidia',           label: 'Nemotron 120B (Nv)',      tier: 'frontier', timeout: 45000 },
+  { id: 'g4f-nemotron-super-openrouter',            label: 'Nemotron 120B (OpenR)',   tier: 'frontier', timeout: 45000 },
 ];
 
-// Subset of most reliable models for proxy fallback (fewer = less resource waste)
+// Fallbacks for Phase 2 if everything in Phase 1 fails (Direct APIs)
 const PROXY_RACE_MODEL_IDS = [
-  'g4f-gemini-3.5-flash-v1beta',
-  'g4f-glm-5.2-pollinations',
-  'g4f-deepseek-v4-flash-nvidia',
+  'pollination-gptoss',
+  'llm7-models'
 ];
+
+// ── Champion Caching ──
+// To prevent burning tokens/rate limits across multiple sequential queries
+// we cache the winning model for a short time and try it first.
+let cachedChampionId: string | null = null;
+let cachedChampionExpiry: number = 0;
+const CHAMPION_TTL_MS = 60000; // 1 minute
 
 // ═══════════════════════════════════════════════════════════════════
 // Turbo Race Engine
@@ -128,6 +143,15 @@ async function raceModels(
           throw new Error(`Empty or too-short response from ${model.label}`);
         }
 
+        // Validate JSON since all Turbo callers expect JSON
+        try {
+          const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || content.match(/\{[\s\S]*\}/);
+          const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
+          JSON.parse(jsonString); // Will throw if invalid
+        } catch (e) {
+          throw new Error(`Invalid JSON format from ${model.label}`);
+        }
+
         const responseTime = Date.now() - startTime;
         console.log(`[TurboRace] 🏆 WINNER: ${model.label} responded in ${responseTime}ms (${content.length} chars)`);
 
@@ -140,7 +164,7 @@ async function raceModels(
         };
       } catch (error: any) {
         clearTimeout(timeoutId);
-        
+
         // Don't log abort errors (they're expected when another model wins)
         if (error.name !== 'AbortError') {
           const isRateLimit = error.message?.includes('429') || error.message?.includes('rate_limit');
@@ -172,7 +196,7 @@ async function raceModels(
     // All promises rejected
     const errorCount = aggregateError.errors?.length || 'unknown';
     console.error(`[TurboRace] 💀 ALL ${errorCount} models failed in Phase`);
-    
+
     // Cleanup
     controllers.forEach(ctrl => ctrl.abort());
     return null;
@@ -193,6 +217,36 @@ export async function turboRace(
 ): Promise<INIXAResponse> {
   const overallStart = Date.now();
 
+  // ── Phase 0: Champion Race (Save requests) ──
+  if (cachedChampionId && Date.now() < cachedChampionExpiry) {
+    const championModel = RACE_MODELS.find(m => m.id === cachedChampionId);
+    if (championModel) {
+      console.log(`[TurboRace] 🏆 Racing cached champion first: ${championModel.label}`);
+      
+      // We give the champion a short timeout so we don't stall too long if it randomly died
+      const championPhaseModel = { ...championModel, timeout: 8000 };
+      const phase0Result = await raceModels([championPhaseModel], messages, temperature, signal);
+
+      if (phase0Result) {
+        const sanitized = sanitizeResponse(phase0Result.response);
+        console.log(`[TurboRace] ✅ Champion responded in ${phase0Result.responseTime}ms. Saved 15 requests!`);
+        
+        // Refresh TTL
+        cachedChampionExpiry = Date.now() + CHAMPION_TTL_MS;
+
+        return {
+          success: true,
+          response: sanitized,
+          modelUsed: phase0Result.modelLabel,
+          responseTime: phase0Result.responseTime,
+        };
+      } else {
+        console.log(`[TurboRace] ⚠️ Champion failed or timed out. Falling back to full Phase 1 race.`);
+        cachedChampionId = null; // Invalidate
+      }
+    }
+  }
+
   console.log(`[TurboRace] 🚀 Starting race with ${RACE_MODELS.length} models across ${new Set(RACE_MODELS.map(m => m.tier)).size} tiers`);
 
   // ── Phase 1: Direct IP Race ──
@@ -202,10 +256,14 @@ export async function turboRace(
     const sanitized = sanitizeResponse(phase1Result.response);
     console.log(`[TurboRace] ✅ Phase 1 complete: ${phase1Result.modelLabel} in ${phase1Result.responseTime}ms`);
     
+    // Set as new champion
+    cachedChampionId = phase1Result.modelId;
+    cachedChampionExpiry = Date.now() + CHAMPION_TTL_MS;
+
     return {
       success: true,
       response: sanitized,
-      modelUsed: getInixaDisplayName(phase1Result.modelId),
+      modelUsed: phase1Result.modelLabel,
       responseTime: phase1Result.responseTime,
     };
   }
@@ -213,12 +271,18 @@ export async function turboRace(
   // ── Phase 2: Proxy Race (subset of models through proxy pool) ──
   console.log(`[TurboRace] ⚡ Phase 1 failed. Starting Phase 2 (Proxy Race) with ${PROXY_RACE_MODEL_IDS.length} models...`);
 
-  const proxyModels: RaceModel[] = PROXY_RACE_MODEL_IDS.map(id => ({
-    id,
-    label: `Proxy:${RACE_MODELS.find(m => m.id === id)?.label || id}`,
-    tier: 'mid-high' as const,
-    timeout: 15000, // Longer timeout for proxy
-  }));
+  const proxyModels: RaceModel[] = PROXY_RACE_MODEL_IDS.map(id => {
+    let label = id;
+    if (id === 'pollination-gptoss') label = 'Pollinations Direct';
+    if (id === 'llm7-models') label = 'LLM7 Direct';
+
+    return {
+      id,
+      label,
+      tier: 'direct-api' as const,
+      timeout: 45000, // Longer timeout to ensure fallback completes
+    };
+  });
 
   const phase2Result = await raceModels(proxyModels, messages, temperature, signal);
 

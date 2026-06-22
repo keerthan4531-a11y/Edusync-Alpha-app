@@ -18,18 +18,56 @@ const SCENE_PROMPTS = [
 export function ImageCreationModule() {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState("");
   const [currentPrompt, setCurrentPrompt] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
-  const loadNewImage = () => {
-    const randomPrompt = SCENE_PROMPTS[Math.floor(Math.random() * SCENE_PROMPTS.length)];
-    setCurrentPrompt(randomPrompt);
-    setImageUrl(`https://image.pollinations.ai/prompt/${encodeURIComponent(randomPrompt)}?width=800&height=500&nologo=true&seed=${Math.floor(Math.random() * 1000)}`);
+  const loadNewImage = async () => {
+    setIsGeneratingPrompt(true);
+    setError("");
+    setImageUrl("");
     setDescription("");
     setResult(null);
-    setError("");
+
+    try {
+      // 1. Get creative prompt from our fast Turbo Race engine
+      const res = await fetch("/api/communication/generate-picture-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: "Give me a random scene prompt." })
+      });
+
+      let generatedPrompt = "";
+      if (res.ok) {
+        const data = await res.json();
+        generatedPrompt = data.prompt || "";
+        generatedPrompt = generatedPrompt.replace(/["']/g, "").trim();
+      }
+
+      // Fallback if AI fails or returns empty
+      if (!generatedPrompt || generatedPrompt.length < 5) {
+         generatedPrompt = SCENE_PROMPTS[Math.floor(Math.random() * SCENE_PROMPTS.length)];
+      }
+
+      setCurrentPrompt(generatedPrompt);
+      
+      // 2. Load image via our Proxy Pool API to protect User IP
+      // We fetch it in JS first so we can keep the loading spinner active until it's fully downloaded
+      const imageResponse = await fetch(`/api/proxy-image?prompt=${encodeURIComponent(generatedPrompt)}`);
+      if (!imageResponse.ok) throw new Error("Failed to load image");
+      
+      const imageBlob = await imageResponse.blob();
+      const objectUrl = URL.createObjectURL(imageBlob);
+      setImageUrl(objectUrl);
+
+    } catch (err) {
+      console.error(err);
+      setError("Failed to generate new picture. Try again.");
+    } finally {
+      setIsGeneratingPrompt(false);
+    }
   };
 
   useEffect(() => {
@@ -79,10 +117,10 @@ export function ImageCreationModule() {
         </div>
         <button 
           onClick={loadNewImage}
-          disabled={loading}
-          className="flex items-center gap-2 px-4 py-2 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl transition-colors text-sm font-semibold"
+          disabled={loading || isGeneratingPrompt}
+          className="flex items-center gap-2 px-4 py-2 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 rounded-xl transition-colors text-sm font-semibold disabled:opacity-50"
         >
-          <RefreshCw className="w-4 h-4" /> Next Picture
+          <RefreshCw className={`w-4 h-4 ${isGeneratingPrompt ? 'animate-spin' : ''}`} /> Next Picture
         </button>
       </div>
 
@@ -90,7 +128,12 @@ export function ImageCreationModule() {
         
         {/* Image Display */}
         <div className="w-full h-64 md:h-80 rounded-2xl overflow-hidden border border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 relative">
-          {imageUrl ? (
+          {isGeneratingPrompt ? (
+             <div className="w-full h-full flex flex-col items-center justify-center text-zinc-500 gap-3">
+               <Loader2 className="w-8 h-8 animate-spin text-stage1" />
+               <span className="text-sm font-medium">Generating creative scene with Grok AI...</span>
+             </div>
+          ) : imageUrl ? (
             <img 
               src={imageUrl} 
               alt="AI Generated Scene"
