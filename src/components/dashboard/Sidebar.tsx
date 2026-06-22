@@ -33,6 +33,7 @@ const getMenuByRole = (role: string): MenuItem[] => {
     return [
       { name: "Dashboard", href: "/faculty-dashboard", icon: LayoutDashboard },
       { name: "Classrooms", href: "/faculty-dashboard/classrooms", icon: Users },
+      { name: "Communities", href: "/faculty-dashboard/communities", icon: Compass },
       { name: "Submissions", href: "/faculty-dashboard/submissions", icon: BookOpen },
     ]
   }

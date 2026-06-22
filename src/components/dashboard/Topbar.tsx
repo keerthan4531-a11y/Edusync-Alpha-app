@@ -1,7 +1,7 @@
 "use client"
 
 import { signOut } from "next-auth/react"
-import { LogOut, User as UserIcon, Bell } from "lucide-react"
+import { LogOut, User as UserIcon, Bell, Bot } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import {
@@ -91,6 +91,16 @@ export function Topbar({ user }: TopbarProps) {
       </div>
       
       <div className="flex items-center gap-3 relative z-10">
+        {(user.role === "FACULTY" || user.role === "HOD") && (
+          <button 
+            onClick={() => window.dispatchEvent(new CustomEvent("openAIAssistant"))}
+            className="flex items-center gap-2 px-4 py-2 text-xs md:text-sm font-semibold rounded-full bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] hover:scale-[1.03] active:scale-[0.97] transition-all cursor-pointer relative overflow-hidden mr-1"
+          >
+            <Bot className="w-4 h-4" />
+            <span>AI Assistant</span>
+          </button>
+        )}
+
         {/* Notification bell with glass styling */}
         <button className="glass-panel flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 relative text-muted-foreground hover:text-foreground">
           <Bell className="w-5 h-5 relative z-10" />

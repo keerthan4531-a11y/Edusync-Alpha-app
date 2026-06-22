@@ -3,6 +3,8 @@ import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout"
 
+import { AIAssistantVoice } from "@/components/dashboard/AIAssistantVoice"
+
 export default async function FacultyDashboardLayout({
   children,
 }: {
@@ -18,5 +20,10 @@ export default async function FacultyDashboardLayout({
     redirect("/")
   }
 
-  return <DashboardLayout user={session.user as any}>{children}</DashboardLayout>
+  return (
+    <DashboardLayout user={session.user as any}>
+      {children}
+      <AIAssistantVoice />
+    </DashboardLayout>
+  )
 }
