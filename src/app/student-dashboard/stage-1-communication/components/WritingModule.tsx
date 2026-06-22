@@ -53,6 +53,29 @@ const WRITING_FEATURES = [
 export function WritingModule({ content, challenges = [], onNext, onSubFeatureOpen }: WritingModuleProps) {
   const [activeFeature, setActiveFeature] = useState<"tutor" | "image" | "filter" | null>(null);
   const [tutorChallengeIdx, setTutorChallengeIdx] = useState(0);
+  const [dynamicChallenges, setDynamicChallenges] = useState<Stage1ContentDTO[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchChallenges() {
+      try {
+        const res = await fetch("/api/communication/generate-challenge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ moduleType: "WRITING" })
+        });
+        const data = await res.json();
+        if (data.success && data.challenge) {
+          setDynamicChallenges([data.challenge]);
+        }
+      } catch (err) {
+        console.error("Failed to generate writing challenges", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchChallenges();
+  }, []);
 
   useEffect(() => {
     if (onSubFeatureOpen) {
@@ -61,8 +84,9 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
   }, [activeFeature, onSubFeatureOpen]);
 
   // Filter writing challenges from challenges array
-  const writingChallenges = challenges.filter(c => c.type === "WRITING");
-  const activeTutorChallenge = writingChallenges[tutorChallengeIdx] || content;
+  const activeChallenges = dynamicChallenges.length > 0 ? dynamicChallenges : challenges;
+  const writingChallenges = activeChallenges.filter(c => c.type === "WRITING");
+  const activeTutorChallenge = writingChallenges[tutorChallengeIdx] || activeChallenges[0];
 
   // AI Writing Tutor speech Hook
   const {
@@ -161,7 +185,12 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
 
   return (
     <div className="space-y-6">
-      {!activeFeature ? (
+      {loading ? (
+        <LiquidGlassCard className="p-8 text-center flex flex-col items-center justify-center">
+          <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-zinc-500 dark:text-gray-400 font-medium">Inixa AI is generating your writing challenge...</p>
+        </LiquidGlassCard>
+      ) : !activeFeature ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {WRITING_FEATURES.map((feature) => {
             const Icon = feature.icon;

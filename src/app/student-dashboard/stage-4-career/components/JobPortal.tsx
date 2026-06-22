@@ -12,56 +12,42 @@ interface Job {
   skills: string[]
 }
 
-const MOCK_JOBS: Job[] = [
-  {
-    id: "1",
-    role: "Frontend Developer",
-    company: "Inixa AI",
-    type: "Remote",
-    location: "Bangalore, India",
-    salary: "₹12 - ₹18 LPA",
-    experience: "0 - 2 Years",
-    skills: ["React", "Next.js", "TypeScript", "Tailwind CSS"]
-  },
-  {
-    id: "2",
-    role: "Full-Stack Engineer",
-    company: "CloudSync",
-    type: "Hybrid",
-    location: "Chennai, India",
-    salary: "₹8 - ₹14 LPA",
-    experience: "1 - 3 Years",
-    skills: ["Node.js", "Next.js", "PostgreSQL", "React"]
-  },
-  {
-    id: "3",
-    role: "AI Integration specialist",
-    company: "EduTech Corp",
-    type: "Full-time",
-    location: "Hyderabad, India",
-    salary: "₹15 - ₹22 LPA",
-    experience: "Freshers Welcome",
-    skills: ["Python", "FastAPI", "OpenAI API", "JavaScript"]
-  },
-  {
-    id: "4",
-    role: "Software Development Engineer (SDE-1)",
-    company: "DecentralTech",
-    type: "Remote",
-    location: "Mumbai, India",
-    salary: "₹10 - ₹15 LPA",
-    experience: "0 - 1 Years",
-    skills: ["React", "TypeScript", "GraphQL", "Solidity"]
-  }
-]
+
 
 export function JobPortal() {
   const [search, setSearch] = useState("")
   const [appliedJobs, setAppliedJobs] = useState<string[]>([])
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState("")
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const filteredJobs = MOCK_JOBS.filter(job => 
+  import("react").then((React) => {
+    React.useEffect(() => {
+      fetch("/api/ai/generate-jobs")
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            // Map the API schema to our Job interface
+            const mappedJobs = data.map((item: any) => ({
+              id: item.id,
+              role: item.title || item.role,
+              company: item.company,
+              type: item.type,
+              location: item.location,
+              salary: item.salary,
+              experience: "0-2 Years", // Fallback if API doesn't provide
+              skills: item.requirements || []
+            }));
+            setJobs(mappedJobs);
+          }
+          setLoading(false);
+        })
+        .catch(() => setLoading(false));
+    }, []);
+  });
+
+  const filteredJobs = jobs.filter(job => 
     job.role.toLowerCase().includes(search.toLowerCase()) ||
     job.company.toLowerCase().includes(search.toLowerCase()) ||
     job.skills.some(skill => skill.toLowerCase().includes(search.toLowerCase()))
@@ -92,7 +78,7 @@ export function JobPortal() {
         </div>
         <div className="px-4 py-1.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-full text-xs font-semibold shadow-sm flex items-center gap-2 self-start md:self-auto">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          {MOCK_JOBS.length} Jobs Available
+          {loading ? "Generating..." : `${jobs.length} Jobs Available`}
         </div>
       </div>
 
@@ -109,6 +95,12 @@ export function JobPortal() {
       </LiquidGlassCard>
 
       {/* Jobs Grid */}
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-zinc-500">AI is fetching the latest job openings for you...</p>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredJobs.map(job => {
           const isApplied = appliedJobs.includes(job.id)
@@ -173,13 +165,14 @@ export function JobPortal() {
           )
         })}
 
-        {filteredJobs.length === 0 && (
+        {filteredJobs.length === 0 && !loading && (
           <div className="col-span-2 text-center py-12">
             <i className="fas fa-info-circle text-2xl text-zinc-400 dark:text-gray-500 mb-2"></i>
             <p className="text-[15px] text-zinc-500 dark:text-gray-400">No jobs found matching your search criteria.</p>
           </div>
         )}
       </div>
+      )}
     </div>
   )
 }

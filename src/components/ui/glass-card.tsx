@@ -6,8 +6,15 @@ export interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {}
 export function GlassCard({ className, ...props }: GlassCardProps) {
   return (
     <div 
-      className={cn("bg-white/5 backdrop-blur-md border border-white/10 rounded-xl", className)} 
+      className={cn(
+        "glass-panel relative overflow-hidden rounded-2xl",
+        className
+      )} 
       {...props} 
-    />
+    >
+      <div className="glass-specular" />
+      <div className="glass-noise" />
+      <div className="relative z-10 w-full h-full">{props.children}</div>
+    </div>
   )
 }

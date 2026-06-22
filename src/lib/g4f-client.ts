@@ -65,7 +65,75 @@ export async function createChatCompletion(
   // Resolve model ID to modelStr if it is a friendly ID
   const foundModel = AI_MODELS.find(m => m.id === modelStr);
   const resolvedModel = foundModel ? foundModel.modelStr : modelStr;
+  const engine = foundModel?.engine || 'g4f';
   
+  if (engine === 'pollinations') {
+    // Direct server-side request to Pollinations.ai (OpenAI compatible endpoint)
+    // The user's IP is not exposed, request goes through our backend
+    const fetchOptions: RequestInit = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: resolvedModel,
+        messages: request.messages,
+        temperature: request.temperature ?? 0.7,
+      }),
+    };
+    
+    try {
+      const response = await fetch('https://text.pollinations.ai/openai', fetchOptions);
+      if (!response.ok) {
+        throw new Error(`Pollinations API failed (${response.status})`);
+      }
+      const text = await response.text();
+      // Pollinations might return direct text or JSON. We check if it's JSON.
+      try {
+        const json = JSON.parse(text);
+        if (json.choices) return json as G4FCompletionResponse;
+      } catch (e) {
+        // Fallback if it returned raw text
+        return {
+          id: `pollinations-${Date.now()}`,
+          model: resolvedModel,
+          choices: [{ message: { role: 'assistant', content: text }, finish_reason: 'stop' }],
+        };
+      }
+      // If parsed JSON doesn't have choices, fallback to text
+      return {
+          id: `pollinations-${Date.now()}`,
+          model: resolvedModel,
+          choices: [{ message: { role: 'assistant', content: text }, finish_reason: 'stop' }],
+      };
+    } catch (e: any) {
+      throw new Error(`Pollinations API Error: ${e.message}`);
+    }
+  }
+  
+  if (engine === 'llm7') {
+    // Direct server-side request to LLM7.io proxy
+    const fetchOptions: RequestInit = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: resolvedModel,
+        messages: request.messages,
+        temperature: request.temperature ?? 0.7,
+      }),
+    };
+    
+    try {
+      // Assuming LLM7.io proxy endpoint is OpenAI compatible
+      const response = await fetch('https://api.llm7.io/v1/chat/completions', fetchOptions);
+      if (!response.ok) {
+        throw new Error(`LLM7 API failed (${response.status})`);
+      }
+      const data = await response.json();
+      return data as G4FCompletionResponse;
+    } catch (e: any) {
+      throw new Error(`LLM7 API Error: ${e.message}`);
+    }
+  }
+
   const isG4F = resolvedModel.startsWith('g4f/') || resolvedModel.startsWith('deepinfra/') || resolvedModel.startsWith('qwen_worker/');
   
   const port = process.env.PORT || '3000';

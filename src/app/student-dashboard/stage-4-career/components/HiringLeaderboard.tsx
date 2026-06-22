@@ -9,15 +9,28 @@ interface LeaderboardEntry {
   status: "Placed" | "Interviewing" | "Open to Work"
 }
 
-const MOCK_DATA: LeaderboardEntry[] = [
-  { rank: 1, name: "Alex Johnson", score: 980, mockScore: 95, projects: 5, status: "Placed" },
-  { rank: 2, name: "Samantha Lee", score: 940, mockScore: 92, projects: 4, status: "Interviewing" },
-  { rank: 3, name: "Michael Chen", score: 890, mockScore: 88, projects: 4, status: "Interviewing" },
-  { rank: 4, name: "Emily Davis", score: 850, mockScore: 84, projects: 3, status: "Open to Work" },
-  { rank: 5, name: "John Doe (You)", score: 780, mockScore: 80, projects: 3, status: "Open to Work" }
-]
+
+
+import { useState } from "react"
 
 export function HiringLeaderboard() {
+  const [data, setData] = useState<LeaderboardEntry[]>([])
+  const [loading, setLoading] = useState(true)
+
+  import("react").then((React) => {
+    React.useEffect(() => {
+      fetch("/api/ai/generate-leaderboard")
+        .then(res => res.json())
+        .then(resData => {
+          if (Array.isArray(resData)) {
+            setData(resData)
+          }
+          setLoading(false)
+        })
+        .catch(() => setLoading(false))
+    }, [])
+  })
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div>
@@ -42,7 +55,14 @@ export function HiringLeaderboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-black/5 dark:divide-white/5 text-[15px]">
-              {MOCK_DATA.map((student, idx) => {
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center">
+                    <div className="w-6 h-6 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                    <p className="text-zinc-500">AI is fetching the latest cohort standings...</p>
+                  </td>
+                </tr>
+              ) : data.map((student, idx) => {
                 const isUser = student.name.includes("(You)")
                 return (
                   <tr 

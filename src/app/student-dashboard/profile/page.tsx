@@ -8,6 +8,7 @@ import {
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { signOut } from "next-auth/react"
+import { LiquidGlassCard } from "@/components/ui/liquid-glass-card"
 
 export default function ProfileViewPage() {
   const router = useRouter()
@@ -57,7 +58,7 @@ export default function ProfileViewPage() {
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <RefreshCw className="w-8 h-8 animate-spin text-indigo-400" />
+        <RefreshCw className="w-8 h-8 animate-spin text-primary drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]" />
       </div>
     )
   }
@@ -69,9 +70,9 @@ export default function ProfileViewPage() {
       <div className="flex items-center justify-between mb-2 mt-4 px-2 md:px-0">
         <button 
           onClick={() => router.push('/student-dashboard')} 
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors backdrop-blur-md"
+          className="w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border-subtle)] hover:bg-[var(--glass-bg-hover)] hover:shadow-[var(--glass-shadow)] transition-all duration-300 backdrop-blur-md"
         >
-          <ChevronLeft className="w-6 h-6 text-zinc-600 dark:text-gray-300" />
+          <ChevronLeft className="w-6 h-6 text-foreground" />
         </button>
         <h1 className="text-xl font-bold tracking-wide">Profile</h1>
         <div className="w-auto">
@@ -81,32 +82,33 @@ export default function ProfileViewPage() {
 
       {/* Centered Avatar and Stats */}
       <div className="flex flex-col items-center justify-center mt-6 mb-8">
-        <div className="w-28 h-28 rounded-full bg-white/70 dark:bg-[#080A10] flex items-center justify-center text-4xl font-black text-foreground overflow-hidden shadow-xl border border-black/10 dark:border-white/10 mb-4 transition-transform hover:scale-105 duration-300 backdrop-blur-xl">
+        <div className="w-28 h-28 rounded-full bg-[var(--glass-bg)] flex items-center justify-center text-4xl font-black text-foreground overflow-hidden shadow-[var(--glass-shadow-hover),0_0_30px_rgba(139,92,246,0.1)] border-2 border-[var(--glass-border)] mb-4 transition-transform hover:scale-105 duration-300 backdrop-blur-xl">
           {avatarUrl ? (
             <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
           ) : (
-            <User className="w-12 h-12 text-zinc-400 dark:text-gray-400" />
+            <User className="w-12 h-12 text-muted-foreground" />
           )}
         </div>
         <h1 className="text-2xl font-bold mb-1">{fullName || "Student Demo"}</h1>
-        <p className="text-zinc-500 dark:text-gray-400 text-sm mb-5">Student</p>
+        <p className="text-muted-foreground text-sm mb-5">Student</p>
         
-        <div className="flex gap-4 text-xs font-bold text-zinc-600 dark:text-gray-300 bg-white/70 dark:bg-white/5 px-6 py-3 rounded-full border border-black/10 dark:border-white/10 shadow-lg backdrop-blur-xl">
+        {/* Glass stats pill */}
+        <div className="flex gap-4 text-xs font-bold text-foreground bg-[var(--glass-bg)] px-6 py-3 rounded-2xl border border-[var(--glass-border)] shadow-[var(--glass-shadow)] backdrop-blur-xl">
           <span className="flex flex-col items-center">
             <span className="text-lg font-black text-foreground">{profile?.level || 1}</span>
-            <span className="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-gray-500">Level</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Level</span>
           </span>
-          <div className="w-px h-8 bg-black/10 dark:bg-white/10"></div>
+          <div className="w-px h-8 bg-[var(--glass-border)]"></div>
           <span className="flex flex-col items-center">
-            <span className="text-lg font-black text-yellow-400">{profile?.coins || 0}</span>
-            <span className="text-[10px] uppercase tracking-wider text-gray-500">Coins</span>
+            <span className="text-lg font-black text-yellow-400 drop-shadow-[0_0_6px_rgba(234,179,8,0.4)]">{profile?.coins || 0}</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Coins</span>
           </span>
-          <div className="w-px h-8 bg-black/10 dark:bg-white/10"></div>
+          <div className="w-px h-8 bg-[var(--glass-border)]"></div>
           <span className="flex flex-col items-center">
-            <span className="text-lg font-black text-amber-500 flex items-center gap-1">
+            <span className="text-lg font-black text-amber-500 flex items-center gap-1 drop-shadow-[0_0_6px_rgba(245,158,11,0.4)]">
               <Flame className="w-4 h-4" /> {profile?.currentStreak || 0}
             </span>
-            <span className="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-gray-500">Streak</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Streak</span>
           </span>
         </div>
       </div>
@@ -115,70 +117,46 @@ export default function ProfileViewPage() {
       <div className="flex justify-center mb-10">
         <Button 
           onClick={() => router.push('/student-dashboard/profile/edit')} 
-          className="bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/20 hover:bg-black/10 dark:hover:bg-white/20 text-foreground rounded-full px-8 py-6 text-base font-bold flex items-center gap-2 transition-all shadow-lg backdrop-blur-md w-full max-w-xs"
+          variant="glass"
+          className="rounded-2xl px-8 py-6 text-base font-bold flex items-center gap-2 w-full max-w-xs border-[var(--glass-border)] hover:shadow-[var(--glass-shadow-hover),0_0_20px_rgba(139,92,246,0.1)]"
         >
           <Edit className="w-5 h-5" /> Edit Profile
         </Button>
       </div>
 
       {/* Info List Card */}
-      <div className="bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-[32px] p-2 backdrop-blur-2xl shadow-2xl">
+      <LiquidGlassCard className="p-2" accentColor="#8b5cf6">
         <div className="flex flex-col">
           
-          <div className="flex items-center gap-4 p-5 md:p-6 border-b border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-t-[24px]">
-            <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0">
-              <User className="w-5 h-5 text-zinc-500 dark:text-gray-300" />
+          {[
+            { icon: User, label: "Full Name", value: fullName || "Not provided" },
+            { icon: Mail, label: "Email", value: email || "student@example.com" },
+            { icon: Phone, label: "Phone", value: phone || "Add your phone number" },
+            { icon: FileText, label: "Bio", value: bio || "A work in progress, constantly evolving and learning. Passionate about growth and creativity." },
+          ].map((item, i, arr) => (
+            <div key={item.label} className={`flex items-center gap-4 p-5 md:p-6 hover:bg-[var(--glass-bg-hover)] transition-all duration-300 ${i < arr.length - 1 ? 'border-b border-[var(--glass-border-subtle)]' : ''} ${i === 0 ? 'rounded-t-[20px]' : ''}`}>
+              <div className="w-10 h-10 rounded-xl glass-panel flex items-center justify-center shrink-0">
+                <item.icon className="w-5 h-5 text-muted-foreground relative z-10" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{item.label}</span>
+                <span className="text-foreground font-semibold">{item.value}</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] text-zinc-500 dark:text-gray-500 font-bold uppercase tracking-wider">Full Name</span>
-              <span className="text-foreground font-semibold">{fullName || "Not provided"}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 p-5 md:p-6 border-b border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-            <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0">
-              <Mail className="w-5 h-5 text-zinc-500 dark:text-gray-300" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] text-zinc-500 dark:text-gray-500 font-bold uppercase tracking-wider">Email</span>
-              <span className="text-foreground font-semibold">{email || "student@example.com"}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 p-5 md:p-6 border-b border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-            <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0">
-              <Phone className="w-5 h-5 text-zinc-500 dark:text-gray-300" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] text-zinc-500 dark:text-gray-500 font-bold uppercase tracking-wider">Phone</span>
-              <span className="text-foreground font-semibold">{phone || "Add your phone number"}</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 p-5 md:p-6 border-b border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
-            <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0">
-              <FileText className="w-5 h-5 text-zinc-500 dark:text-gray-300" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[10px] text-zinc-500 dark:text-gray-500 font-bold uppercase tracking-wider">Bio</span>
-              <span className="text-foreground font-semibold leading-relaxed">
-                {bio || "A work in progress, constantly evolving and learning. Passionate about growth and creativity."}
-              </span>
-            </div>
-          </div>
+          ))}
 
           <div 
-            className="flex items-center gap-4 p-5 md:p-6 cursor-pointer hover:bg-red-500/10 transition-colors rounded-b-[24px]" 
+            className="flex items-center gap-4 p-5 md:p-6 cursor-pointer hover:bg-destructive/10 transition-all duration-300 rounded-b-[20px]" 
             onClick={() => signOut({ callbackUrl: '/' })}
           >
-            <div className="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center shrink-0">
-              <LogOut className="w-5 h-5 text-red-400" />
+            <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center shrink-0">
+              <LogOut className="w-5 h-5 text-destructive" />
             </div>
-            <span className="text-red-400 font-bold">Logout</span>
+            <span className="text-destructive font-bold">Logout</span>
           </div>
 
         </div>
-      </div>
+      </LiquidGlassCard>
       
     </div>
   )

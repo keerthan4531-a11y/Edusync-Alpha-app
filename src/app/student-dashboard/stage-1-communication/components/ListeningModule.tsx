@@ -29,6 +29,29 @@ interface ListeningModuleProps {
 }
 
 export function ListeningModule({ content, challenges = [], onNext, onSubFeatureOpen }: ListeningModuleProps) {
+  const [dynamicChallenges, setDynamicChallenges] = useState<Stage1ContentDTO[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchChallenges() {
+      try {
+        const res = await fetch("/api/communication/generate-challenge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ moduleType: "LISTENING" })
+        });
+        const data = await res.json();
+        if (data.success && data.challenge) {
+          setDynamicChallenges([data.challenge]);
+        }
+      } catch (err) {
+        console.error("Failed to generate listening challenges", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchChallenges();
+  }, []);
   const [activeFeature, setActiveFeature] = useState<"mcq" | "fill" | "directions" | "tone" | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -39,12 +62,14 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
   }, [activeFeature, onSubFeatureOpen]);
 
   // Find corresponding seeded challenges
-  const mcqChallenge = challenges.find(c => {
+  const activeChallenges = dynamicChallenges.length > 0 ? dynamicChallenges : challenges;
+  
+  const mcqChallenge = activeChallenges.find(c => {
     try {
       const q = typeof c.questions === "string" ? JSON.parse(c.questions) : c.questions;
       return Array.isArray(q) && q.length > 0 && !q[0].isDirection && !q[0].isToneAnalysis;
     } catch { return false; }
-  }) || content;
+  }) || activeChallenges[0];
 
   const directionsChallenge = challenges.find(c => {
     try {
@@ -391,8 +416,12 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
 
   return (
     <div className="space-y-6">
-      {/* FEATURE SELECTOR GRID */}
-      {!activeFeature ? (
+      {loading ? (
+        <LiquidGlassCard className="p-8 text-center flex flex-col items-center justify-center">
+          <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-zinc-500 dark:text-gray-400 font-medium">Inixa AI is generating your listening challenge...</p>
+        </LiquidGlassCard>
+      ) : !activeFeature ? (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-2">
           <button
             onClick={() => { setActiveFeature("mcq"); stopAudio(); }}

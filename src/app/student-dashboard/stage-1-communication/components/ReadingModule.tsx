@@ -1,15 +1,39 @@
 "use client";
-
+import { useState, useEffect } from "react";
 import { Stage1ContentDTO, Question } from "@/types/communication";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { useMCQ } from "../hooks/useMCQ";
 
 interface ReadingModuleProps {
-  content: Stage1ContentDTO | null;
+  content: Stage1ContentDTO | null; // Kept for backward compatibility, but we will ignore it
   onNext: () => void;
 }
 
-export function ReadingModule({ content, onNext }: ReadingModuleProps) {
+export function ReadingModule({ content: initialContent, onNext }: ReadingModuleProps) {
+  const [content, setContent] = useState<Stage1ContentDTO | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchChallenge() {
+      try {
+        const res = await fetch("/api/communication/generate-challenge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ moduleType: "READING" })
+        });
+        const data = await res.json();
+        if (data.success && data.challenge) {
+          setContent(data.challenge);
+        }
+      } catch (err) {
+        console.error("Failed to generate reading challenge", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchChallenge();
+  }, []);
+
   const {
     answers,
     handleOptionSelect,
@@ -19,10 +43,19 @@ export function ReadingModule({ content, onNext }: ReadingModuleProps) {
     error,
   } = useMCQ(content);
 
+  if (loading) {
+    return (
+      <LiquidGlassCard className="p-8 text-center flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-zinc-500 dark:text-gray-400 font-medium">Inixa AI is generating your reading challenge...</p>
+      </LiquidGlassCard>
+    );
+  }
+
   if (!content) {
     return (
       <LiquidGlassCard className="p-8 text-center text-zinc-500 dark:text-gray-400">
-        No reading challenges available right now.
+        Failed to generate reading challenge. Please try again later.
       </LiquidGlassCard>
     );
   }

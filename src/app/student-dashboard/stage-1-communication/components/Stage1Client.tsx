@@ -8,6 +8,7 @@ import { WritingModule } from "./WritingModule";
 import { SpeakingModule } from "./SpeakingModule";
 import { VocabularyModule } from "./VocabularyModule";
 import { AIChatModule } from "./AIChatModule";
+import { ImageCreationModule } from "./ImageCreationModule";
 import { useRouter } from "next/navigation";
 import { 
   BookOpen, 
@@ -16,6 +17,7 @@ import {
   Mic, 
   BookOpenCheck, 
   MessageSquareCode,
+  Image as ImageIcon,
   ChevronLeft
 } from "lucide-react";
 
@@ -30,6 +32,7 @@ const MAIN_FEATURES = [
   { id: "SPEAKING" as const, label: "Speaking", icon: Mic, color: "text-orange-400", bgColor: "bg-orange-400/10", borderColor: "border-orange-400/20" },
   { id: "VOCABULARY" as const, label: "Vocabulary", icon: BookOpenCheck, color: "text-rose-400", bgColor: "bg-rose-400/10", borderColor: "border-rose-400/20" },
   { id: "AICHAT" as const, label: "AI Convo", icon: MessageSquareCode, color: "text-purple-400", bgColor: "bg-purple-400/10", borderColor: "border-purple-400/20" },
+  { id: "CREATION" as const, label: "Visual Expression", icon: ImageIcon, color: "text-stage1", bgColor: "bg-stage1/10", borderColor: "border-stage1/20" },
 ];
 
 export function Stage1Client({ initialContent }: Stage1ClientProps) {
@@ -47,10 +50,10 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
         <div className="mb-4 shrink-0">
           <button 
             onClick={() => router.back()}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
+            className="glass-panel flex items-center justify-center w-10 h-10 rounded-full hover:bg-[var(--glass-bg-hover)] transition-all duration-300"
             aria-label="Go back"
           >
-            <ChevronLeft className="w-6 h-6 text-foreground" />
+            <ChevronLeft className="w-6 h-6 text-foreground relative z-10" />
           </button>
         </div>
         <div>
@@ -66,12 +69,14 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
             <button
               key={feature.id}
               onClick={() => setActiveTab(feature.id)}
-              className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+              className="glass-panel group relative flex flex-col items-center justify-center gap-4 p-8 rounded-[2rem] hover:-translate-y-1 hover:scale-[1.02] transition-all duration-400 overflow-hidden"
             >
-              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${feature.bgColor} ${feature.borderColor} border transition-transform duration-300 group-hover:scale-110`}>
+              <div className="glass-noise" />
+              <div className="glass-specular" />
+              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${feature.bgColor} ${feature.borderColor} border transition-transform duration-300 group-hover:scale-110 relative z-10 shadow-inner`}>
                 <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
               </div>
-              <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
+              <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors relative z-10">
                 {feature.label}
               </span>
             </button>
@@ -141,6 +146,10 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
 
         {activeTab === "AICHAT" && (
           <AIChatModule onSubFeatureOpen={setIsSubFeatureOpen} />
+        )}
+
+        {activeTab === "CREATION" && (
+          <ImageCreationModule />
         )}
       </div>
     </div>

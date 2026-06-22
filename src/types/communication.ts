@@ -1,4 +1,4 @@
-export type ActivityType = "READING" | "LISTENING" | "WRITING" | "SPEAKING" | "VOCABULARY" | "AICHAT";
+export type ActivityType = "READING" | "LISTENING" | "WRITING" | "SPEAKING" | "VOCABULARY" | "AICHAT" | "CREATION";
 
 export interface Question {
   id: number;

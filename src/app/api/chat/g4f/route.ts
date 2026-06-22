@@ -294,18 +294,22 @@ export async function POST(req: Request) {
         return new Promise(async (resolve, reject) => {
           if (!proxyUrl) return reject(new Error('Empty proxy'));
           
-          let agent: any;
-          if (proxyUrl.startsWith('socks')) {
-            agent = new SocksProxyAgent(proxyUrl);
-          } else {
-            agent = proxyUrl.startsWith('https') ? new HttpsProxyAgent(proxyUrl) : new HttpProxyAgent(proxyUrl);
-          }
-          
           const controller = new AbortController();
           // Increased timeout for racing to 30s to allow large prompts to process
           const timeoutId = setTimeout(() => controller.abort(), 30000);
 
           try {
+            // Validate proxy URL to avoid crashing on HTML error pages
+            if (proxyUrl.includes('<') || proxyUrl.includes('>') || proxyUrl.includes('{') || proxyUrl.length > 100) {
+              throw new Error('Invalid proxy format');
+            }
+
+            let agent: any;
+            if (proxyUrl.startsWith('socks')) {
+              agent = new SocksProxyAgent(proxyUrl);
+            } else {
+              agent = proxyUrl.startsWith('https') ? new HttpsProxyAgent(proxyUrl) : new HttpProxyAgent(proxyUrl);
+            }
             const fakeIP = `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
             
             const requestBody: any = { ...body, model: g4fModel };

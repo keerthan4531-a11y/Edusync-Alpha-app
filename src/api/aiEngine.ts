@@ -30,10 +30,586 @@ export interface AIModel {
 export const AI_MODELS: AIModel[] = [
   // ── Direct Provider Models (via INIXA AI Gateway CF Worker) ──
   // These hit Pollinations.ai and DuckDuckGo DIRECTLY — no G4F, no proxies needed!
+  {
+    id: 'pollination-gptoss',
+    label: 'Pollinations (GPT-OSS)',
+    engine: 'pollinations',
+    modelStr: 'gptoss',
+    badge: 'GPT-OSS',
+    badgeColor: 'violet',
+    icon: 'Sparkles',
+    iconColor: '#8b5cf6',
+    description: 'GPT-OSS via Pollinations.ai Direct'
+  },
+  {
+    id: 'llm7-models',
+    label: 'LLM7.io Models',
+    engine: 'llm7',
+    modelStr: 'default',
+    badge: 'LLM7',
+    badgeColor: 'blue',
+    icon: 'Brain',
+    iconColor: '#3b82f6',
+    description: 'LLM7.io Direct Proxy'
+  },
 
+  // ── Frontier Models (Grouped under g4f engine) ──
+  {
+    id: 'g4f-gpt-5-5-pollinations',
+    label: 'GPT-5.5 (Pollinations)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkoloq41e34074b6133e:gpt-5.5',
+    badge: 'FRONTIER',
+    badgeColor: 'violet',
+    icon: 'Sparkles',
+    iconColor: '#8b5cf6',
+    description: 'GPT-5.5 via Pollinations.ai'
+  },
+  {
+    id: 'g4f-claude-pollinations',
+    label: 'Claude (Pollinations)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkoloq41e34074b6133e:claude',
+    badge: 'FRONTIER',
+    badgeColor: 'violet',
+    icon: 'Brain',
+    iconColor: '#8b5cf6',
+    description: 'Anthropic Claude via Pollinations.ai'
+  },
+  {
+    id: 'g4f-claude-opus-thinking-antigravity',
+    label: 'Claude Opus Thinking (Antigravity)',
+    engine: 'g4f',
+    modelStr: 'g4f/Google Antigravity:claude-opus-4-6-thinking',
+    badge: 'OPUS',
+    badgeColor: 'red',
+    icon: 'Brain',
+    iconColor: '#ef4444',
+    description: 'Claude Opus 4.6 Thinking via Google Antigravity Server'
+  },
+  {
+    id: 'g4f-gemini-3.1-pro-rocket',
+    label: 'Gemini 3.1 Pro (Rocket)',
+    engine: 'g4f',
+    modelStr: 'g4f/Rocket Hosting (Gemini):gemini-3.1-pro-preview',
+    badge: '3.1 PRO',
+    badgeColor: 'violet',
+    icon: 'Sparkles',
+    iconColor: '#8b5cf6',
+    description: 'Gemini 3.1 Pro Preview via Rocket Hosting'
+  },
+  {
+    id: 'g4f-grok-4-pollinations',
+    label: 'Grok 4 (Pollinations)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkoloq41e34074b6133e:grok-4',
+    badge: 'GROK 4',
+    badgeColor: 'blue',
+    icon: 'Globe',
+    iconColor: '#3b82f6',
+    description: 'Grok 4 via Pollinations'
+  },
+  {
+    id: 'g4f-grok-4.3-crowllm',
+    label: 'Grok 4.3 (CrowLLM)',
+    engine: 'g4f',
+    modelStr: 'g4f/crowllm.com:grok-4.3',
+    badge: 'GROK 4.3',
+    badgeColor: 'blue',
+    icon: 'Globe',
+    iconColor: '#3b82f6',
+    description: 'Grok 4.3 via CrowLLM'
+  },
+  {
+    id: 'g4f-deepseek-v4-pro-nvidia',
+    label: 'DeepSeek V4 Pro (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:deepseek-ai/deepseek-v4-pro',
+    badge: 'PRO',
+    badgeColor: 'blue',
+    icon: 'Brain',
+    iconColor: '#3b82f6',
+    description: 'DeepSeek V4 Pro via Nvidia'
+  },
+  {
+    id: 'g4f-qwen-3.7-max',
+    label: 'Qwen 3.7 Max',
+    engine: 'g4f',
+    modelStr: 'g4f/qwen:qwen3.7-max',
+    badge: '3.7 MAX',
+    badgeColor: 'violet',
+    icon: 'Brain',
+    iconColor: '#8b5cf6',
+    description: 'Alibaba Qwen 3.7 Max via Qwen worker'
+  },
+  {
+    id: 'g4f-minimax-m2.7-nvidia',
+    label: 'Minimax M2.7 (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:minimaxai/minimax-m2.7',
+    badge: 'M2.7',
+    badgeColor: 'orange',
+    icon: 'Sparkles',
+    iconColor: '#f97316',
+    description: 'Minimax M2.7 via Nvidia'
+  },
+  {
+    id: 'g4f-glm-5.2-pollinations',
+    label: 'GLM 5.2 (Pollinations)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkoloq41e34074b6133e:glm-5.2',
+    badge: 'GLM 5.2',
+    badgeColor: 'green',
+    icon: 'Zap',
+    iconColor: '#10b981',
+    description: 'GLM 5.2 via Pollinations'
+  },
+  {
+    id: 'g4f-glm-5.2-ollama-pro',
+    label: 'GLM 5.2 (Ollama Pro)',
+    engine: 'g4f',
+    modelStr: 'g4f/ollama.pro:glm-5.2',
+    badge: 'GLM 5.2',
+    badgeColor: 'green',
+    icon: 'Zap',
+    iconColor: '#10b981',
+    description: 'GLM 5.2 via Ollama Pro'
+  },
 
+  // ── Mid-high Tier / General-purpose Models (Grouped under g4f engine) ──
+  {
+    id: 'g4f-gemini-3.5-flash-v1beta',
+    label: 'Gemini 3.5 Flash (v1beta)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkol5tgcd33cc358ddbc:models/gemini-3.5-flash',
+    badge: '3.5 FLASH',
+    badgeColor: 'violet',
+    icon: 'Zap',
+    iconColor: '#8b5cf6',
+    description: 'Gemini 3.5 Flash via Gemini v1beta'
+  },
+  {
+    id: 'g4f-gemini-3.1-flash-lite-v1beta',
+    label: 'Gemini 3.1 Flash-Lite (v1beta)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkol5tgcd33cc358ddbc:gemini-3.1-flash-lite',
+    badge: '3.1 LITE',
+    badgeColor: 'violet',
+    icon: 'Zap',
+    iconColor: '#8b5cf6',
+    description: 'Gemini 3.1 Flash-Lite via Gemini v1beta'
+  },
+  {
+    id: 'g4f-gemini-3.1-flash-lite-preview-v1beta',
+    label: 'Gemini 3.1 Flash-Lite Preview (v1beta)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkol5tgcd33cc358ddbc:gemini-3.1-flash-lite-preview',
+    badge: '3.1 LITE',
+    badgeColor: 'violet',
+    icon: 'Zap',
+    iconColor: '#8b5cf6',
+    description: 'Gemini 3.1 Flash-Lite Preview via Gemini v1beta'
+  },
+  {
+    id: 'g4f-glm-4.7-ollama',
+    label: 'GLM 4.7 (Ollama)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mnkjel2208cf770e5009:glm-4.7',
+    badge: 'GLM 4.7',
+    badgeColor: 'green',
+    icon: 'Zap',
+    iconColor: '#10b981',
+    description: 'GLM 4.7 via Ollama'
+  },
+  {
+    id: 'g4f-glm-5.1-crowllm',
+    label: 'GLM 5.1 (CrowLLM)',
+    engine: 'g4f',
+    modelStr: 'g4f/crowllm.com:glm-5.1',
+    badge: 'GLM 5.1',
+    badgeColor: 'green',
+    icon: 'Zap',
+    iconColor: '#10b981',
+    description: 'GLM 5.1 via CrowLLM'
+  },
+  {
+    id: 'g4f-kimi-k2.6-nvidia',
+    label: 'Kimi k2.6 (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:moonshotai/kimi-k2.6',
+    badge: 'KIMI',
+    badgeColor: 'orange',
+    icon: 'Brain',
+    iconColor: '#f97316',
+    description: 'Moonshot Kimi k2.6 via Nvidia'
+  },
+  {
+    id: 'g4f-deepseek-v4-flash-nvidia',
+    label: 'DeepSeek V4 Flash (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:deepseek-ai/deepseek-v4-flash',
+    badge: 'FLASH',
+    badgeColor: 'blue',
+    icon: 'Zap',
+    iconColor: '#3b82f6',
+    description: 'DeepSeek V4 Flash via Nvidia'
+  },
+  {
+    id: 'g4f-nemotron-super-120b-nvidia',
+    label: 'Nemotron Super 120B (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:nvidia/nemotron-3-super-120b-a12b',
+    badge: '120B',
+    badgeColor: 'blue',
+    icon: 'Globe',
+    iconColor: '#3b82f6',
+    description: 'Nvidia Nemotron-3 Super 120B via Nvidia'
+  },
+  {
+    id: 'g4f-llama-4-scout-groq',
+    label: 'Llama 4 Scout (Groq)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkom688d57c76d8a3542:meta-llama/llama-4-scout-17b-16e-instruct',
+    badge: 'SCOUT',
+    badgeColor: 'green',
+    icon: 'Globe',
+    iconColor: '#10b981',
+    description: 'Llama 4 Scout via Groq'
+  },
+  {
+    id: 'g4f-qwen3-coder-pollinations',
+    label: 'Qwen3 Coder (Pollinations)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkoloq41e34074b6133e:qwen3-coder',
+    badge: 'CODER',
+    badgeColor: 'blue',
+    icon: 'Brain',
+    iconColor: '#3b82f6',
+    description: 'Qwen3 Coder via Pollinations'
+  },
+  {
+    id: 'g4f-glm-4.6-crowllm',
+    label: 'GLM 4.6 (CrowLLM)',
+    engine: 'g4f',
+    modelStr: 'g4f/crowllm.com:glm-4.6',
+    badge: 'GLM 4.6',
+    badgeColor: 'green',
+    icon: 'Zap',
+    iconColor: '#10b981',
+    description: 'GLM 4.6 via CrowLLM'
+  },
+  {
+    id: 'g4f-glm-4.7-flash-crowllm',
+    label: 'GLM 4.7 Flash (CrowLLM)',
+    engine: 'g4f',
+    modelStr: 'g4f/crowllm.com:glm-4.7-flash',
+    badge: 'GLM 4.7',
+    badgeColor: 'green',
+    icon: 'Zap',
+    iconColor: '#10b981',
+    description: 'GLM 4.7 Flash via CrowLLM'
+  },
+  {
+    id: 'g4f-glm-5-crowllm',
+    label: 'GLM 5 (CrowLLM)',
+    engine: 'g4f',
+    modelStr: 'g4f/crowllm.com:glm-5',
+    badge: 'GLM 5',
+    badgeColor: 'green',
+    icon: 'Zap',
+    iconColor: '#10b981',
+    description: 'GLM 5 via CrowLLM'
+  },
+  {
+    id: 'g4f-glm-5v-turbo-crowllm',
+    label: 'GLM 5V Turbo (CrowLLM)',
+    engine: 'g4f',
+    modelStr: 'g4f/crowllm.com:glm-5v-turbo',
+    badge: 'GLM 5V',
+    badgeColor: 'green',
+    icon: 'Zap',
+    iconColor: '#10b981',
+    description: 'GLM 5V Turbo via CrowLLM'
+  },
 
+  // ── Api.airforce Models (Grouped under g4f engine) ──
+  {
+    id: 'g4f-gpt-4o-mini-airforce',
+    label: 'GPT-4o mini (Airforce)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkomfko63371049b6da6:gpt-4o-mini',
+    badge: 'MINI',
+    badgeColor: 'green',
+    icon: 'Zap',
+    iconColor: '#10b981',
+    description: 'GPT-4o mini via api.airforce'
+  },
+  {
+    id: 'g4f-step-3.5-flash-airforce',
+    label: 'Step 3.5 Flash (Airforce)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkomfko63371049b6da6:step-3.5-flash:free',
+    badge: 'STEP',
+    badgeColor: 'blue',
+    icon: 'Zap',
+    iconColor: '#3b82f6',
+    description: 'Step 3.5 Flash via api.airforce'
+  },
+  {
+    id: 'g4f-grok-4.1-mini-airforce',
+    label: 'Grok 4.1 mini (Airforce)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkomfko63371049b6da6:grok-4.1-mini:free',
+    badge: 'GROK MINI',
+    badgeColor: 'blue',
+    icon: 'Globe',
+    iconColor: '#3b82f6',
+    description: 'Grok 4.1 mini via api.airforce'
+  },
 
+  // ── Minimax & Stepfun & other Models (Grouped under g4f engine) ──
+  {
+    id: 'g4f-minimax-m2.5-ollama',
+    label: 'Minimax M2.5 (Ollama)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mnkjel2208cf770e5009:minimax-m2.5',
+    badge: 'MINIMAX',
+    badgeColor: 'orange',
+    icon: 'Sparkles',
+    iconColor: '#f97316',
+    description: 'Minimax M2.5 via Ollama'
+  },
+  {
+    id: 'g4f-minimax-m2.1-ollama',
+    label: 'Minimax M2.1 (Ollama)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mnkjel2208cf770e5009:minimax-m2.1',
+    badge: 'MINIMAX',
+    badgeColor: 'orange',
+    icon: 'Sparkles',
+    iconColor: '#f97316',
+    description: 'Minimax M2.1 via Ollama'
+  },
+  {
+    id: 'g4f-minimax-m3-nvidia',
+    label: 'Minimax M3 (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:minimaxai/minimax-m3',
+    badge: 'M3',
+    badgeColor: 'orange',
+    icon: 'Sparkles',
+    iconColor: '#f97316',
+    description: 'Minimax M3 via Nvidia'
+  },
+  {
+    id: 'g4f-step-3.7-flash-nvidia',
+    label: 'Step 3.7 Flash (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:stepfun-ai/step-3.7-flash',
+    badge: 'STEP 3.7',
+    badgeColor: 'green',
+    icon: 'Zap',
+    iconColor: '#10b981',
+    description: 'Step 3.7 Flash via Nvidia'
+  },
+  {
+    id: 'g4f-diffusiongemma-26b-nvidia',
+    label: 'Diffusion Gemma 26B (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:google/diffusiongemma-26b-a4b-it',
+    badge: 'GEMMA 26B',
+    badgeColor: 'blue',
+    icon: 'Sparkles',
+    iconColor: '#3b82f6',
+    description: 'Google Diffusion Gemma 26B via Nvidia'
+  },
+  {
+    id: 'g4f-ministral-14b-nvidia',
+    label: 'Ministral 14B (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:mistralai/ministral-14b-instruct-2512',
+    badge: 'MINISTRAL',
+    badgeColor: 'orange',
+    icon: 'Zap',
+    iconColor: '#f97316',
+    description: 'Mistralai Ministral 14B via Nvidia'
+  },
+  {
+    id: 'g4f-gemini-2.5-flash-v1beta',
+    label: 'Gemini 2.5 Flash (v1beta)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkol5tgcd33cc358ddbc:models/gemini-2.5-flash',
+    badge: '2.5 FLASH',
+    badgeColor: 'violet',
+    icon: 'Brain',
+    iconColor: '#8b5cf6',
+    description: 'Gemini 2.5 Flash via Gemini v1beta'
+  },
+  {
+    id: 'g4f-gemini-2.5-flash-lite-v1beta',
+    label: 'Gemini 2.5 Flash-Lite (v1beta)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkol5tgcd33cc358ddbc:models/gemini-2.5-flash-lite',
+    badge: '2.5 LITE',
+    badgeColor: 'violet',
+    icon: 'Brain',
+    iconColor: '#8b5cf6',
+    description: 'Gemini 2.5 Flash-Lite via Gemini v1beta'
+  },
+  {
+    id: 'g4f-gemini-flash-lite-latest-v1beta',
+    label: 'Gemini Flash-Lite Latest (v1beta)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkol5tgcd33cc358ddbc:models/gemini-flash-lite-latest',
+    badge: 'LITE LATEST',
+    badgeColor: 'violet',
+    icon: 'Zap',
+    iconColor: '#8b5cf6',
+    description: 'Gemini Flash-Lite Latest via Gemini v1beta'
+  },
+  {
+    id: 'g4f-gemini-flash-latest-v1beta',
+    label: 'Gemini Flash Latest (v1beta)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkol5tgcd33cc358ddbc:models/gemini-flash-latest',
+    badge: 'FLASH LATEST',
+    badgeColor: 'violet',
+    icon: 'Zap',
+    iconColor: '#8b5cf6',
+    description: 'Gemini Flash Latest via Gemini v1beta'
+  },
+  {
+    id: 'g4f-gemini-3.1-flash-lite-rocket',
+    label: 'Gemini 3.1 Flash-Lite (Rocket)',
+    engine: 'g4f',
+    modelStr: 'g4f/Rocket Hosting (Gemini):gemini-3.1-flash-lite',
+    badge: '3.1 LITE',
+    badgeColor: 'violet',
+    icon: 'Zap',
+    iconColor: '#8b5cf6',
+    description: 'Gemini 3.1 Flash-Lite via Rocket Hosting'
+  },
+  {
+    id: 'g4f-qwen-3.5-397b',
+    label: 'Qwen 3.5 397B (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:qwen/qwen3.5-397b-a17b',
+    badge: '397B',
+    badgeColor: 'red',
+    icon: 'Brain',
+    iconColor: '#ef4444',
+    description: 'Alibaba Qwen 3.5 397B via Nvidia'
+  },
+  {
+    id: 'g4f-llama-3.3-70b-nvidia',
+    label: 'Llama 3.3 70B (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:meta/llama-3.3-70b-instruct',
+    badge: '70B',
+    badgeColor: 'blue',
+    icon: 'Brain',
+    iconColor: '#3b82f6',
+    description: 'Meta Llama 3.3 70B via Nvidia'
+  },
+  {
+    id: 'g4f-llama-3.3-70b-groq',
+    label: 'Llama 3.3 70B (Groq)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkom688d57c76d8a3542:llama-3.3-70b-versatile',
+    badge: '70B',
+    badgeColor: 'green',
+    icon: 'Zap',
+    iconColor: '#10b981',
+    description: 'Meta Llama 3.3 70B via Groq'
+  },
+  {
+    id: 'g4f-mistral-large-675b',
+    label: 'Mistral Large 675B (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:mistralai/mistral-large-3-675b-instruct-2512',
+    badge: '675B',
+    badgeColor: 'red',
+    icon: 'Sparkles',
+    iconColor: '#ef4444',
+    description: 'Mistral Large 675B MoE via Nvidia'
+  },
+  {
+    id: 'g4f-qwen3-next-80b-nvidia',
+    label: 'Qwen3 Next 80B (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:qwen/qwen3-next-80b-a3b-instruct',
+    badge: '80B',
+    badgeColor: 'blue',
+    icon: 'Brain',
+    iconColor: '#3b82f6',
+    description: 'Qwen3 Next 80B via Nvidia'
+  },
+  {
+    id: 'g4f-mistral-small-119b',
+    label: 'Mistral Small 119B (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:mistralai/mistral-small-4-119b-2603',
+    badge: '119B',
+    badgeColor: 'orange',
+    icon: 'Zap',
+    iconColor: '#f97316',
+    description: 'Mistral Small 119B via Nvidia'
+  },
+  {
+    id: 'g4f-devstral-123b',
+    label: 'Devstral 2 123B (Ollama)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mnkjel2208cf770e5009:devstral-2:123b',
+    badge: '123B',
+    badgeColor: 'purple',
+    icon: 'Brain',
+    iconColor: '#8b5cf6',
+    description: 'Devstral 2 123B via Ollama'
+  },
+  {
+    id: 'g4f-llama-90b-vision',
+    label: 'Llama 3.2 90B Vision (Nvidia)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkombumpae45db46dcb8:meta/llama-3.2-90b-vision-instruct',
+    badge: '90B',
+    badgeColor: 'red',
+    icon: 'Globe',
+    iconColor: '#ef4444',
+    description: 'Llama 3.2 90B Vision via Nvidia'
+  },
+  {
+    id: 'g4f-nemotron-super-openrouter',
+    label: 'Nemotron Super 120B (OpenRouter)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_monk1pkz433a519ff2be:nvidia/nemotron-3-super-120b-a12b:free',
+    badge: '120B',
+    badgeColor: 'blue',
+    icon: 'Globe',
+    iconColor: '#3b82f6',
+    description: 'Nvidia Nemotron-3 Super 120B via OpenRouter'
+  },
+  {
+    id: 'g4f-nemotron-super-ollama',
+    label: 'Nemotron Super 120B (Ollama)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mnkjel2208cf770e5009:nemotron-3-super',
+    badge: '120B',
+    badgeColor: 'purple',
+    icon: 'Globe',
+    iconColor: '#8b5cf6',
+    description: 'Nemotron-3 Super 120B via Ollama'
+  },
+  {
+    id: 'g4f-gpt-oss-groq',
+    label: 'GPT-OSS 120B (Groq)',
+    engine: 'g4f',
+    modelStr: 'g4f/srv_mkom688d57c76d8a3542:openai/gpt-oss-120b',
+    badge: '120B',
+    badgeColor: 'red',
+    icon: 'Sparkles',
+    iconColor: '#ef4444',
+    description: 'GPT-OSS 120B via Groq Proxy'
+  },
   {
     id: 'g4f-deepseek-v3.2',
     label: 'DeepSeek V3.2',
@@ -255,107 +831,7 @@ export const AI_MODELS: AIModel[] = [
     description: 'Alibaba Qwen 3.6 Plus'
   },
 
-  // ── DeepInfra Models (via Proxy Pool) ──
-  {
-    id: 'di-nemotron-3-ultra',
-    label: 'Nemotron 3 Ultra 550B',
-    engine: 'g4f',
-    modelStr: 'deepinfra/nvidia/NVIDIA-Nemotron-3-Ultra-550B-A55B',
-    badge: 'DEEPINFRA',
-    badgeColor: 'blue',
-    icon: 'Brain',
-    iconColor: '#3b82f6',
-    description: 'NVIDIA 550B MoE via DeepInfra'
-  },
-  {
-    id: 'di-nemotron-3-nano-omni',
-    label: 'Nemotron Omni 30B',
-    engine: 'g4f',
-    modelStr: 'deepinfra/nvidia/Nemotron-3-Nano-Omni-30B-A3B-Reasoning',
-    badge: 'DEEPINFRA',
-    badgeColor: 'blue',
-    icon: 'Sparkles',
-    iconColor: '#3b82f6',
-    description: 'NVIDIA Omni Reasoning 30B via DeepInfra'
-  },
 
-  {
-    id: 'di-deepseek-v4-pro',
-    label: 'DeepSeek V4 pro',
-    engine: 'g4f',
-    modelStr: 'deepinfra/deepseek-ai/DeepSeek-V4-Flash',
-    badge: 'DEEPINFRA',
-    badgeColor: 'blue',
-    icon: 'Zap',
-    iconColor: '#3b82f6',
-    description: 'DeepSeek V4 Flash via DeepInfra'
-  },
-  {
-    id: 'di-kimi-k2.6',
-    label: 'Kimi K2.6',
-    engine: 'g4f',
-    modelStr: 'deepinfra/moonshotai/Kimi-K2.6',
-    badge: 'DEEPINFRA',
-    badgeColor: 'blue',
-    icon: 'Star',
-    iconColor: '#3b82f6',
-    description: 'Moonshot Kimi K2.6 via DeepInfra'
-  },
-  {
-    id: 'di-mimo-v2.5',
-    label: 'MiMo V2.5',
-    engine: 'g4f',
-    modelStr: 'deepinfra/XiaomiMiMo/MiMo-V2.5',
-    badge: 'DEEPINFRA',
-    badgeColor: 'blue',
-    icon: 'Sparkles',
-    iconColor: '#3b82f6',
-    description: 'Xiaomi MiMo V2.5 via DeepInfra'
-  },
-  {
-    id: 'di-mimo-v2.5-pro',
-    label: 'MiMo V2.5 Pro',
-    engine: 'g4f',
-    modelStr: 'deepinfra/XiaomiMiMo/MiMo-V2.5-Pro',
-    badge: 'PRO',
-    badgeColor: 'blue',
-    icon: 'Sparkles',
-    iconColor: '#3b82f6',
-    description: 'Xiaomi MiMo V2.5 Pro via DeepInfra'
-  },
-  {
-    id: 'di-qwen-3.6-35b',
-    label: 'Qwen3.6 35B',
-    engine: 'g4f',
-    modelStr: 'deepinfra/Qwen/Qwen3.6-35B-A3B',
-    badge: 'DEEPINFRA',
-    badgeColor: 'blue',
-    icon: 'Brain',
-    iconColor: '#3b82f6',
-    description: 'Alibaba Qwen3.6 35B via DeepInfra'
-  },
-  {
-    id: 'di-glm-5.1',
-    label: 'GLM-5.1',
-    engine: 'g4f',
-    modelStr: 'deepinfra/zai-org/GLM-5.1',
-    badge: 'DEEPINFRA',
-    badgeColor: 'blue',
-    icon: 'Brain',
-    iconColor: '#3b82f6',
-    description: 'Z-AI GLM-5.1 via DeepInfra'
-  },
-  {
-    id: 'di-gemma-4-31b',
-    label: 'Gemma 4 31B',
-    engine: 'g4f',
-    modelStr: 'deepinfra/google/gemma-4-31B-it',
-    badge: 'DEEPINFRA',
-    badgeColor: 'blue',
-    icon: 'Star',
-    iconColor: '#3b82f6',
-    description: 'Google Gemma 4 31B via DeepInfra'
-  },
 
   // ── Auto-Scraped Models (from free-llm-api-keys GitHub repo) ──
   // Only models with verified working keys are listed here

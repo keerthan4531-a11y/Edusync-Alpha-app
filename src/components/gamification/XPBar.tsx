@@ -12,12 +12,12 @@ export function XPBar({ xp, level }: XPBarProps) {
   const progressPercentage = (currentLevelXp / 500) * 100
 
   return (
-    <div className="w-full space-y-1.5">
-      <div className="flex items-center justify-between text-sm font-medium">
-        <span>Level {level}</span>
-        <span className="text-muted-foreground">{currentLevelXp} / 500 XP</span>
+    <div className="w-full space-y-2">
+      <div className="flex items-center justify-between text-sm font-semibold">
+        <span className="text-foreground">Level {level}</span>
+        <span className="text-muted-foreground tabular-nums">{currentLevelXp} / 500 XP</span>
       </div>
-      <Progress value={progressPercentage} className="h-2" />
+      <Progress value={progressPercentage} className="h-2.5" />
     </div>
   )
 }

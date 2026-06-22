@@ -14,7 +14,7 @@ export function ThemeToggle() {
   }, []);
 
   if (!mounted) {
-    return <div className="w-32 h-10 rounded-full bg-white/10" />;
+    return <div className="w-32 h-10 rounded-2xl bg-[var(--glass-bg)]" />;
   }
 
   const options = [
@@ -24,17 +24,17 @@ export function ThemeToggle() {
   ];
 
   return (
-    <div className="flex items-center p-1 space-x-1 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 backdrop-blur-xl">
+    <div className="flex items-center p-1 space-x-1 rounded-2xl glass-panel border border-[var(--glass-border-subtle)] backdrop-blur-xl shadow-[var(--glass-shadow)]">
       {options.map(({ value, icon: Icon, label }) => {
         const isActive = theme === value;
         return (
           <button
             key={value}
             onClick={() => setTheme(value)}
-            className={`relative flex items-center justify-center w-10 h-8 rounded-full text-sm font-medium transition-colors ${
+            className={`relative flex items-center justify-center w-10 h-8 rounded-xl text-sm font-medium transition-all duration-300 ${
               isActive
-                ? "text-black dark:text-white"
-                : "text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white"
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground"
             }`}
             aria-label={label}
             title={label}
@@ -42,7 +42,7 @@ export function ThemeToggle() {
             {isActive && (
               <motion.div
                 layoutId="theme-active"
-                className="absolute inset-0 bg-white dark:bg-white/10 rounded-full shadow-sm"
+                className="absolute inset-0 bg-[var(--glass-bg-hover)] rounded-xl shadow-[var(--glass-shadow)] border border-[var(--glass-border-subtle)]"
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
               />
             )}

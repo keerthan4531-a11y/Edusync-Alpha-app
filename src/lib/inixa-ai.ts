@@ -60,9 +60,9 @@ export async function generateResponse(
   // 1. Get model configuration from database
   const modelChain = await getModelChain(context.stage, role, context.feature);
 
-  // 2. Try each model in the chain
-  let lastError = '';
-  for (const modelId of modelChain) {
+  // Helper to execute a single model request
+  const runModel = async (modelId: string): Promise<INIXAResponse> => {
+    const reqStartTime = Date.now();
     try {
       const result = await createChatCompletion(
         {
@@ -73,7 +73,7 @@ export async function generateResponse(
         true // Use proxy
       );
 
-      const responseTime = Date.now() - startTime;
+      const responseTime = Date.now() - reqStartTime;
       const rawResponse = result.choices?.[0]?.message?.content || '';
       const sanitizedResponse = sanitizeResponse(rawResponse);
 
@@ -95,8 +95,8 @@ export async function generateResponse(
         responseTime,
       };
     } catch (error: any) {
-      lastError = error.message || 'Unknown error';
-      console.warn(`[INIXA] Model ${modelId} failed: ${lastError}. Trying next fallback...`);
+      const errorMessage = error.message || 'Unknown error';
+      console.warn(`[INIXA] Model ${modelId} failed: ${errorMessage}`);
 
       // Log failed attempt
       await logRequest({
@@ -104,24 +104,39 @@ export async function generateResponse(
         stage: context.stage,
         feature: context.feature,
         modelUsed: modelId,
-        responseTime: Date.now() - startTime,
+        responseTime: Date.now() - reqStartTime,
         success: false,
-        errorMessage: lastError,
+        errorMessage,
       }).catch(() => {}); // Don't fail on logging errors
 
-      continue;
+      throw error; // Throw so Promise.any knows it failed
+    }
+  };
+
+  try {
+    // 2. Race all primary configured models concurrently
+    const primaryPromises = modelChain.map(modelId => runModel(modelId));
+    return await Promise.any(primaryPromises);
+  } catch (primaryAggregateError) {
+    console.warn(`[INIXA] All primary models failed. Falling back to Pollinations and LLM7...`);
+    
+    // 3. Fallback race between direct API providers
+    const fallbackModels = ['pollination-gptoss', 'llm7-models'];
+    
+    try {
+      const fallbackPromises = fallbackModels.map(modelId => runModel(modelId));
+      return await Promise.any(fallbackPromises);
+    } catch (fallbackAggregateError) {
+      // 4. Everything failed
+      return {
+        success: false,
+        response: 'I apologize, but INIXA AI is temporarily experiencing high demand. Please try again in a moment.',
+        modelUsed: 'INIXA AI',
+        responseTime: Date.now() - startTime,
+        error: `All configured and fallback models failed.`,
+      };
     }
   }
-
-  // All models failed
-  const responseTime = Date.now() - startTime;
-  return {
-    success: false,
-    response: 'I apologize, but INIXA AI is temporarily experiencing high demand. Please try again in a moment.',
-    modelUsed: 'INIXA AI',
-    responseTime,
-    error: `All models failed. Last error: ${lastError}`,
-  };
 }
 
 /**

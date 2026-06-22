@@ -44,14 +44,41 @@ const SPEAKING_FEATURES = [
   { id: "roleplay" as const, label: "AI Roleplay Arena", icon: MessageSquareCode, color: "text-orange-400", bgColor: "bg-orange-400/10", borderColor: "border-orange-400/20" },
 ];
 
-export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatureOpen }: SpeakingModuleProps) {
+export function SpeakingModule({ content: initialContent, challenges = [], onFinish, onSubFeatureOpen }: SpeakingModuleProps) {
   const [activeFeature, setActiveFeature] = useState<"read-aloud" | "shadowing" | "analyzer" | "roleplay" | null>(null);
+  const [dynamicChallenges, setDynamicChallenges] = useState<Stage1ContentDTO[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchChallenges() {
+      try {
+        const res = await fetch("/api/communication/generate-challenge", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ moduleType: "SPEAKING" })
+        });
+        const data = await res.json();
+        if (data.success && data.challenge) {
+          setDynamicChallenges([data.challenge]);
+        }
+      } catch (err) {
+        console.error("Failed to generate speaking challenges", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchChallenges();
+  }, []);
 
   useEffect(() => {
     if (onSubFeatureOpen) {
       onSubFeatureOpen(activeFeature !== null);
     }
   }, [activeFeature, onSubFeatureOpen]);
+
+  // Active Content resolution
+  const activeChallenges = dynamicChallenges.length > 0 ? dynamicChallenges : challenges;
+  const content = dynamicChallenges.length > 0 ? dynamicChallenges[0] : initialContent;
 
   // Read Aloud Speech Hook
   const {
@@ -470,7 +497,12 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
 
   return (
     <div className="space-y-6">
-      {!activeFeature ? (
+      {loading ? (
+        <LiquidGlassCard className="p-8 text-center flex flex-col items-center justify-center">
+          <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-zinc-500 dark:text-gray-400 font-medium">Inixa AI is generating your speaking challenge...</p>
+        </LiquidGlassCard>
+      ) : !activeFeature ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {SPEAKING_FEATURES.map((feature) => {
             const Icon = feature.icon;
