@@ -145,38 +145,46 @@ export async function POST(req: Request) {
     let remaining = maxRequests;
     let resetTime = now + windowMs;
 
-    if (rateLimitMap.has(ip)) {
-      const record = rateLimitMap.get(ip)!;
-      if (now > record.resetTime) {
+    let authHeader = req.headers.get('authorization');
+    const SERVER_SECRET = process.env.INIXA_PROXY_SECRET;
+    const hasValidServerSecret = SERVER_SECRET && authHeader && authHeader.includes(SERVER_SECRET);
+    const isInternalRequest = req.headers.get('x-internal-request') === 'true';
+
+    // Bypass rate limit for internal server requests
+    if (!hasValidServerSecret && !isInternalRequest) {
+      if (rateLimitMap.has(ip)) {
+        const record = rateLimitMap.get(ip)!;
+        if (now > record.resetTime) {
+          rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
+          remaining = maxRequests - 1;
+          resetTime = now + windowMs;
+        } else {
+          if (record.count >= maxRequests) {
+            return NextResponse.json(
+              {
+                error: 'Rate limit exceeded. Try again later.',
+                retryAfter: Math.ceil((record.resetTime - now) / 1000)
+              },
+              {
+                status: 429,
+                headers: {
+                  'X-RateLimit-Limit': String(maxRequests),
+                  'X-RateLimit-Remaining': '0',
+                  'X-RateLimit-Reset': String(Math.ceil(record.resetTime / 1000)),
+                  'Retry-After': String(Math.ceil((record.resetTime - now) / 1000)),
+                }
+              }
+            );
+          }
+          record.count++;
+          remaining = maxRequests - record.count;
+          resetTime = record.resetTime;
+        }
+      } else {
         rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
         remaining = maxRequests - 1;
         resetTime = now + windowMs;
-      } else {
-        if (record.count >= maxRequests) {
-          return NextResponse.json(
-            {
-              error: 'Rate limit exceeded. Try again later.',
-              retryAfter: Math.ceil((record.resetTime - now) / 1000)
-            },
-            {
-              status: 429,
-              headers: {
-                'X-RateLimit-Limit': String(maxRequests),
-                'X-RateLimit-Remaining': '0',
-                'X-RateLimit-Reset': String(Math.ceil(record.resetTime / 1000)),
-                'Retry-After': String(Math.ceil((record.resetTime - now) / 1000)),
-              }
-            }
-          );
-        }
-        record.count++;
-        remaining = maxRequests - record.count;
-        resetTime = record.resetTime;
       }
-    } else {
-      rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs });
-      remaining = maxRequests - 1;
-      resetTime = now + windowMs;
     }
 
     const body = await req.json();
@@ -549,7 +557,7 @@ export async function POST(req: Request) {
       console.error('Cloudflare Proxy error:', proxyResponse.status, errorText);
 
       // ── Cloudflare Fallback: Route to G4F Proxy-Race ──
-      console.log(`[Cloudflare Fallback] Cloudflare Worker failed. Falling back to G4F Proxy-Race (di-mimo-v2.5-pro)...`);
+      console.log(`[Cloudflare Fallback] Cloudflare Worker failed. Falling back to G4F Proxy-Race (g4f/gpt-4o-mini)...`);
       try {
         const protocol = req.headers.get('x-forwarded-proto') || 'http';
         const host = req.headers.get('host') || '127.0.0.1:3000';
@@ -564,7 +572,7 @@ export async function POST(req: Request) {
           },
           body: JSON.stringify({
             messages: chatMessages,
-            model: 'deepinfra/XiaomiMiMo/MiMo-V2.5-Pro',
+            model: 'g4f/gpt-4o-mini',
             stream: stream === true
           })
         });
@@ -596,9 +604,80 @@ export async function POST(req: Request) {
             }
           );
         }
-        console.error(`[Cloudflare Fallback] G4F Fallback failed with status: ${fallbackRes.status}`);
+        
+        console.error(`[Cloudflare Fallback] G4F Fallback failed with status: ${fallbackRes.status}. Trying Pollinations direct fallback...`);
+        
+        // --- SECOND TIER FALLBACK: POLLINATIONS ---
+        try {
+          const pollRes = await fetch('https://text.pollinations.ai/openai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: 'openai',
+              messages: formattedMessages,
+              temperature: 0.7,
+            }),
+          });
+          if (pollRes.ok) {
+            const text = await pollRes.text();
+            let content = text;
+            try {
+              const json = JSON.parse(text);
+              content = json.choices?.[0]?.message?.content || json.reply || text;
+            } catch (e) {}
+            
+            if (content) {
+              console.log(`[Fallback] Pollinations fallback succeeded!`);
+              return NextResponse.json(
+                { reply: content },
+                {
+                  headers: {
+                    'X-RateLimit-Limit': String(maxRequests),
+                    'X-RateLimit-Remaining': String(remaining),
+                    'X-RateLimit-Reset': String(Math.ceil(resetTime / 1000)),
+                  }
+                }
+              );
+            }
+          }
+        } catch (pollErr: any) {
+          console.error(`[Fallback] Pollinations fallback failed:`, pollErr.message || pollErr);
+        }
+
+        // --- THIRD TIER FALLBACK: LLM7.IO ---
+        console.log(`[Fallback] Pollinations failed. Trying LLM7.io fallback...`);
+        try {
+          const llm7Res = await fetch('https://api.llm7.io/v1/chat/completions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              model: 'default',
+              messages: formattedMessages,
+              temperature: 0.7,
+            }),
+          });
+          if (llm7Res.ok) {
+            const data = await llm7Res.json();
+            const content = data.choices?.[0]?.message?.content || data.reply || '';
+            if (content) {
+              console.log(`[Fallback] LLM7.io fallback succeeded!`);
+              return NextResponse.json(
+                { reply: content },
+                {
+                  headers: {
+                    'X-RateLimit-Limit': String(maxRequests),
+                    'X-RateLimit-Remaining': String(remaining),
+                    'X-RateLimit-Reset': String(Math.ceil(resetTime / 1000)),
+                  }
+                }
+              );
+            }
+          }
+        } catch (llm7Err: any) {
+          console.error(`[Fallback] LLM7.io fallback failed:`, llm7Err.message || llm7Err);
+        }
       } catch (fallbackErr: any) {
-        console.error(`[Cloudflare Fallback] G4F Fallback error:`, fallbackErr.message || fallbackErr);
+        console.error(`[Cloudflare Fallback] Fallbacks error:`, fallbackErr.message || fallbackErr);
       }
 
       // Parse error details from Cloudflare Proxy

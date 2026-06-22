@@ -29,29 +29,52 @@ interface ListeningModuleProps {
 }
 
 export function ListeningModule({ content, challenges = [], onNext, onSubFeatureOpen }: ListeningModuleProps) {
-  const [dynamicChallenges, setDynamicChallenges] = useState<Stage1ContentDTO[]>([]);
+  const [mcqChallenge, setMcqChallenge] = useState<Stage1ContentDTO | null>(null);
+  const [fillChallenge, setFillChallenge] = useState<Stage1ContentDTO | null>(null);
+  const [directionsChallenge, setDirectionsChallenge] = useState<Stage1ContentDTO | null>(null);
+  const [toneChallenge, setToneChallenge] = useState<Stage1ContentDTO | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchChallenges() {
+    async function fetchAllChallenges() {
       try {
-        const res = await fetch("/api/communication/generate-challenge", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ moduleType: "LISTENING" })
-        });
-        const data = await res.json();
-        if (data.success && data.challenge) {
-          setDynamicChallenges([data.challenge]);
-        }
+        setLoading(true);
+        const [mcqRes, fillRes, directionsRes, toneRes] = await Promise.all([
+          fetch("/api/communication/generate-challenge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ moduleType: "LISTENING" })
+          }).then(r => r.json()),
+          fetch("/api/communication/generate-challenge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ moduleType: "LISTENING_FILL" })
+          }).then(r => r.json()),
+          fetch("/api/communication/generate-challenge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ moduleType: "LISTENING_DIRECTIONS" })
+          }).then(r => r.json()),
+          fetch("/api/communication/generate-challenge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ moduleType: "LISTENING_TONE" })
+          }).then(r => r.json())
+        ]);
+
+        if (mcqRes.success) setMcqChallenge(mcqRes.challenge);
+        if (fillRes.success) setFillChallenge(fillRes.challenge);
+        if (directionsRes.success) setDirectionsChallenge(directionsRes.challenge);
+        if (toneRes.success) setToneChallenge(toneRes.challenge);
       } catch (err) {
         console.error("Failed to generate listening challenges", err);
       } finally {
         setLoading(false);
       }
     }
-    fetchChallenges();
+    fetchAllChallenges();
   }, []);
+
   const [activeFeature, setActiveFeature] = useState<"mcq" | "fill" | "directions" | "tone" | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -60,30 +83,6 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
       onSubFeatureOpen(activeFeature !== null);
     }
   }, [activeFeature, onSubFeatureOpen]);
-
-  // Find corresponding seeded challenges
-  const activeChallenges = dynamicChallenges.length > 0 ? dynamicChallenges : challenges;
-  
-  const mcqChallenge = activeChallenges.find(c => {
-    try {
-      const q = typeof c.questions === "string" ? JSON.parse(c.questions) : c.questions;
-      return Array.isArray(q) && q.length > 0 && !q[0].isDirection && !q[0].isToneAnalysis;
-    } catch { return false; }
-  }) || activeChallenges[0];
-
-  const directionsChallenge = challenges.find(c => {
-    try {
-      const q = typeof c.questions === "string" ? JSON.parse(c.questions) : c.questions;
-      return q && q.isDirection === true;
-    } catch { return false; }
-  });
-
-  const toneChallenge = challenges.find(c => {
-    try {
-      const q = typeof c.questions === "string" ? JSON.parse(c.questions) : c.questions;
-      return q && q.isToneAnalysis === true;
-    } catch { return false; }
-  });
 
   // MCQ Hook state
   const {
@@ -94,6 +93,17 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
     result: mcqResult,
     error: mcqError
   } = useMCQ(mcqChallenge);
+
+  // Tone Analyzer Hook state
+  const {
+    answers: toneAnswers,
+    handleOptionSelect: handleToneOptionSelect,
+    submitAnswers: submitToneAnswers,
+    isSubmitting: isToneSubmitting,
+    result: toneResult,
+    error: toneError,
+    reset: resetToneAnswers
+  } = useMCQ(toneChallenge);
 
   // Audio speech synthesis helper
   const speakText = (text: string) => {
@@ -356,28 +366,9 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
   // ----------------------------------------------------
   // VOICE TONE ANALYSIS LOGIC
   // ----------------------------------------------------
-  const [toneSelectedIdx, setToneSelectedIdx] = useState<number | null>(null);
-  const [isToneSubmitted, setIsToneSubmitted] = useState(false);
-  const [toneResult, setToneResult] = useState<any>(null);
-
   const parsedTone = toneChallenge
     ? (typeof toneChallenge.questions === "string" ? JSON.parse(toneChallenge.questions) : toneChallenge.questions)
     : null;
-
-  const submitToneChoice = () => {
-    if (toneSelectedIdx === null || !toneChallenge) return;
-
-    const correct = toneSelectedIdx === parsedTone.correctIndex;
-    setIsToneSubmitted(true);
-    setToneResult({
-      correct,
-      score: correct ? 100 : 0,
-      xpAwarded: correct ? 20 : 5,
-      feedback: correct 
-        ? "Superb! You correctly identified the speaker's emotional tone as Excited." 
-        : `The emotional tone was "Excited". The speaker was thrilled about the research project.`
-    });
-  };
 
   // ----------------------------------------------------
   // GAP FILL / FILL THE BEATS LOGIC
@@ -385,33 +376,46 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
   const [gapAnswers, setGapAnswers] = useState<Record<string, string>>({});
   const [isGapSubmitted, setIsGapSubmitted] = useState(false);
   const [gapResult, setGapResult] = useState<any>(null);
+  const [isSubmittingGap, setIsSubmittingGap] = useState(false);
+  const [gapError, setGapError] = useState<string | null>(null);
 
-  // We can use the Routine challenge content but hide the MCQ and render text fill
   const handleGapAnswerChange = (qId: number, val: string) => {
     setGapAnswers(prev => ({ ...prev, [qId]: val }));
   };
 
-  const submitGapAnswers = () => {
-    let score = 0;
-    // Routine quiz has 2 questions.
-    // Q1: "What time does the speaker wake up?" -> correct is "7 AM"
-    // Q2: "What does the speaker have for breakfast?" -> correct is "cereal and coffee"
-    const isQ1Correct = (gapAnswers[1] || "").toLowerCase().includes("7") || (gapAnswers[1] || "").toLowerCase().includes("seven");
-    const isQ2Correct = (gapAnswers[2] || "").toLowerCase().includes("cereal") || (gapAnswers[2] || "").toLowerCase().includes("coffee");
-    
-    if (isQ1Correct) score += 50;
-    if (isQ2Correct) score += 50;
-
-    setIsGapSubmitted(true);
-    setGapResult({
-      score,
-      xpAwarded: score === 100 ? 25 : score === 50 ? 15 : 5,
-      q1Correct: isQ1Correct,
-      q2Correct: isQ2Correct,
-      feedback: score === 100
-        ? "Perfect! You accurately filled all details from the audio clip."
-        : "Some details were missed. Try playing the audio once more and check the script details."
-    });
+  const submitGapAnswers = async () => {
+    if (!fillChallenge) return;
+    setIsSubmittingGap(true);
+    setGapError(null);
+    try {
+      const res = await fetch("/api/communication/evaluate-fill", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contentId: fillChallenge.id,
+          answers: gapAnswers
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setIsGapSubmitted(true);
+        setGapResult({
+          score: data.score,
+          xpAwarded: data.xpAwarded,
+          q1Correct: data.q1Correct,
+          q2Correct: data.q2Correct,
+          feedback: data.feedback,
+          tamilFeedback: data.tamilFeedback
+        });
+      } else {
+        setGapError(data.error || "Failed to evaluate answers.");
+      }
+    } catch (e) {
+      console.error(e);
+      setGapError("Connection error. Please try again.");
+    } finally {
+      setIsSubmittingGap(false);
+    }
   };
 
   return (
@@ -595,16 +599,16 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
       )}
 
       {/* RENDER FEATURE 2: FILL THE BEATS / GAP FILL */}
-      {activeFeature === "fill" && (
+      {activeFeature === "fill" && fillChallenge && (
         <div className="space-y-6">
           <LiquidGlassCard className="p-6 text-center" accentColor="#8b5cf6">
-            <h2 className="text-[22px] font-bold text-foreground mb-4">Transcription practice</h2>
+            <h2 className="text-[22px] font-bold text-foreground mb-4">{fillChallenge.title || "Transcription practice"}</h2>
             <p className="text-zinc-500 dark:text-gray-400 text-[15px] mb-6">
-              Listen to the daily routine statement and transcribe details to fill the gaps.
+              Listen to the audio statement and transcribe details to fill the gaps.
             </p>
 
             <button
-              onClick={() => speakText("I usually wake up at 7 AM. For breakfast, I like to eat cereal and drink a cup of coffee.")}
+              onClick={() => speakText(fillChallenge.content)}
               disabled={isPlaying}
               className={`h-20 w-20 rounded-full flex items-center justify-center mx-auto transition-all ${
                 isPlaying ? "bg-purple-600 animate-pulse" : "bg-purple-500/20 hover:bg-purple-500/30"
@@ -617,58 +621,42 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
           <div className="space-y-4">
             <LiquidGlassCard className="p-6 border-black/10 dark:border-white/10" accentColor="#8b5cf6">
               <div className="space-y-6">
-                <div>
-                  <label className="block text-[15px] font-semibold text-zinc-600 dark:text-gray-300 mb-2">
-                    1. What time does the speaker wake up? (e.g. 7 AM)
-                  </label>
-                  <input
-                    type="text"
-                    disabled={isGapSubmitted}
-                    placeholder="Enter time details..."
-                    value={gapAnswers[1] || ""}
-                    onChange={(e) => handleGapAnswerChange(1, e.target.value)}
-                    className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500"
-                  />
-                  {isGapSubmitted && (
-                    <div className="mt-2 text-xs flex items-center gap-1.5 font-medium">
-                      {gapResult.q1Correct ? (
-                        <span className="text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Correct</span>
-                      ) : (
-                        <span className="text-red-400 flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Incorrect (Expected: 7 AM)</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-[15px] font-semibold text-zinc-600 dark:text-gray-300 mb-2">
-                    2. What does the speaker eat and drink for breakfast? (e.g. cereal and coffee)
-                  </label>
-                  <input
-                    type="text"
-                    disabled={isGapSubmitted}
-                    placeholder="Enter breakfast items..."
-                    value={gapAnswers[2] || ""}
-                    onChange={(e) => handleGapAnswerChange(2, e.target.value)}
-                    className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500"
-                  />
-                  {isGapSubmitted && (
-                    <div className="mt-2 text-xs flex items-center gap-1.5 font-medium">
-                      {gapResult.q2Correct ? (
-                        <span className="text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Correct</span>
-                      ) : (
-                        <span className="text-red-400 flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Incorrect (Expected: cereal and coffee)</span>
-                      )}
-                    </div>
-                  )}
-                </div>
+                {Array.isArray(fillChallenge.questions) && fillChallenge.questions.map((q: any, idx: number) => (
+                  <div key={q.id}>
+                    <label className="block text-[15px] font-semibold text-zinc-600 dark:text-gray-300 mb-2">
+                      {idx + 1}. {q.question}
+                    </label>
+                    <input
+                      type="text"
+                      disabled={isGapSubmitted}
+                      placeholder="Enter details..."
+                      value={gapAnswers[q.id] || ""}
+                      onChange={(e) => handleGapAnswerChange(q.id, e.target.value)}
+                      className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500"
+                    />
+                    {isGapSubmitted && (
+                      <div className="mt-2 text-xs flex items-center gap-1.5 font-medium">
+                        {gapResult?.[`q${idx + 1}Correct`] ? (
+                          <span className="text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Correct</span>
+                        ) : (
+                          <span className="text-red-400 flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Incorrect (Expected: {q.answer})</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
             </LiquidGlassCard>
 
-            {isGapSubmitted ? (
+            {gapError && <div className="text-red-400 text-sm">{gapError}</div>}
+
+            {isGapSubmitted && gapResult ? (
               <LiquidGlassCard className="p-6 border-green-500/30 bg-green-500/5" accentColor="#22c55e">
                 <h3 className="text-[17px] font-bold text-foreground mb-2">Quiz Summary</h3>
-                <p className="text-zinc-500 dark:text-gray-300 text-[15px] mb-4">{gapResult.feedback}</p>
+                <p className="text-zinc-500 dark:text-gray-300 text-[15px] mb-2">{gapResult.feedback}</p>
+                {gapResult.tamilFeedback && (
+                  <p className="text-purple-600 dark:text-purple-300 text-[14px] italic mb-4">{gapResult.tamilFeedback}</p>
+                )}
                 <div className="flex gap-4 items-center">
                   <span className="px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-300 rounded-full text-[13px] font-bold">
                     Score: {gapResult.score}%
@@ -678,7 +666,7 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
                   </span>
                   <div className="flex-1" />
                   <button
-                    onClick={() => { setIsGapSubmitted(false); setGapAnswers({}); }}
+                    onClick={() => { setIsGapSubmitted(false); setGapAnswers({}); setGapResult(null); }}
                     className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl text-xs font-semibold"
                   >
                     Reset Challenge
@@ -688,10 +676,10 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
             ) : (
               <button
                 onClick={submitGapAnswers}
-                disabled={!gapAnswers[1] || !gapAnswers[2]}
+                disabled={isSubmittingGap || (Array.isArray(fillChallenge?.questions) && fillChallenge.questions.some((q: any) => !gapAnswers[q.id]))}
                 className="w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold rounded-xl transition-all"
               >
-                Submit Gap Answers
+                {isSubmittingGap ? "Evaluating..." : "Submit Gap Answers"}
               </button>
             )}
           </div>
@@ -831,55 +819,67 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
             </button>
 
             <div className="grid grid-cols-1 gap-3">
-              {parsedTone.options.map((option: string, idx: number) => {
-                let btnStyle = "border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-zinc-600 dark:text-gray-300";
-                
-                if (isToneSubmitted) {
-                  if (idx === parsedTone.correctIndex) {
-                    btnStyle = "bg-green-500/10 border-green-500 text-green-600 dark:text-green-300 pointer-events-none";
-                  } else if (idx === toneSelectedIdx) {
-                    btnStyle = "bg-red-500/10 border-red-500 text-red-600 dark:text-red-300 pointer-events-none";
-                  } else {
-                    btnStyle = "border-black/5 dark:border-white/5 text-zinc-400 dark:text-gray-500 pointer-events-none opacity-45";
-                  }
-                } else if (toneSelectedIdx === idx) {
-                  btnStyle = "bg-purple-600/10 border-purple-500 text-purple-600 dark:text-purple-300";
-                }
+              {Array.isArray(toneChallenge.questions) && toneChallenge.questions.map((q: any) => (
+                <div key={q.id} className="space-y-3">
+                  <p className="text-foreground font-medium text-[15px] mb-2">{q.question}</p>
+                  {q.options?.map((option: string, idx: number) => {
+                    const isOptionSelected = toneAnswers[q.id] === idx;
+                    const isSubmitted = toneResult !== null;
+                    const isCorrect = isSubmitted && idx === q.correctIndex;
+                    const isWrong = isSubmitted && isOptionSelected && idx !== q.correctIndex;
 
-                return (
-                  <button
-                    key={idx}
-                    disabled={isToneSubmitted}
-                    onClick={() => setToneSelectedIdx(idx)}
-                    className={`w-full text-left p-3 rounded-xl border text-sm font-medium transition-all ${btnStyle}`}
-                  >
-                    {option}
-                  </button>
-                );
-              })}
+                    let btnStyle = "border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-zinc-600 dark:text-gray-300";
+                    if (isOptionSelected && !isSubmitted) {
+                      btnStyle = "bg-purple-600/10 border-purple-500 text-purple-600 dark:text-purple-300";
+                    } else if (isCorrect) {
+                      btnStyle = "bg-green-500/10 border-green-500 text-green-600 dark:text-green-300 pointer-events-none";
+                    } else if (isWrong) {
+                      btnStyle = "bg-red-500/10 border-red-500 text-red-600 dark:text-red-300 pointer-events-none";
+                    } else if (isSubmitted) {
+                      btnStyle = "border-black/5 dark:border-white/5 text-zinc-400 dark:text-gray-500 pointer-events-none opacity-45";
+                    }
+
+                    return (
+                      <button
+                        key={idx}
+                        disabled={isSubmitted}
+                        onClick={() => handleToneOptionSelect(q.id, idx)}
+                        className={`w-full text-left p-3 rounded-xl border text-sm font-medium transition-all ${btnStyle}`}
+                      >
+                        {option}
+                      </button>
+                    );
+                  })}
+                </div>
+              ))}
             </div>
 
-            {!isToneSubmitted ? (
-              <button
-                onClick={submitToneChoice}
-                disabled={toneSelectedIdx === null}
-                className="w-full mt-6 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold text-sm rounded-xl transition-all"
-              >
-                Submit Selection
-              </button>
-            ) : (
+            {toneError && <div className="text-red-400 text-xs mt-2">{toneError}</div>}
+
+            {toneResult ? (
               <div className="mt-6 p-4 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl space-y-3">
                 <p className="text-[13px] text-zinc-600 dark:text-gray-300 leading-relaxed font-light">{toneResult.feedback}</p>
+                {toneResult.tamilFeedback && (
+                  <p className="text-[13px] text-purple-400 italic font-light">{toneResult.tamilFeedback}</p>
+                )}
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-semibold text-purple-300">XP Awarded: +{toneResult.xpAwarded}</span>
                   <button 
-                    onClick={() => { setIsToneSubmitted(false); setToneSelectedIdx(null); setToneResult(null); }}
-                    className="text-purple-400 hover:underline"
+                    onClick={resetToneAnswers}
+                    className="text-purple-400 hover:underline font-semibold"
                   >
                     Try Again
                   </button>
                 </div>
               </div>
+            ) : (
+              <button
+                onClick={submitToneAnswers}
+                disabled={isToneSubmitting || Object.keys(toneAnswers).length === 0}
+                className="w-full mt-6 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold text-sm rounded-xl transition-all"
+              >
+                {isToneSubmitting ? "Evaluating..." : "Submit Selection"}
+              </button>
             )}
           </LiquidGlassCard>
         </div>

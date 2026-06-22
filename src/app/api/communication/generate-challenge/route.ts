@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { generateResponse, type INIXAMessage } from "@/lib/inixa-ai";
+import { generateResponseTurbo, type INIXAMessage } from "@/lib/inixa-ai";
 import { ActivityType } from "@/types/communication";
+import { db } from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
@@ -57,6 +58,68 @@ export async function POST(req: Request) {
           ]
         }`;
         break;
+      case "LISTENING_FILL":
+        promptText = `Generate a ${difficulty} level short monologue transcript (approx 100-150 words) about an everyday routine or event.
+        Then, create 2 fill-in-the-blank questions based on the script details.
+        Output MUST be strictly valid JSON in this exact format:
+        {
+          "title": "Transcription Fill Challenge",
+          "content": "The full transcript text here...",
+          "questions": [
+            {
+              "id": 1,
+              "question": "The first fill-in-the-blank question, e.g., 'The speaker wakes up at ______.'",
+              "answer": "7 AM"
+            },
+            {
+              "id": 2,
+              "question": "The second fill-in-the-blank question, e.g., 'He enjoys drinking ______.'",
+              "answer": "coffee"
+            }
+          ]
+        }`;
+        break;
+      case "LISTENING_DIRECTIONS":
+        promptText = `Generate a ${difficulty} level map navigation listening exercise on a 5x5 grid (coordinates 0 to 4 for rows and cols).
+        You need to define a starting junction, a destination junction, a list of 2 landmarks, a set of verbal navigation directions, and the exact step-by-step path coordinates to get there.
+        Note: The path must only make grid steps (North, South, East, West). No diagonal steps.
+        Output MUST be strictly valid JSON in this exact format:
+        {
+          "title": "Listening Map Navigation",
+          "content": "Verbal directions description, e.g., 'Start at green node (1, 1). Walk east past the Cafe, then turn south...'",
+          "gridSize": 5,
+          "start": { "row": 0, "col": 0 },
+          "end": { "row": 2, "col": 2 },
+          "landmarks": [
+            { "name": "Cafe", "row": 0, "col": 1 },
+            { "name": "Library", "row": 1, "col": 2 }
+          ],
+          "correctPath": [
+            { "row": 0, "col": 0 },
+            { "row": 0, "col": 1 },
+            { "row": 0, "col": 2 },
+            { "row": 1, "col": 2 },
+            { "row": 2, "col": 2 }
+          ]
+        }`;
+        break;
+      case "LISTENING_TONE":
+        promptText = `Generate a ${difficulty} level short monologue (1-2 sentences) spoken with a very strong emotional tone (excited, anxious, sad, angry, apologetic, etc.).
+        Create 1 multiple-choice question asking the student to analyze the emotional tone of the speaker.
+        Output MUST be strictly valid JSON in this exact format:
+        {
+          "title": "Emotional Tone Analysis",
+          "content": "The monologue text containing clear emotional clues here...",
+          "questions": [
+            {
+              "id": 1,
+              "question": "What is the emotional tone of the speaker?",
+              "options": ["Excited", "Sad", "Angry", "Calm"],
+              "correctIndex": 0
+            }
+          ]
+        }`;
+        break;
       case "WRITING":
         promptText = `Generate a ${difficulty} level creative writing prompt. It should ask the student to write a paragraph (at least 3-4 sentences) expressing their opinion or describing an experience.
         Output MUST be strictly valid JSON in this exact format:
@@ -65,12 +128,53 @@ export async function POST(req: Request) {
           "content": "The writing prompt text detailing what the student should write about."
         }`;
         break;
+      case "WRITING_IMAGE":
+        promptText = `Generate a ${difficulty} level picture description prompt. Provide a detailed descriptive text-to-image prompt that will be rendered for the student, and write the matching description outline they must replicate.
+        Output MUST be strictly valid JSON in this exact format:
+        {
+          "title": "Creative Scene Describer",
+          "content": "A detailed descriptive prompt describing a visual scene, e.g., 'A cozy library cafe on a rainy day, steaming coffee, glowing warm lights'",
+          "imagePrompt": "The text-to-image prompt to use, e.g., 'A cozy library cafe on a rainy day, steaming coffee, glowing warm lights'"
+        }`;
+        break;
+      case "WRITING_REWRITE":
+        promptText = `Generate a ${difficulty} level sentence rewrite exercise. Provide a simple/boring sentence using basic English words.
+        List 2 or 3 of these basic words as banned filter words, and suggest advanced alternative adjectives as hints.
+        Output MUST be strictly valid JSON in this exact format:
+        {
+          "title": "Advanced Vocabulary Rewrite",
+          "content": "The simple/boring sentence, e.g., 'The weather was very good and I felt happy.'",
+          "banned": ["good", "happy", "very"],
+          "hints": {
+            "good": ["splendid", "pleasant", "delightful"],
+            "happy": ["thrilled", "joyful", "ecstatic"],
+            "very": ["incredibly", "exceptionally"]
+          }
+        }`;
+        break;
       case "SPEAKING":
         promptText = `Generate a ${difficulty} level speaking prompt. It should give a scenario or topic for the student to speak about for 1 minute. Provide 3 bullet points they must include in their speech.
         Output MUST be strictly valid JSON in this exact format:
         {
           "title": "Speaking Topic",
           "content": "The speaking prompt scenario...",
+          "bulletPoints": ["Point 1", "Point 2", "Point 3"]
+        }`;
+        break;
+      case "SPEAKING_SHADOW":
+        promptText = `Generate a ${difficulty} level inspiring or philosophical sentence (8-15 words) suitable for pronunciation repetition/shadowing practice.
+        Output MUST be strictly valid JSON in this exact format:
+        {
+          "title": "Shadow repetition challenge",
+          "content": "The inspiring sentence here, e.g., 'Clear communication is the bridge between confusion and clarity.'"
+        }`;
+        break;
+      case "SPEAKING_ANALYZER":
+        promptText = `Generate a ${difficulty} level speaking presentation topic. It should ask the student to speak for 1 minute on an engaging subject. Provide 3 bullet points they should address.
+        Output MUST be strictly valid JSON in this exact format:
+        {
+          "title": "Presentation Pitch Topic",
+          "content": "The speaking presentation prompt, e.g., 'Explain the advantages of renewable energy sources.'",
           "bulletPoints": ["Point 1", "Point 2", "Point 3"]
         }`;
         break;
@@ -83,15 +187,15 @@ export async function POST(req: Request) {
       { role: "user", content: promptText }
     ];
 
-    const result = await generateResponse(
+    const result = await generateResponseTurbo(
       messages,
       {
         stage: "stage-1",
-        feature: "chat", // Reusing chat feature config or we can add specific ones
+        feature: "chat",
         role: session.user.role || "STUDENT",
         userId: session.user.id,
       },
-      0.7 // Temperature
+      0.7
     );
 
     if (!result.success) {
@@ -101,7 +205,6 @@ export async function POST(req: Request) {
     // Try to parse the JSON output
     let parsedData;
     try {
-      // Find JSON block if there's markdown wrapping
       const text = result.response;
       const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/\{[\s\S]*\}/);
       const jsonString = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : text;
@@ -111,18 +214,63 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "AI produced invalid format. Please try again." }, { status: 500 });
     }
 
-    // Return the dynamically generated challenge formatted as Stage1ContentDTO
+    // Store in Prisma database so it is evaluatable by id
+    let questionsField = null;
+    if (parsedData.questions) {
+      questionsField = JSON.stringify(parsedData.questions);
+    } else if (parsedData.bulletPoints) {
+      questionsField = JSON.stringify({ bulletPoints: parsedData.bulletPoints });
+    } else if (moduleType === "LISTENING_DIRECTIONS") {
+      questionsField = JSON.stringify({
+        gridSize: parsedData.gridSize,
+        start: parsedData.start,
+        end: parsedData.end,
+        landmarks: parsedData.landmarks,
+        correctPath: parsedData.correctPath
+      });
+    } else if (moduleType === "WRITING_REWRITE") {
+      questionsField = JSON.stringify({
+        banned: parsedData.banned,
+        hints: parsedData.hints
+      });
+    } else if (moduleType === "WRITING_IMAGE") {
+      questionsField = JSON.stringify({
+        imagePrompt: parsedData.imagePrompt
+      });
+    }
+
+    // SQLite/Prisma create record
+    // @ts-ignore
+    const savedChallenge = await db.stage1Content.create({
+      data: {
+        type: moduleType,
+        title: parsedData.title || `${moduleType} Challenge`,
+        content: parsedData.content || "",
+        questions: questionsField,
+        difficulty: difficulty.toLowerCase(),
+        isActive: true
+      }
+    });
+
     return NextResponse.json({
       success: true,
       challenge: {
-        id: `gen-${Date.now()}`,
-        type: moduleType,
-        title: parsedData.title,
-        content: parsedData.content,
+        id: savedChallenge.id,
+        type: savedChallenge.type as ActivityType,
+        title: savedChallenge.title,
+        content: savedChallenge.content,
+        difficulty: savedChallenge.difficulty,
+        // DTO field mapping
         questions: parsedData.questions || null,
-        difficulty: difficulty,
-        // Include extra properties like bulletPoints if they exist
-        ...(parsedData.bulletPoints && { additionalData: { bulletPoints: parsedData.bulletPoints } })
+        bulletPoints: parsedData.bulletPoints || null,
+        imagePrompt: parsedData.imagePrompt || null,
+        banned: parsedData.banned || null,
+        hints: parsedData.hints || null,
+        gridSize: parsedData.gridSize || null,
+        start: parsedData.start || null,
+        end: parsedData.end || null,
+        landmarks: parsedData.landmarks || null,
+        correctPath: parsedData.correctPath || null
       },
       modelUsed: result.modelUsed
     });

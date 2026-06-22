@@ -1,4 +1,4 @@
-export type ActivityType = "READING" | "LISTENING" | "WRITING" | "SPEAKING" | "VOCABULARY" | "AICHAT" | "CREATION";
+export type ActivityType = "READING" | "LISTENING" | "LISTENING_FILL" | "LISTENING_DIRECTIONS" | "LISTENING_TONE" | "WRITING" | "WRITING_IMAGE" | "WRITING_REWRITE" | "SPEAKING" | "SPEAKING_SHADOW" | "SPEAKING_ANALYZER" | "VOCABULARY" | "AICHAT" | "CREATION";
 
 export interface Question {
   id: number;
@@ -14,6 +14,15 @@ export interface Stage1ContentDTO {
   content: string;
   questions: any;
   difficulty: string;
+  imagePrompt?: string | null;
+  banned?: string[] | null;
+  hints?: any | null;
+  bulletPoints?: string[] | null;
+  gridSize?: number | null;
+  start?: any | null;
+  end?: any | null;
+  landmarks?: any | null;
+  correctPath?: any | null;
 }
 
 export interface EvaluateRequest {

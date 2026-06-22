@@ -9,7 +9,7 @@ export const metadata = {
 export default function Stage1CommunicationPage() {
   // We no longer fetch mocked content from the database.
   // Instead, content is generated dynamically by AI inside the client modules.
-  const emptyContentMap: Record<ActivityType, Stage1ContentDTO[]> = {
+  const emptyContentMap: Partial<Record<ActivityType, Stage1ContentDTO[]>> = {
     READING: [],
     LISTENING: [],
     WRITING: [],

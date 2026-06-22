@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { generateResponse } from "@/lib/inixa-ai";
+import { generateResponseTurbo } from "@/lib/inixa-ai";
 
 export async function GET() {
   try {
@@ -35,7 +35,7 @@ export async function GET() {
       ]
     }`;
 
-    const result = await generateResponse(
+    const result = await generateResponseTurbo(
       [
         { role: "system", content: systemPrompt },
         { role: "user", content: promptText }

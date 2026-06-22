@@ -233,6 +233,42 @@ export default function ClassroomsPage() {
     localStorage.setItem(`resources_${selectedClassroomId}`, JSON.stringify(updated))
   }
 
+  // Delete Announcement
+  const handleDeleteAnnouncement = async (announcementId: string) => {
+    if (!selectedClassroomId) return
+    if (!confirm("Are you sure you want to delete this announcement?")) return
+    try {
+      const res = await fetch(`/api/faculty/classrooms/${selectedClassroomId}/announcements/${announcementId}`, {
+        method: "DELETE",
+      })
+      if (res.ok) {
+        loadClassroomDetails(selectedClassroomId)
+      } else {
+        alert("Failed to delete announcement")
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  // Delete Assignment
+  const handleDeleteAssignment = async (assignmentId: string) => {
+    if (!selectedClassroomId) return
+    if (!confirm("Are you sure you want to delete this assignment? All student submissions for it will also be deleted.")) return
+    try {
+      const res = await fetch(`/api/faculty/classrooms/${selectedClassroomId}/assignments/${assignmentId}`, {
+        method: "DELETE",
+      })
+      if (res.ok) {
+        loadClassroomDetails(selectedClassroomId)
+      } else {
+        alert("Failed to delete assignment")
+      }
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   return (
     <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 pb-16">
       
@@ -531,12 +567,19 @@ export default function ClassroomsPage() {
                     ) : (
                       <div className="flex flex-col gap-4">
                         {classroomDetails?.announcements?.map((ann: any) => (
-                          <div key={ann.id} className="p-4 bg-white/5 border border-white/5 rounded-2xl relative">
-                            <div className="flex justify-between items-center text-[10px] text-muted-foreground font-medium mb-1">
+                          <div key={ann.id} className="p-4 bg-white/5 border border-white/5 rounded-2xl relative group">
+                            <div className="flex justify-between items-center text-[10px] text-muted-foreground font-medium mb-1 pr-6">
                               <span>By You (Faculty)</span>
                               <span>{new Date(ann.createdAt).toLocaleDateString()}</span>
                             </div>
                             <p className="text-xs md:text-sm text-foreground leading-relaxed whitespace-pre-wrap">{ann.content}</p>
+                            <button
+                              onClick={() => handleDeleteAnnouncement(ann.id)}
+                              className="absolute top-3 right-3 p-1 text-muted-foreground hover:text-rose-400 hover:bg-white/5 rounded transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                              title="Delete Announcement"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -627,9 +670,9 @@ export default function ClassroomsPage() {
                     ) : (
                       <div className="grid gap-4 sm:grid-cols-2">
                         {classroomDetails?.assignments?.map((asg: any) => (
-                          <div key={asg.id} className="p-4 bg-white/5 border border-white/5 rounded-2xl hover:border-white/10 transition-all flex flex-col justify-between min-h-[140px]">
+                          <div key={asg.id} className="p-4 bg-white/5 border border-white/5 rounded-2xl hover:border-white/10 transition-all flex flex-col justify-between min-h-[140px] relative group">
                             <div>
-                              <div className="flex justify-between items-start gap-2">
+                              <div className="flex justify-between items-start gap-2 pr-6">
                                 <h5 className="font-bold text-xs md:text-sm text-foreground line-clamp-1">{asg.title}</h5>
                                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 shrink-0">
                                   {asg.submissions?.length || 0} Turned-in
@@ -649,6 +692,14 @@ export default function ClassroomsPage() {
                                 {asg.xpReward} XP / {asg.coinReward} Coins
                               </span>
                             </div>
+
+                            <button
+                              onClick={() => handleDeleteAssignment(asg.id)}
+                              className="absolute top-3.5 right-3.5 p-1 text-muted-foreground hover:text-rose-400 hover:bg-white/5 rounded transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+                              title="Delete Assignment"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         ))}
                       </div>

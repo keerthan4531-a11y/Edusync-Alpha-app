@@ -176,7 +176,14 @@ export async function POST(req: Request) {
     
     adminStats.logRequest(ip);
 
-    if (!checkRateLimit(ip)) {
+    let authHeader = req.headers.get('authorization');
+    const SERVER_SECRET = process.env.INIXA_PROXY_SECRET; // No hardcoded fallback
+    
+    const hasValidServerSecret = SERVER_SECRET && authHeader && authHeader.includes(SERVER_SECRET);
+    const isInternalRequest = req.headers.get('x-internal-request') === 'true';
+
+    // Bypass rate limit for internal server requests (Turbo Engine)
+    if (!hasValidServerSecret && !isInternalRequest && !checkRateLimit(ip)) {
       adminStats.logFailure();
       console.warn(`[Security] Rate limit exceeded for IP: ${ip}`);
       return NextResponse.json({ ok: false, error: 'Too Many Requests. Please slow down.' }, { status: 429 });
@@ -190,13 +197,9 @@ export async function POST(req: Request) {
     // Check if origin matches allowed domains or matches current host
     const isOriginAllowed = allowedOrigins.some(allowed => origin.includes(allowed)) || (host && origin.includes(host));
     
-    let authHeader = req.headers.get('authorization');
-    const SERVER_SECRET = process.env.INIXA_PROXY_SECRET; // No hardcoded fallback
-    
-    const hasValidServerSecret = SERVER_SECRET && authHeader && authHeader.includes(SERVER_SECRET);
     const isScrapedKeyRequest = authHeader && (authHeader.includes('sk-') || authHeader.includes('g4f_'));
 
-    if (!isOriginAllowed && !hasValidServerSecret && !isScrapedKeyRequest) {
+    if (!isOriginAllowed && !hasValidServerSecret && !isScrapedKeyRequest && !isInternalRequest) {
       console.warn(`[Security] Blocked unauthorized request from Origin: ${origin}, Host: ${host}`);
       return NextResponse.json({ ok: false, error: 'Forbidden: Invalid Origin' }, { status: 403 });
     }
@@ -266,8 +269,10 @@ export async function POST(req: Request) {
       let targetEndpoint = 'https://g4f.space/v1/chat/completions';
       
       if (model.startsWith('deepinfra/')) {
+        // Skip deepinfra directly to prevent DNS getaddrinfo ENOTFOUND blocks
         g4fModel = model.replace('deepinfra/', '');
-        targetEndpoint = 'https://api.deepinfra.com/v1/openai/chat/completions';
+        targetEndpoint = 'https://g4f.space/v1/chat/completions';
+        console.log(`[DeepInfra Bypass] Rerouting deepinfra model "${model}" to g4f.space proxy race`);
       } else if (model.startsWith('qwen_worker/')) {
         g4fModel = model.replace('qwen_worker/', '');
         targetEndpoint = 'https://qwen.g4f-dev.workers.dev/v1/chat/completions';
@@ -275,86 +280,177 @@ export async function POST(req: Request) {
         g4fModel = model.replace('g4f/', '');
       }
       
+      // 1. Direct Fetch from server/user IP
+      console.log(`[Route] Trying direct fetch from server/user IP first for model: ${g4fModel} at ${targetEndpoint}`);
+      let directSucceeded = false;
+      let directRes: any = null;
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        
+        if (req.signal) {
+          req.signal.addEventListener('abort', () => {
+            console.log(`[Route] Direct fetch aborted by client for model ${g4fModel}`);
+            controller.abort();
+          });
+        }
+        
+        const fakeIP = `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+        
+        const directHeaders: any = {
+          'Content-Type': 'application/json',
+          'Accept': stream ? 'text/event-stream' : 'application/json',
+          'Origin': targetEndpoint.includes('deepinfra') ? 'https://deepinfra.com' : (targetEndpoint.includes('qwen') ? 'https://qwen.g4f-dev.workers.dev' : 'https://g4f.dev'),
+          'Referer': targetEndpoint.includes('deepinfra') ? 'https://deepinfra.com/' : (targetEndpoint.includes('qwen') ? 'https://qwen.g4f-dev.workers.dev/' : 'https://g4f.dev/'),
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+          'X-Forwarded-For': fakeIP
+        };
+
+        const requestBody = { ...body, model: g4fModel };
+        if (body.provider) {
+          requestBody.provider = body.provider;
+        }
+
+        directRes = await nodeFetch(targetEndpoint, {
+          method: 'POST',
+          headers: directHeaders,
+          body: JSON.stringify(requestBody),
+          signal: controller.signal as any
+        });
+
+        clearTimeout(timeoutId);
+
+        if (directRes.ok) {
+          console.log(`[Route] Direct fetch succeeded!`);
+          directSucceeded = true;
+        } else {
+          console.warn(`[Route] Direct fetch failed with status ${directRes.status}`);
+        }
+      } catch (e: any) {
+        console.warn(`[Route] Direct fetch failed/timed out: ${e.message || e}`);
+      }
+
+      if (directSucceeded && directRes) {
+        if (stream) {
+          const bodyStream = new ReadableStream({
+            start(controller) {
+              (directRes.body as any).on('data', (chunk: Buffer) => controller.enqueue(chunk));
+              (directRes.body as any).on('end', () => controller.close());
+              (directRes.body as any).on('error', (err: Error) => controller.error(err));
+            },
+            cancel() {
+              (directRes.body as any).destroy();
+            }
+          });
+          return new Response(bodyStream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' } });
+        }
+        return NextResponse.json(await directRes.json());
+      }
+
+      // 2. Proxy-Race (if direct fetch fails)
+      console.log(`[Route] Direct fetch failed. Falling back to Proxy-Race...`);
       await refreshProxyPool();
       
-      if (proxyPool.length === 0) {
-        throw new Error('No proxies available in the pool.');
-      }
+      let proxySucceeded = false;
+      let winningRes: any = null;
+      let proxyRaceErrors = '';
 
-      console.log(`[ProxyPool] Racing multiple proxies for model: ${g4fModel} at ${targetEndpoint}`);
-      
-      // Grab 12 random proxies to race
-      const numToRace = Math.min(12, proxyPool.length);
-      const proxiesToTry = [];
-      for(let i = 0; i < numToRace; i++) {
-        proxiesToTry.push(getNextProxy());
-      }
+      if (proxyPool.length > 0) {
+        const numToRace = Math.min(12, proxyPool.length);
+        const proxiesToTry = [];
+        for(let i = 0; i < numToRace; i++) {
+          proxiesToTry.push(getNextProxy());
+        }
 
-      const racePromises = proxiesToTry.map((proxyUrl, index) => {
-        return new Promise(async (resolve, reject) => {
-          if (!proxyUrl) return reject(new Error('Empty proxy'));
-          
-          const controller = new AbortController();
-          // Increased timeout for racing to 30s to allow large prompts to process
-          const timeoutId = setTimeout(() => controller.abort(), 30000);
-
-          try {
-            // Validate proxy URL to avoid crashing on HTML error pages
-            if (proxyUrl.includes('<') || proxyUrl.includes('>') || proxyUrl.includes('{') || proxyUrl.length > 100) {
-              throw new Error('Invalid proxy format');
-            }
-
-            let agent: any;
-            if (proxyUrl.startsWith('socks')) {
-              agent = new SocksProxyAgent(proxyUrl);
-            } else {
-              agent = proxyUrl.startsWith('https') ? new HttpsProxyAgent(proxyUrl) : new HttpProxyAgent(proxyUrl);
-            }
-            const fakeIP = `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
-            
-            const requestBody: any = { ...body, model: g4fModel };
-            // Forward provider if it was explicitly requested by frontend
-            if (body.provider) {
-              requestBody.provider = body.provider;
-            }
-
-            const fetchHeaders: any = {
-              'Content-Type': 'application/json',
-              'Accept': stream ? 'text/event-stream' : 'application/json',
-              'Origin': targetEndpoint.includes('deepinfra') ? 'https://deepinfra.com' : (targetEndpoint.includes('qwen') ? 'https://qwen.g4f-dev.workers.dev' : 'https://g4f.dev'),
-              'Referer': targetEndpoint.includes('deepinfra') ? 'https://deepinfra.com/' : (targetEndpoint.includes('qwen') ? 'https://qwen.g4f-dev.workers.dev/' : 'https://g4f.dev/'),
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-              'X-Forwarded-For': fakeIP
-            };
-
-            const g4fRes = await nodeFetch(targetEndpoint, {
-              method: 'POST',
-              headers: fetchHeaders,
-              body: JSON.stringify(requestBody),
-              agent: agent,
-              signal: controller.signal as any
-            });
-            
-            clearTimeout(timeoutId);
-
-            if (g4fRes.ok) {
-              console.log(`[Proxy-Race] 🏆 Winner found! Proxy: ${proxyUrl}`);
-              resolve(g4fRes);
-            } else {
-              const errText = await g4fRes.text();
-              reject(`Status ${g4fRes.status}: ${errText.substring(0, 100)}`);
-            }
-          } catch (err: any) {
-            clearTimeout(timeoutId);
-            reject(err.message || err);
-          }
-        });
-      });
-
-      try {
-        // Promise.any resolves with the FIRST successful promise
-        const winningRes: any = await Promise.any(racePromises);
+        console.log(`[ProxyPool] Racing ${numToRace} proxies for model: ${g4fModel} at ${targetEndpoint}`);
         
+        const controllers = proxiesToTry.map(() => new AbortController());
+
+        if (req.signal) {
+          req.signal.addEventListener('abort', () => {
+            console.log(`[Route] Proxy race aborted by client for model ${g4fModel}`);
+            controllers.forEach(ctrl => ctrl.abort());
+          });
+        }
+
+        const racePromises = proxiesToTry.map((proxyUrl, index) => {
+          return new Promise(async (resolve, reject) => {
+            if (!proxyUrl) return reject(new Error('Empty proxy'));
+            
+            const controller = controllers[index];
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+            try {
+              if (proxyUrl.includes('<') || proxyUrl.includes('>') || proxyUrl.includes('{') || proxyUrl.length > 100) {
+                throw new Error('Invalid proxy format');
+              }
+
+              let agent: any;
+              if (proxyUrl.startsWith('socks')) {
+                agent = new SocksProxyAgent(proxyUrl);
+              } else {
+                agent = proxyUrl.startsWith('https') ? new HttpsProxyAgent(proxyUrl) : new HttpProxyAgent(proxyUrl);
+              }
+              const fakeIP = `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
+              
+              const requestBody: any = { ...body, model: g4fModel };
+              if (body.provider) {
+                requestBody.provider = body.provider;
+              }
+
+              const fetchHeaders: any = {
+                'Content-Type': 'application/json',
+                'Accept': stream ? 'text/event-stream' : 'application/json',
+                'Origin': targetEndpoint.includes('deepinfra') ? 'https://deepinfra.com' : (targetEndpoint.includes('qwen') ? 'https://qwen.g4f-dev.workers.dev' : 'https://g4f.dev'),
+                'Referer': targetEndpoint.includes('deepinfra') ? 'https://deepinfra.com/' : (targetEndpoint.includes('qwen') ? 'https://qwen.g4f-dev.workers.dev/' : 'https://g4f.dev/'),
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+                'X-Forwarded-For': fakeIP
+              };
+
+              const g4fRes = await nodeFetch(targetEndpoint, {
+                method: 'POST',
+                headers: fetchHeaders,
+                body: JSON.stringify(requestBody),
+                agent: agent,
+                signal: controller.signal as any
+              });
+              
+              clearTimeout(timeoutId);
+
+              if (g4fRes.ok) {
+                console.log(`[Proxy-Race] 🏆 Winner found! Proxy: ${proxyUrl}`);
+                resolve({ res: g4fRes, winnerIndex: index });
+              } else {
+                const errText = await g4fRes.text();
+                reject(`Status ${g4fRes.status}: ${errText.substring(0, 100)}`);
+              }
+            } catch (err: any) {
+              clearTimeout(timeoutId);
+              reject(err.message || err);
+            }
+          });
+        });
+
+        try {
+          const winner: any = await Promise.any(racePromises);
+          winningRes = winner.res;
+          proxySucceeded = true;
+
+          // Abort all other racing proxies immediately
+          controllers.forEach((ctrl, idx) => {
+            if (idx !== winner.winnerIndex) {
+              ctrl.abort();
+            }
+          });
+        } catch (aggregateError: any) {
+          proxyRaceErrors = aggregateError.errors ? aggregateError.errors.join(' | ') : (aggregateError.message || aggregateError);
+          console.error(`[Proxy-Race Failed] All proxies failed. Errors: ${proxyRaceErrors}`);
+        }
+      } else {
+        console.warn(`[ProxyPool] No proxies available for racing.`);
+      }
+
+      if (proxySucceeded && winningRes) {
         if (stream) {
           const bodyStream = new ReadableStream({
             start(controller) {
@@ -369,162 +465,186 @@ export async function POST(req: Request) {
           return new Response(bodyStream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' } });
         }
         return NextResponse.json(await winningRes.json());
-      } catch (aggregateError: any) {
-        // All raced proxies failed
-        const errors = aggregateError.errors ? aggregateError.errors.join(' | ') : (aggregateError.message || aggregateError);
-        console.error(`[Proxy-Race Failed] All ${numToRace} proxies failed. Errors: ${errors}`);
+      }
 
-        // ── Direct Fetch Fallback ──
-        console.log(`[Fallback] Trying direct fetch without proxies...`);
+      // 3. Fallbacks: Pollinations -> LLM7.io -> DDG (for deepseek)
+      const formattedMessages = body.messages || [{ role: 'user', content: body.message || '' }];
+      
+      console.log(`[Route] Proxy-Race failed/unavailable. Trying Pollinations fallback...`);
+      try {
+        const pollRes = await nodeFetch('https://text.pollinations.ai/openai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'openai',
+            messages: formattedMessages,
+            stream: stream === true,
+            temperature: 0.7,
+          }),
+        });
+
+        if (pollRes.ok) {
+          console.log(`[Route Fallback] Pollinations succeeded!`);
+          if (stream) {
+            const bodyStream = new ReadableStream({
+              start(controller) {
+                (pollRes.body as any).on('data', (chunk: Buffer) => controller.enqueue(chunk));
+                (pollRes.body as any).on('end', () => controller.close());
+                (pollRes.body as any).on('error', (err: Error) => controller.error(err));
+              },
+              cancel() { (pollRes.body as any).destroy(); }
+            });
+            return new Response(bodyStream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' } });
+          }
+          const pollData = await pollRes.json();
+          return NextResponse.json(pollData);
+        } else {
+          console.warn(`[Route Fallback] Pollinations failed with status ${pollRes.status}`);
+        }
+      } catch (pollErr: any) {
+        console.error(`[Route Fallback] Pollinations fallback failed: ${pollErr.message || pollErr}`);
+      }
+
+      console.log(`[Route] Pollinations failed. Trying LLM7.io fallback...`);
+      try {
+        const llm7Res = await nodeFetch('https://api.llm7.io/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'default',
+            messages: formattedMessages,
+            stream: stream === true,
+            temperature: 0.7,
+          }),
+        });
+
+        if (llm7Res.ok) {
+          console.log(`[Route Fallback] LLM7.io succeeded!`);
+          if (stream) {
+            const bodyStream = new ReadableStream({
+              start(controller) {
+                (llm7Res.body as any).on('data', (chunk: Buffer) => controller.enqueue(chunk));
+                (llm7Res.body as any).on('end', () => controller.close());
+                (llm7Res.body as any).on('error', (err: Error) => controller.error(err));
+              },
+              cancel() { (llm7Res.body as any).destroy(); }
+            });
+            return new Response(bodyStream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' } });
+          }
+          const llm7Data = await llm7Res.json();
+          return NextResponse.json(llm7Data);
+        } else {
+          console.warn(`[Route Fallback] LLM7.io failed with status ${llm7Res.status}`);
+        }
+      } catch (llm7Err: any) {
+        console.error(`[Route Fallback] LLM7.io fallback failed: ${llm7Err.message || llm7Err}`);
+      }
+
+      // Keep existing DuckDuckGo fallback for DeepSeek
+      if (g4fModel.toLowerCase().includes('deepseek')) {
+        console.log(`[DeepSeek-Fallback] g4f.space failed. Trying DuckDuckGo AI Chat...`);
         try {
-          const fakeIP = `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`;
-          const requestBody: any = { ...body, model: g4fModel };
-          if (body.provider) requestBody.provider = body.provider;
+          // Step 1: Get VQD token from DDG
+          const statusRes = await nodeFetch('https://duckduckgo.com/duckchat/v1/status', {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+              'Accept': '*/*',
+              'x-vqd-accept': '1',
+              'Referer': 'https://duckduckgo.com/',
+              'Origin': 'https://duckduckgo.com',
+            }
+          });
+          const vqd = statusRes.headers.get('x-vqd-4');
+          if (!vqd) throw new Error(`VQD token fetch failed (HTTP ${statusRes.status})`);
 
-          const fallbackHeaders: any = {
-            'Content-Type': 'application/json',
-            'Accept': stream ? 'text/event-stream' : 'application/json',
-            'Origin': targetEndpoint.includes('deepinfra') ? 'https://deepinfra.com' : (targetEndpoint.includes('qwen') ? 'https://qwen.g4f-dev.workers.dev' : 'https://g4f.dev'),
-            'Referer': targetEndpoint.includes('deepinfra') ? 'https://deepinfra.com/' : (targetEndpoint.includes('qwen') ? 'https://qwen.g4f-dev.workers.dev/' : 'https://g4f.dev/'),
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-            'X-Forwarded-For': fakeIP
-          };
+          // Step 2: Send chat to DDG with deepseek-r1
+          const ddgMessages = formattedMessages
+            .filter((m: any) => m.role !== 'system')
+            .map((m: any) => ({ role: m.role, content: typeof m.content === 'string' ? m.content : String(m.content) }));
 
-          const directRes = await nodeFetch(targetEndpoint, {
+          const chatRes = await nodeFetch('https://duckduckgo.com/duckchat/v1/chat', {
             method: 'POST',
-            headers: fallbackHeaders,
-            body: JSON.stringify(requestBody)
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+              'Accept': 'text/event-stream',
+              'Content-Type': 'application/json',
+              'Referer': 'https://duckduckgo.com/',
+              'Origin': 'https://duckduckgo.com',
+              'x-vqd-4': vqd,
+            },
+            body: JSON.stringify({ model: 'deepseek-r1', messages: ddgMessages }),
           });
 
-          if (directRes.ok) {
-            console.log(`[Fallback] Direct fetch succeeded!`);
-            if (stream) {
-              const bodyStream = new ReadableStream({
-                start(controller) {
-                  (directRes.body as any).on('data', (chunk: Buffer) => controller.enqueue(chunk));
-                  (directRes.body as any).on('end', () => controller.close());
-                  (directRes.body as any).on('error', (err: Error) => controller.error(err));
-                },
-                cancel() { (directRes.body as any).destroy(); }
-              });
-              return new Response(bodyStream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' } });
-            }
-            return NextResponse.json(await directRes.json());
-          } else {
-            console.error(`[Fallback] Direct fetch returned status ${directRes.status}`);
-          }
-        } catch (directErr: any) {
-          console.error(`[Fallback] Direct fetch also failed: ${directErr.message || directErr}`);
-        }
+          if (!chatRes.ok) throw new Error(`DDG chat error: HTTP ${chatRes.status}`);
 
-        // ── DeepSeek Fallback: DuckDuckGo AI Chat ──
-        // g4f.space blocks DeepSeek with "Not authenticated", so we fallback to DDG
-        if (g4fModel.toLowerCase().includes('deepseek')) {
-          console.log(`[DeepSeek-Fallback] g4f.space failed for DeepSeek. Trying DuckDuckGo AI Chat...`);
-          try {
-            // Step 1: Get VQD token from DDG
-            const statusRes = await nodeFetch('https://duckduckgo.com/duckchat/v1/status', {
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-                'Accept': '*/*',
-                'x-vqd-accept': '1',
-                'Referer': 'https://duckduckgo.com/',
-                'Origin': 'https://duckduckgo.com',
-              }
-            });
-            const vqd = statusRes.headers.get('x-vqd-4');
-            if (!vqd) throw new Error(`VQD token fetch failed (HTTP ${statusRes.status})`);
-
-            // Step 2: Send chat to DDG with deepseek-r1
-            const ddgMessages = (body.messages || [{ role: 'user', content: body.message || '' }])
-              .filter((m: any) => m.role !== 'system')
-              .map((m: any) => ({ role: m.role, content: typeof m.content === 'string' ? m.content : String(m.content) }));
-
-            const chatRes = await nodeFetch('https://duckduckgo.com/duckchat/v1/chat', {
-              method: 'POST',
-              headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-                'Accept': 'text/event-stream',
-                'Content-Type': 'application/json',
-                'Referer': 'https://duckduckgo.com/',
-                'Origin': 'https://duckduckgo.com',
-                'x-vqd-4': vqd,
-              },
-              body: JSON.stringify({ model: 'deepseek-r1', messages: ddgMessages }),
-            });
-
-            if (!chatRes.ok) throw new Error(`DDG chat error: HTTP ${chatRes.status}`);
-
-            if (stream && chatRes.body) {
-              console.log(`[DeepSeek-Fallback] DDG streaming response started`);
-              // Convert DDG SSE stream → OpenAI-compatible SSE stream
-              const encoder = new TextEncoder();
-              let buffer = '';
-              const transformedStream = new ReadableStream({
-                start(controller) {
-                  (chatRes.body as any).on('data', (chunk: Buffer) => {
-                    buffer += chunk.toString();
-                    const lines = buffer.split('\n');
-                    buffer = lines.pop() || ''; // keep incomplete line in buffer
-                    for (const line of lines) {
-                      if (line.startsWith('data: ')) {
-                        const dataStr = line.slice(6).trim();
-                        if (dataStr === '[DONE]') {
-                          const finalChunk = { id: `chatcmpl-ddg-${Date.now()}`, object: 'chat.completion.chunk', created: Math.floor(Date.now() / 1000), model: 'deepseek-r1', choices: [{ index: 0, delta: {}, finish_reason: 'stop' }] };
-                          controller.enqueue(encoder.encode(`data: ${JSON.stringify(finalChunk)}\n\n`));
-                          controller.enqueue(encoder.encode('data: [DONE]\n\n'));
-                          return;
-                        }
-                        try {
-                          const parsed = JSON.parse(dataStr);
-                          if (parsed.message != null) {
-                            const openaiChunk = { id: `chatcmpl-ddg-${Date.now()}`, object: 'chat.completion.chunk', created: Math.floor(Date.now() / 1000), model: 'deepseek-r1', choices: [{ index: 0, delta: { content: parsed.message }, finish_reason: null }] };
-                            controller.enqueue(encoder.encode(`data: ${JSON.stringify(openaiChunk)}\n\n`));
-                          }
-                        } catch {}
+          if (stream && chatRes.body) {
+            console.log(`[DeepSeek-Fallback] DDG streaming response started`);
+            const encoder = new TextEncoder();
+            let buffer = '';
+            const transformedStream = new ReadableStream({
+              start(controller) {
+                (chatRes.body as any).on('data', (chunk: Buffer) => {
+                  buffer += chunk.toString();
+                  const lines = buffer.split('\n');
+                  buffer = lines.pop() || '';
+                  for (const line of lines) {
+                    if (line.startsWith('data: ')) {
+                      const dataStr = line.slice(6).trim();
+                      if (dataStr === '[DONE]') {
+                        const finalChunk = { id: `chatcmpl-ddg-${Date.now()}`, object: 'chat.completion.chunk', created: Math.floor(Date.now() / 1000), model: 'deepseek-r1', choices: [{ index: 0, delta: {}, finish_reason: 'stop' }] };
+                        controller.enqueue(encoder.encode(`data: ${JSON.stringify(finalChunk)}\n\n`));
+                        controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+                        return;
                       }
+                      try {
+                        const parsed = JSON.parse(dataStr);
+                        if (parsed.message != null) {
+                          const openaiChunk = { id: `chatcmpl-ddg-${Date.now()}`, object: 'chat.completion.chunk', created: Math.floor(Date.now() / 1000), model: 'deepseek-r1', choices: [{ index: 0, delta: { content: parsed.message }, finish_reason: null }] };
+                          controller.enqueue(encoder.encode(`data: ${JSON.stringify(openaiChunk)}\n\n`));
+                        }
+                      } catch {}
                     }
-                  });
-                  (chatRes.body as any).on('end', () => controller.close());
-                  (chatRes.body as any).on('error', (err: Error) => controller.error(err));
-                },
-                cancel() { (chatRes.body as any).destroy(); }
-              });
-              return new Response(transformedStream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' } });
-            }
-
-            // Non-streaming: collect full response
-            const sseTxt = await chatRes.text();
-            let content = '';
-            for (const line of sseTxt.split('\n')) {
-              if (line.startsWith('data: ') && !line.includes('[DONE]')) {
-                try {
-                  const parsed = JSON.parse(line.slice(6));
-                  if (parsed.message) content += parsed.message;
-                } catch {}
-              }
-            }
-            if (content) {
-              console.log(`[DeepSeek-Fallback] DDG success! Response length: ${content.length}`);
-              return NextResponse.json({
-                id: `chatcmpl-ddg-${Date.now()}`,
-                object: 'chat.completion',
-                created: Math.floor(Date.now() / 1000),
-                model: 'deepseek-r1',
-                choices: [{ index: 0, message: { role: 'assistant', content }, finish_reason: 'stop' }]
-              });
-            }
-            throw new Error('Empty DDG response');
-          } catch (ddgErr: any) {
-            console.error(`[DeepSeek-Fallback] DDG also failed: ${ddgErr.message || ddgErr}`);
+                  }
+                });
+                (chatRes.body as any).on('end', () => controller.close());
+                (chatRes.body as any).on('error', (err: Error) => controller.error(err));
+              },
+              cancel() { (chatRes.body as any).destroy(); }
+            });
+            return new Response(transformedStream, { headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' } });
           }
-        }
 
-        return NextResponse.json(
-          { ok: false, engine: "proxy", error: `All raced proxies failed. Last error: ${errors}` },
-          { status: 502 }
-        );
+          // Non-streaming: collect full response
+          const sseTxt = await chatRes.text();
+          let content = '';
+          for (const line of sseTxt.split('\n')) {
+            if (line.startsWith('data: ') && !line.includes('[DONE]')) {
+              try {
+                const parsed = JSON.parse(line.slice(6));
+                if (parsed.message) content += parsed.message;
+              } catch {}
+            }
+          }
+          if (content) {
+            console.log(`[DeepSeek-Fallback] DDG success! Response length: ${content.length}`);
+            return NextResponse.json({
+              id: `chatcmpl-ddg-${Date.now()}`,
+              object: 'chat.completion',
+              created: Math.floor(Date.now() / 1000),
+              model: 'deepseek-r1',
+              choices: [{ index: 0, message: { role: 'assistant', content }, finish_reason: 'stop' }]
+            });
+          }
+          throw new Error('Empty DDG response');
+        } catch (ddgErr: any) {
+          console.error(`[DeepSeek-Fallback] DDG also failed: ${ddgErr.message || ddgErr}`);
+        }
       }
+
+      return NextResponse.json(
+        { ok: false, engine: "proxy", error: `All fallback channels failed. Direct error, Proxy race errors: ${proxyRaceErrors}` },
+        { status: 502 }
+      );
     }
 
     // 3. Fallback Route

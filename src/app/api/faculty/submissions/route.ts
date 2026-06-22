@@ -55,7 +55,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { submissionId, grade, feedback } = await req.json()
+    const { submissionId, grade, feedback, status } = await req.json()
 
     if (!submissionId) {
       return NextResponse.json({ error: "Submission ID is required." }, { status: 400 })
@@ -89,6 +89,7 @@ export async function POST(req: Request) {
     }
 
     const previousStatus = submission.status
+    const targetStatus = status || "GRADED"
 
     // Update submission
     const updatedSubmission = await db.assignmentSubmission.update({
@@ -96,12 +97,12 @@ export async function POST(req: Request) {
       data: {
         grade: Number(grade),
         feedback: feedback || "",
-        status: "GRADED",
+        status: targetStatus,
       },
     })
 
     // Award rewards if not already graded
-    if (previousStatus !== "GRADED") {
+    if (targetStatus === "GRADED" && previousStatus !== "GRADED") {
       await db.user.update({
         where: { id: submission.studentId },
         data: {

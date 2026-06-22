@@ -285,7 +285,7 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
   const handleConfirmMCQ = () => {
     if (selectedAnswerIndex === null || isSubmitted) return;
     const currentQ = quizQuestions[currentQuizIndex];
-    const correctIdx = currentQ.correct;
+    const correctIdx = currentQ.correct !== undefined ? currentQ.correct : currentQ.correctIndex;
     
     const correct = selectedAnswerIndex === correctIdx;
     setIsCorrect(correct);
@@ -297,11 +297,16 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
   const handleConfirmFill = () => {
     if (!fillAnswer.trim() || isSubmitted) return;
     const currentQ = quizQuestions[currentQuizIndex];
-    const correctAns = currentQ.word.toLowerCase().trim();
+    const correctIdx = currentQ.correct !== undefined ? currentQ.correct : currentQ.correctIndex;
+    const correctAns = currentQ.word 
+      ? currentQ.word.toLowerCase().trim() 
+      : (currentQ.options && correctIdx !== undefined) 
+        ? currentQ.options[correctIdx].toLowerCase().trim() 
+        : "";
     const userAns = fillAnswer.toLowerCase().trim();
     
     // Fuzzy matching similar to prototype
-    const correct = userAns === correctAns || correctAns.includes(userAns) && userAns.length >= 3;
+    const correct = userAns === correctAns || (correctAns && correctAns.includes(userAns) && userAns.length >= 3);
     setIsCorrect(correct);
     if (correct) setQuizScore(prev => prev + 1);
     setIsSubmitted(true);
@@ -663,8 +668,9 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
               <div className="grid grid-cols-1 gap-3">
                 {quizQuestions[currentQuizIndex].options.map((option: string, idx: number) => {
                   let optionStyle = "border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/10 text-foreground";
+                  const correctIdx = quizQuestions[currentQuizIndex].correct !== undefined ? quizQuestions[currentQuizIndex].correct : quizQuestions[currentQuizIndex].correctIndex;
                   if (isSubmitted) {
-                    if (idx === quizQuestions[currentQuizIndex].correct) {
+                    if (idx === correctIdx) {
                       optionStyle = "bg-green-500/20 border-green-500 text-green-700 dark:text-green-300 pointer-events-none";
                     } else if (idx === selectedAnswerIndex) {
                       optionStyle = "bg-red-500/20 border-red-500 text-red-700 dark:text-red-300 pointer-events-none";
@@ -733,7 +739,7 @@ export function VocabularyModule({ onSubFeatureOpen }: VocabularyModuleProps) {
                     <p className="text-[11px] text-zinc-600 dark:text-gray-300 mt-1">
                       {isCorrect 
                         ? "You identified the correct vocabulary word choice." 
-                        : `The correct answer was: "${quizQuestions[currentQuizIndex].word}".`}
+                        : `The correct answer was: "${quizQuestions[currentQuizIndex].word || (quizQuestions[currentQuizIndex].options && quizQuestions[currentQuizIndex].options[quizQuestions[currentQuizIndex].correct !== undefined ? quizQuestions[currentQuizIndex].correct : quizQuestions[currentQuizIndex].correctIndex]) || ""}".`}
                     </p>
                   </div>
                 </div>

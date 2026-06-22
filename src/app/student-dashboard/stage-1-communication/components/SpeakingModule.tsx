@@ -46,28 +46,43 @@ const SPEAKING_FEATURES = [
 
 export function SpeakingModule({ content: initialContent, challenges = [], onFinish, onSubFeatureOpen }: SpeakingModuleProps) {
   const [activeFeature, setActiveFeature] = useState<"read-aloud" | "shadowing" | "analyzer" | "roleplay" | null>(null);
-  const [dynamicChallenges, setDynamicChallenges] = useState<Stage1ContentDTO[]>([]);
+  const [readAloudChallenge, setReadAloudChallenge] = useState<Stage1ContentDTO | null>(null);
+  const [shadowChallenge, setShadowChallenge] = useState<Stage1ContentDTO | null>(null);
+  const [analyzerChallenge, setAnalyzerChallenge] = useState<Stage1ContentDTO | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchChallenges() {
+    async function fetchAllChallenges() {
       try {
-        const res = await fetch("/api/communication/generate-challenge", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ moduleType: "SPEAKING" })
-        });
-        const data = await res.json();
-        if (data.success && data.challenge) {
-          setDynamicChallenges([data.challenge]);
-        }
+        setLoading(true);
+        const [readAloudRes, shadowRes, analyzerRes] = await Promise.all([
+          fetch("/api/communication/generate-challenge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ moduleType: "SPEAKING" })
+          }).then(r => r.json()),
+          fetch("/api/communication/generate-challenge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ moduleType: "SPEAKING_SHADOW" })
+          }).then(r => r.json()),
+          fetch("/api/communication/generate-challenge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ moduleType: "SPEAKING_ANALYZER" })
+          }).then(r => r.json())
+        ]);
+
+        if (readAloudRes.success) setReadAloudChallenge(readAloudRes.challenge);
+        if (shadowRes.success) setShadowChallenge(shadowRes.challenge);
+        if (analyzerRes.success) setAnalyzerChallenge(analyzerRes.challenge);
       } catch (err) {
         console.error("Failed to generate speaking challenges", err);
       } finally {
         setLoading(false);
       }
     }
-    fetchChallenges();
+    fetchAllChallenges();
   }, []);
 
   useEffect(() => {
@@ -75,10 +90,6 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
       onSubFeatureOpen(activeFeature !== null);
     }
   }, [activeFeature, onSubFeatureOpen]);
-
-  // Active Content resolution
-  const activeChallenges = dynamicChallenges.length > 0 ? dynamicChallenges : challenges;
-  const content = dynamicChallenges.length > 0 ? dynamicChallenges[0] : initialContent;
 
   // Read Aloud Speech Hook
   const {
@@ -92,7 +103,7 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
     result: readAloudResult,
     error: readAloudError,
     reset: resetReadAloud,
-  } = useSpeaking(content);
+  } = useSpeaking(readAloudChallenge);
 
   const [useFallback, setUseFallback] = useState(false);
 
@@ -115,81 +126,20 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
   };
 
   // ----------------------------------------------------
-  // SHADOW PRACTICE LOGIC
+  // SHADOW PRACTICE HOOK
   // ----------------------------------------------------
-  const [shadowSentenceIdx, setShadowSentenceIdx] = useState(0);
-  const [shadowTranscribed, setShadowTranscribed] = useState("");
-  const [isShadowRecording, setIsShadowRecording] = useState(false);
-  const [shadowResult, setShadowResult] = useState<any>(null);
-  const [shadowError, setShadowError] = useState<string | null>(null);
-  const shadowRecognitionRef = useRef<any>(null);
-
-  const activeShadow = SHADOW_SENTENCES[shadowSentenceIdx];
-
-  const startShadowRecord = () => {
-    setShadowError(null);
-    setShadowTranscribed("");
-    setShadowResult(null);
-    
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      setShadowError("Speech recognition is not supported in your browser.");
-      return;
-    }
-
-    try {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      const rec = new SpeechRecognition();
-      rec.continuous = false;
-      rec.interimResults = false;
-      rec.lang = 'en-US';
-
-      rec.onstart = () => setIsShadowRecording(true);
-      rec.onresult = (e: any) => {
-        const resultText = e.results[0][0].transcript;
-        setShadowTranscribed(resultText);
-      };
-      rec.onerror = (e: any) => {
-        console.error(e);
-        setShadowError(`Microphone error: ${e.error}`);
-        setIsShadowRecording(false);
-      };
-      rec.onend = () => setIsShadowRecording(false);
-
-      rec.start();
-      shadowRecognitionRef.current = rec;
-    } catch (e: any) {
-      setShadowError(e.message);
-    }
-  };
-
-  const stopShadowRecord = () => {
-    if (shadowRecognitionRef.current) {
-      shadowRecognitionRef.current.stop();
-    }
-  };
-
-  const evaluateShadowPractice = () => {
-    if (!shadowTranscribed) return;
-    const targetWords = activeShadow.text.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").split(/\s+/);
-    const userWords = shadowTranscribed.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").split(/\s+/);
-
-    const matches = userWords.filter(w => targetWords.includes(w));
-    const score = Math.round((matches.length / targetWords.length) * 100);
-
-    const mispronounced = targetWords.filter(w => !userWords.includes(w));
-
-    setShadowResult({
-      score,
-      xpAwarded: score >= 80 ? 20 : 5,
-      mispronounced,
-      feedback: score >= 80 
-        ? "Excellent shadowing accuracy! You matched almost every word." 
-        : "Some words were missed. Focus on copying the exact sentence rhythm.",
-      tamilFeedback: score >= 80 
-        ? "அருமையான உச்சரிப்பு துல்லியம்! அனைத்து வார்த்தைகளையும் சரியாகப் பேசினீர்கள்."
-        : "சில வார்த்தைகள் விடுபட்டுள்ளன. வார்த்தைகளின் உச்சரிப்பு வேகத்தைக் கவனித்து மீண்டும் முயலவும்."
-    });
-  };
+  const {
+    transcribedText: shadowTranscribed,
+    setTranscribedText: setShadowTranscribed,
+    startRecording: startShadowRecord,
+    stopRecording: stopShadowRecord,
+    isRecording: isShadowRecording,
+    submitSpeaking: submitShadowAnswers,
+    isSubmitting: isShadowSubmitting,
+    result: shadowResult,
+    error: shadowError,
+    reset: resetShadowPractice,
+  } = useSpeaking(shadowChallenge);
 
   // ----------------------------------------------------
   // SPEECH PITCH ANALYZER LOGIC
@@ -198,6 +148,8 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
   const [isAnalyzerRecording, setIsAnalyzerRecording] = useState(false);
   const [analyzerResult, setAnalyzerResult] = useState<any>(null);
   const [analyzerSeconds, setAnalyzerSeconds] = useState(0);
+  const [isSubmittingPitch, setIsSubmittingPitch] = useState(false);
+  const [pitchError, setPitchError] = useState<string | null>(null);
   const pitchCanvasRef = useRef<HTMLCanvasElement>(null);
   
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -211,6 +163,7 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
     setAnalyzerResult(null);
     setAnalyzerTranscribed("");
     setAnalyzerSeconds(0);
+    setPitchError(null);
     
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -324,40 +277,42 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
     }, 800);
   };
 
-  const evaluateAnalyzerResults = () => {
-    const text = analyzerTranscribed || "Mock transcription of clear academic communication text for visual presentation feedback.";
-    const seconds = analyzerSeconds || 8;
-    const words = text.split(/\s+/).filter(Boolean).length;
-    const wpm = seconds > 0 ? Math.round((words / seconds) * 60) : 120;
-
-    // Detect fillers
-    const fillers = ["um", "uh", "like", "so", "basically", "actually"];
-    const foundFillers: string[] = [];
-    text.toLowerCase().split(/\s+/).forEach(w => {
-      const cleaned = w.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "");
-      if (fillers.includes(cleaned)) {
-        foundFillers.push(cleaned);
+  const evaluateAnalyzerResults = async () => {
+    if (!analyzerChallenge) return;
+    setIsSubmittingPitch(true);
+    setPitchError(null);
+    try {
+      const res = await fetch("/api/communication/evaluate-pitch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contentId: analyzerChallenge.id,
+          transcribedText: analyzerTranscribed || "No speech transcribed.",
+          seconds: analyzerSeconds || 10
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setAnalyzerResult({
+          wpm: data.evaluation.wpm,
+          fillerCount: data.evaluation.fillerCount,
+          fillersUsed: data.evaluation.fillersUsed,
+          fluencyScore: data.score,
+          paceFeedback: data.evaluation.paceFeedback,
+          feedback: data.evaluation.feedback,
+          tamilFeedback: data.evaluation.tamilFeedback,
+          xpAwarded: data.xpAwarded,
+          transcript: analyzerTranscribed
+        });
+      } else {
+        setPitchError(data.error || "Failed to evaluate presentation pitch.");
       }
-    });
-
-    const fluencyScore = Math.max(30, 100 - (foundFillers.length * 8) - Math.abs(130 - wpm) * 0.3);
-
-    let paceFeedback = "Perfect rhythm! Your communication flow is clear and dynamic.";
-    if (wpm < 100) {
-      paceFeedback = "Speaking rate is a bit slow. Try to connect words more smoothly to build speech momentum.";
-    } else if (wpm > 150) {
-      paceFeedback = "Speaking rate is relatively high. Pause at commas and periods to help listeners capture key facts.";
+    } catch (e) {
+      console.error(e);
+      setPitchError("Connection error. Please try again.");
+    } finally {
+      setIsSubmittingPitch(false);
     }
-
-    setAnalyzerResult({
-      wpm,
-      fillerCount: foundFillers.length,
-      fillersUsed: Array.from(new Set(foundFillers)),
-      fluencyScore: Math.round(fluencyScore),
-      paceFeedback,
-      xpAwarded: 25,
-      transcript: text
-    });
   };
 
   // ----------------------------------------------------
@@ -535,13 +490,13 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
           </div>
 
           {/* 1. READ ALOUD TAB */}
-          {activeFeature === "read-aloud" && content && (
+          {activeFeature === "read-aloud" && readAloudChallenge && (
         <div className="space-y-6 animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
-            <h2 className="text-[22px] font-bold text-foreground mb-2">{content.title}</h2>
+            <h2 className="text-[22px] font-bold text-foreground mb-2">{readAloudChallenge.title}</h2>
             <div className="p-6 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/10 dark:border-white/10 text-center shadow-[inset_0_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
               <p className="text-zinc-600 dark:text-gray-200 text-[28px] font-medium leading-relaxed">
-                "{content.content}"
+                "{readAloudChallenge.content}"
               </p>
             </div>
           </LiquidGlassCard>
@@ -666,42 +621,20 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
       )}
 
       {/* 2. SHADOW PRACTICE TAB */}
-      {activeFeature === "shadowing" && (
+      {activeFeature === "shadowing" && shadowChallenge && (
         <div className="space-y-6 max-w-xl mx-auto animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
             <h3 className="text-[17px] font-bold text-foreground mb-4 flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-purple-400" /> Shadowing repetition practice
             </h3>
 
-            {/* List of Shadow prompts */}
-            <div className="flex gap-2 mb-6">
-              {SHADOW_SENTENCES.map((item, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setShadowSentenceIdx(idx);
-                    setShadowTranscribed("");
-                    setShadowResult(null);
-                    setShadowError(null);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-[13px] font-semibold border transition-all ${
-                    shadowSentenceIdx === idx
-                      ? "bg-purple-600 border-purple-500 text-white"
-                      : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-zinc-500 dark:text-gray-400 hover:text-foreground"
-                  }`}
-                >
-                  {item.difficulty} Prompt
-                </button>
-              ))}
-            </div>
-
             <div className="p-5 bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-2xl text-center space-y-4 mb-6">
               <p className="text-zinc-500 dark:text-gray-400 text-[13px] uppercase font-bold tracking-wider">Listen carefully & Shadow:</p>
               <p className="text-foreground text-[22px] font-medium leading-relaxed">
-                "{activeShadow.text}"
+                "{shadowChallenge.content}"
               </p>
               <button
-                onClick={() => speakText(activeShadow.text, 0.85)}
+                onClick={() => speakText(shadowChallenge.content, 0.85)}
                 className="mx-auto flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/40 hover:bg-purple-500/20 text-purple-600 dark:text-purple-300 text-[13px] font-semibold rounded-xl transition-all"
               >
                 <Volume2 className="w-4 h-4" /> Listen to Audio guide
@@ -735,10 +668,11 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
                   
                   {!shadowResult && (
                     <button
-                      onClick={evaluateShadowPractice}
+                      onClick={submitShadowAnswers}
+                      disabled={isShadowSubmitting}
                       className="mt-3 px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-[13px] font-bold w-full transition-all"
                     >
-                      Compare Pronunciation
+                      {isShadowSubmitting ? "Comparing Pronunciation..." : "Compare Pronunciation"}
                     </button>
                   )}
                 </div>
@@ -755,20 +689,22 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
               <div className="mt-6 p-4 bg-purple-500/5 border border-purple-500/30 rounded-2xl space-y-3 animate-in slide-in-from-bottom-3">
                 <div className="flex justify-between items-center">
                   <h4 className="font-bold text-[15px] text-foreground flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 dark:text-green-400" /> Accuracy Breakdown
+                    <CheckCircle2 className="w-4 h-4 text-green-500 dark:text-green-400" /> Pronunciation Review
                   </h4>
                   <span className="px-2.5 py-0.5 bg-purple-500/10 text-purple-600 dark:text-purple-300 rounded-full text-[13px] font-bold border border-purple-500/30">
                     Match Score: {shadowResult.score}%
                   </span>
                 </div>
-                <p className="text-[13px] text-zinc-600 dark:text-gray-300">{shadowResult.feedback}</p>
-                <p className="text-[13px] text-purple-600 dark:text-purple-300 italic">{shadowResult.tamilFeedback}</p>
+                <p className="text-[13px] text-zinc-600 dark:text-gray-300">{shadowResult.evaluation?.feedback || shadowResult.feedback}</p>
+                {(shadowResult.evaluation?.tamilFeedback || shadowResult.tamilFeedback) && (
+                  <p className="text-[13px] text-purple-600 dark:text-purple-300 italic">{shadowResult.evaluation?.tamilFeedback || shadowResult.tamilFeedback}</p>
+                )}
 
-                {shadowResult.mispronounced.length > 0 && (
+                {Array.isArray(shadowResult.evaluation?.mispronouncedWords) && shadowResult.evaluation.mispronouncedWords.length > 0 && (
                   <div className="text-[13px] space-y-1">
                     <span className="text-orange-500 dark:text-orange-400 font-semibold">Focus pronunciation on:</span>
                     <div className="flex flex-wrap gap-1 mt-1">
-                      {shadowResult.mispronounced.map((word: string, i: number) => (
+                      {shadowResult.evaluation.mispronouncedWords.map((word: string, i: number) => (
                         <span key={i} className="px-2 py-0.5 bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-200 rounded">
                           {word}
                         </span>
@@ -780,10 +716,7 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
                 <div className="flex justify-between items-center text-[13px] text-yellow-600 dark:text-yellow-500 font-bold pt-2">
                   <span>+{shadowResult.xpAwarded} XP Earned</span>
                   <button
-                    onClick={() => {
-                      setShadowResult(null);
-                      setShadowTranscribed("");
-                    }}
+                    onClick={resetShadowPractice}
                     className="text-purple-400 hover:underline"
                   >
                     Repeat Practice
@@ -796,15 +729,33 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
       )}
 
       {/* 3. SPEECH PITCH ANALYZER TAB */}
-      {activeFeature === "analyzer" && (
+      {activeFeature === "analyzer" && analyzerChallenge && (
         <div className="space-y-6 max-w-xl mx-auto animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
             <h3 className="text-[17px] font-bold text-foreground mb-2 flex items-center gap-2">
               <Activity className="w-5 h-5 text-cyan-400 animate-pulse" /> Speech Pitch & Pacing Analyzer
             </h3>
             <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-6 leading-relaxed">
-              Read any academic or work sentence aloud. We will trace your voice frequency variations on the visualizer and analyze words-per-minute pacing.
+              Read the presentation topic pitch below aloud. We will trace your voice variations and analyze your pacing and grammar.
             </p>
+
+            <div className="p-4 bg-cyan-950/20 border border-cyan-500/20 rounded-2xl mb-6">
+              <span className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider block mb-1">Presentation Prompt Topic:</span>
+              <p className="text-foreground font-semibold text-sm">"{analyzerChallenge.content}"</p>
+              {(() => {
+                const parsed = analyzerChallenge.questions 
+                  ? (typeof analyzerChallenge.questions === "string" ? JSON.parse(analyzerChallenge.questions) : analyzerChallenge.questions)
+                  : null;
+                const bulletPoints = parsed?.bulletPoints || [];
+                return bulletPoints.length > 0 && (
+                  <ul className="list-disc list-inside mt-2 text-xs text-gray-400 space-y-1">
+                    {bulletPoints.map((bp: string, idx: number) => (
+                      <li key={idx}>{bp}</li>
+                    ))}
+                  </ul>
+                );
+              })()}
+            </div>
 
             <div className="relative border border-white/10 rounded-2xl overflow-hidden bg-slate-900/50 mb-6">
               <canvas
@@ -824,6 +775,7 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
             <div className="flex flex-col items-center space-y-4">
               <button
                 onClick={isAnalyzerRecording ? stopPitchAnalyzer : startPitchAnalyzer}
+                disabled={isSubmittingPitch}
                 className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${
                   isAnalyzerRecording 
                     ? "bg-red-500 animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.5)]" 
@@ -846,9 +798,22 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
                   <p className="text-[13px] text-zinc-600 dark:text-gray-300">"{analyzerTranscribed}"</p>
                 </div>
               )}
+
+              {pitchError && (
+                <div className="text-[13px] text-red-600 dark:text-red-400 bg-red-500/10 p-2.5 rounded-lg border border-red-500/20 w-full text-center">
+                  {pitchError}
+                </div>
+              )}
             </div>
 
-            {analyzerResult && (
+            {isSubmittingPitch && (
+              <div className="mt-6 p-5 bg-cyan-500/5 border border-cyan-500/10 rounded-2xl flex flex-col items-center justify-center space-y-2 animate-pulse">
+                <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs text-cyan-400 font-semibold">AI is analyzing your presentation speech metrics...</span>
+              </div>
+            )}
+
+            {analyzerResult && !isSubmittingPitch && (
               <div className="mt-6 p-5 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl space-y-4 animate-in slide-in-from-bottom-4">
                 <h4 className="font-bold text-[15px] text-cyan-600 dark:text-cyan-400 flex items-center gap-2">
                   <Activity className="w-4 h-4" /> Speaking metrics report
@@ -869,16 +834,24 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
                   </div>
                 </div>
 
-                <div className="space-y-2 text-[13px]">
+                <div className="space-y-3 text-[13px] leading-relaxed">
                   <div>
                     <span className="font-semibold text-zinc-600 dark:text-gray-300">Pacing Feedback:</span>
-                    <p className="text-zinc-500 dark:text-gray-400 leading-relaxed">{analyzerResult.paceFeedback}</p>
+                    <p className="text-zinc-500 dark:text-gray-400 mt-0.5">{analyzerResult.paceFeedback}</p>
+                  </div>
+
+                  <div>
+                    <span className="font-semibold text-zinc-600 dark:text-gray-300">Speech Quality Evaluation:</span>
+                    <p className="text-zinc-500 dark:text-gray-400 mt-0.5">{analyzerResult.feedback}</p>
+                    {analyzerResult.tamilFeedback && (
+                      <p className="text-purple-600 dark:text-purple-300 italic text-xs mt-1">{analyzerResult.tamilFeedback}</p>
+                    )}
                   </div>
 
                   {analyzerResult.fillersUsed.length > 0 && (
                     <div>
                       <span className="font-semibold text-orange-500 dark:text-orange-400">Filler words detected:</span>
-                      <div className="flex gap-1.5 mt-1.5">
+                      <div className="flex gap-1.5 mt-1.5 flex-wrap">
                         {analyzerResult.fillersUsed.map((word: string, i: number) => (
                           <span key={i} className="px-2 py-0.5 bg-orange-500/10 text-orange-600 dark:text-orange-200 border border-orange-500/20 rounded text-[10px]">
                             {word}
@@ -890,7 +863,7 @@ export function SpeakingModule({ content: initialContent, challenges = [], onFin
                 </div>
 
                 <div className="flex justify-between items-center text-xs text-yellow-500 font-bold border-t border-white/5 pt-3">
-                  <span>+{analyzerResult.xpAwarded} XP Awarded</span>
+                  <span>Score: {analyzerResult.fluencyScore}% (+{analyzerResult.xpAwarded} XP Awarded)</span>
                   <button
                     onClick={() => {
                       setAnalyzerResult(null);

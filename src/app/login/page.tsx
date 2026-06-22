@@ -49,20 +49,20 @@ export default function LoginPage() {
   const rc = roleColorClasses[role]
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center relative overflow-hidden font-sans">
+    <div className="flex min-h-screen w-full items-center justify-center p-4 sm:p-6 md:p-8 relative overflow-hidden font-sans bg-[#02000a]">
       {/* Enhanced animated background orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div 
-          className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full blur-[120px] mix-blend-screen transition-colors duration-1000"
-          style={{ backgroundColor: roleGlows[role] }}
+          className="absolute -top-[10%] -left-[10%] w-[60%] h-[50%] rounded-full blur-[140px] mix-blend-screen transition-all duration-1000"
+          style={{ backgroundColor: roleGlows[role], opacity: 0.6 }}
         />
         <div 
-          className="absolute bottom-[10%] -right-[10%] w-[60%] h-[60%] rounded-full blur-[150px] mix-blend-screen transition-colors duration-1000"
+          className="absolute bottom-[10%] -right-[10%] w-[70%] h-[60%] rounded-full blur-[160px] mix-blend-screen transition-all duration-1000"
           style={{ backgroundColor: roleGlows[role], opacity: 0.5 }}
         />
         <div 
-          className="absolute top-[40%] left-[30%] w-[30%] h-[30%] rounded-full blur-[100px] mix-blend-screen transition-colors duration-1000"
-          style={{ backgroundColor: roleGlows[role], opacity: 0.3, animation: 'float-medium 20s ease-in-out infinite' }}
+          className="absolute top-[35%] left-[25%] w-[40%] h-[40%] rounded-full blur-[120px] mix-blend-screen transition-all duration-1000"
+          style={{ backgroundColor: roleGlows[role], opacity: 0.35, animation: 'float-medium 25s ease-in-out infinite' }}
         />
         
         {/* Subtle grid overlay */}
@@ -71,7 +71,7 @@ export default function LoginPage() {
 
       {/* Premium Glass Login Card */}
       <div className="relative z-10 w-full max-w-md animate-in fade-in zoom-in-95 duration-500 delay-150">
-        <div className="glass-card-premium p-8 sm:p-10 flex flex-col items-center">
+        <div className="glass-card-premium p-6 sm:p-10 flex flex-col items-center">
           <div className="glass-shimmer" />
           <div className="glass-specular" />
           <div className="glass-noise" />
@@ -95,54 +95,82 @@ export default function LoginPage() {
           </div>
           
           {/* Role Selection Tabs with Glass Pill */}
-          <div className="flex p-1 glass-panel rounded-xl mb-8">
-            {(["STUDENT", "FACULTY", "HOD"] as const).map((r) => (
-              <button
-                key={r}
-                onClick={() => {
-                  setRole(r)
-                  setEmail(r.toLowerCase() + "@test.com")
-                }}
-                className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all duration-300 relative ${
-                  role === r 
-                    ? "text-primary" 
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {role === r && (
-                  <div className="absolute inset-0 bg-[var(--glass-bg-hover)] border border-[var(--glass-border)] rounded-lg shadow-sm" />
-                )}
-                <span className="relative z-10">{r}</span>
-              </button>
-            ))}
+          <div className="flex w-full p-1 glass-panel rounded-2xl mb-8 relative z-20">
+            {(["STUDENT", "FACULTY", "HOD"] as const).map((r) => {
+              const isActive = role === r
+              return (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => {
+                    setRole(r)
+                    setEmail(r.toLowerCase() + "@test.com")
+                  }}
+                  className={`flex-1 py-3 text-xs font-bold rounded-xl transition-all duration-300 relative select-none ${
+                    isActive 
+                      ? "text-white" 
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {isActive && (
+                    <div 
+                      className="absolute inset-0 bg-white/10 border rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.05)] animate-in fade-in zoom-in-95 duration-200"
+                      style={{ 
+                        borderColor: roleAccents[r],
+                        boxShadow: `0 0 10px ${roleGlows[r]}`
+                      }}
+                    />
+                  )}
+                  <span className="relative z-10 tracking-wider">{r}</span>
+                </button>
+              )
+            })}
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5 mb-8 w-full">
-            <div className="space-y-1.5 relative group">
+            <div className="space-y-1.5 relative group w-full">
               <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest ml-1">Email Address</label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-foreground transition-colors" />
+                <Mail 
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors duration-300 group-focus-within:text-foreground"
+                  style={{
+                    color: email ? roleAccents[role] : undefined
+                  }}
+                />
                 <Input 
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-12 rounded-xl bg-[var(--glass-bg)] border-[var(--glass-border)]"
+                  className="pl-10 h-12 rounded-xl bg-[var(--glass-bg)] border-[var(--glass-border)] transition-all duration-300 focus-visible:bg-[var(--glass-bg-hover)]"
+                  style={{
+                    borderColor: email ? `${roleAccents[role]}50` : undefined,
+                    boxShadow: email ? `0 0 15px ${roleGlows[role]}` : undefined
+                  }}
                 />
               </div>
             </div>
 
-            <div className="space-y-1.5 relative group">
+            <div className="space-y-1.5 relative group w-full">
               <div className="flex justify-between items-center ml-1">
                 <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">Password</label>
                 <span className="text-[10px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors">Forgot?</span>
               </div>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-foreground transition-colors" />
+                <Lock 
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground transition-colors duration-300 group-focus-within:text-foreground"
+                  style={{
+                    color: password ? roleAccents[role] : undefined
+                  }}
+                />
                 <Input 
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 h-12 rounded-xl bg-[var(--glass-bg)] border-[var(--glass-border)]"
+                  className="pl-10 h-12 rounded-xl bg-[var(--glass-bg)] border-[var(--glass-border)] transition-all duration-300 focus-visible:bg-[var(--glass-bg-hover)]"
+                  style={{
+                    borderColor: password ? `${roleAccents[role]}50` : undefined,
+                    boxShadow: password ? `0 0 15px ${roleGlows[role]}` : undefined
+                  }}
                 />
               </div>
             </div>
@@ -150,7 +178,11 @@ export default function LoginPage() {
             <Button 
               type="submit"
               disabled={isLoading}
-              className={`w-full h-12 mt-2 rounded-xl ${rc.bg} hover:opacity-90 text-white font-bold text-sm tracking-wide shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2`}
+              className="w-full h-12 mt-2 rounded-xl text-white font-bold text-sm tracking-wide shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_20px_rgba(0,0,0,0.2)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2 cursor-pointer"
+              style={{
+                backgroundColor: roleAccents[role],
+                boxShadow: `0 4px 20px ${roleGlows[role]}`
+              }}
             >
               {isLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

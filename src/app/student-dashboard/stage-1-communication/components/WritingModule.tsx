@@ -52,29 +52,43 @@ const WRITING_FEATURES = [
 
 export function WritingModule({ content, challenges = [], onNext, onSubFeatureOpen }: WritingModuleProps) {
   const [activeFeature, setActiveFeature] = useState<"tutor" | "image" | "filter" | null>(null);
-  const [tutorChallengeIdx, setTutorChallengeIdx] = useState(0);
-  const [dynamicChallenges, setDynamicChallenges] = useState<Stage1ContentDTO[]>([]);
+  const [tutorChallenge, setTutorChallenge] = useState<Stage1ContentDTO | null>(null);
+  const [imageChallenge, setImageChallenge] = useState<Stage1ContentDTO | null>(null);
+  const [rewriteChallenge, setRewriteChallenge] = useState<Stage1ContentDTO | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchChallenges() {
+    async function fetchAllChallenges() {
       try {
-        const res = await fetch("/api/communication/generate-challenge", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ moduleType: "WRITING" })
-        });
-        const data = await res.json();
-        if (data.success && data.challenge) {
-          setDynamicChallenges([data.challenge]);
-        }
+        setLoading(true);
+        const [tutorRes, imageRes, rewriteRes] = await Promise.all([
+          fetch("/api/communication/generate-challenge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ moduleType: "WRITING" })
+          }).then(r => r.json()),
+          fetch("/api/communication/generate-challenge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ moduleType: "WRITING_IMAGE" })
+          }).then(r => r.json()),
+          fetch("/api/communication/generate-challenge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ moduleType: "WRITING_REWRITE" })
+          }).then(r => r.json())
+        ]);
+
+        if (tutorRes.success) setTutorChallenge(tutorRes.challenge);
+        if (imageRes.success) setImageChallenge(imageRes.challenge);
+        if (rewriteRes.success) setRewriteChallenge(rewriteRes.challenge);
       } catch (err) {
         console.error("Failed to generate writing challenges", err);
       } finally {
         setLoading(false);
       }
     }
-    fetchChallenges();
+    fetchAllChallenges();
   }, []);
 
   useEffect(() => {
@@ -83,10 +97,10 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
     }
   }, [activeFeature, onSubFeatureOpen]);
 
-  // Filter writing challenges from challenges array
-  const activeChallenges = dynamicChallenges.length > 0 ? dynamicChallenges : challenges;
-  const writingChallenges = activeChallenges.filter(c => c.type === "WRITING");
-  const activeTutorChallenge = writingChallenges[tutorChallengeIdx] || activeChallenges[0];
+  // Filter writing challenges from challenges array (kept for compatibility)
+  const writingChallenges = tutorChallenge ? [tutorChallenge] : [];
+  const [tutorChallengeIdx, setTutorChallengeIdx] = useState(0);
+  const activeTutorChallenge = writingChallenges[tutorChallengeIdx];
 
   // AI Writing Tutor speech Hook
   const {
@@ -97,7 +111,7 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
     result: tutorResult,
     error: tutorError,
     reset: resetTutor
-  } = useWriting(activeTutorChallenge);
+  } = useWriting(tutorChallenge);
 
   // ----------------------------------------------------
   // IMAGE DESCRIBER LOGIC
@@ -107,7 +121,7 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
   const [imageResult, setImageResult] = useState<any>(null);
   const [imageError, setImageError] = useState<string | null>(null);
 
-  const submitImageDescription = () => {
+  const submitImageDescription = async () => {
     setImageError(null);
     const words = imageText.trim().split(/\s+/).filter(Boolean);
     if (words.length < 15) {
@@ -117,28 +131,33 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
 
     setIsImageSubmitting(true);
 
-    // Mock evaluation based on sensory vocabulary keywords
-    setTimeout(() => {
-      const lowercase = imageText.toLowerCase();
-      const sensoryKeywords = ["rain", "window", "warm", "coffee", "books", "cafe", "gold", "light", "steaming", "cozy", "quiet", "ambient", "read", "mug"];
-      const matches = sensoryKeywords.filter(k => lowercase.includes(k));
-
-      // Calculate score based on vocabulary hits
-      const score = Math.min(100, 50 + matches.length * 10);
-      
-      setImageResult({
-        score,
-        xpAwarded: 20,
-        sensoryMatches: matches,
-        feedback: score >= 80
-          ? "Outstanding creative writing! You successfully captured the warm, quiet library atmosphere and detailed sensory elements."
-          : "Good attempt. Try using more atmospheric descriptors (like 'glowing', 'steaming', or 'cozy') to enrich your scene description.",
-        tamilFeedback: score >= 80
-          ? "மிகச்சிறந்த ஆக்கப்பூர்வமான எழுத்து! அமைதியான நூலகத்தின் சூழலையும் உணர்வுகளையும் மிக நேர்த்தியாக விவரித்துள்ளீர்கள்."
-          : "நல்ல முயற்சி. சூழலை இன்னும் மெருகேற்ற 'இருண்ட', 'சூடான', 'அமைதியான' போன்ற வர்ணனை வார்த்தைகளைப் பயன்படுத்தவும்."
+    try {
+      const res = await fetch("/api/communication/evaluate-picture-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userDescription: imageText,
+          actualPrompt: imageChallenge?.imagePrompt || imageChallenge?.content || ""
+        })
       });
+      const data = await res.json();
+      if (res.ok) {
+        setImageResult({
+          score: data.score,
+          xpAwarded: data.score >= 80 ? 25 : (data.score >= 50 ? 15 : 5),
+          feedback: data.feedback,
+          tamilFeedback: data.tamilFeedback,
+          improvedVersion: data.improvedVersion
+        });
+      } else {
+        setImageError(data.error || "Failed to evaluate image description.");
+      }
+    } catch (e) {
+      console.error(e);
+      setImageError("Connection error. Please try again.");
+    } finally {
       setIsImageSubmitting(false);
-    }, 1200);
+    }
   };
 
   const resetImageDescriber = () => {
@@ -150,37 +169,64 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
   // ----------------------------------------------------
   // NO-FILTER REWRITE LOGIC
   // ----------------------------------------------------
-  const [filterIdx, setFilterIdx] = useState(0);
   const [filterText, setFilterText] = useState("");
   const [filterResult, setFilterResult] = useState<any>(null);
-  
-  const activeFilterPrompt = NO_FILTER_PROMPTS[filterIdx];
+  const [isFilterSubmitting, setIsFilterSubmitting] = useState(false);
+  const [filterError, setFilterError] = useState<string | null>(null);
+
+  const parsedRewrite = rewriteChallenge
+    ? (typeof rewriteChallenge.questions === "string" ? JSON.parse(rewriteChallenge.questions) : rewriteChallenge.questions)
+    : null;
+
+  const bannedWords = parsedRewrite?.banned || rewriteChallenge?.banned || [];
+  const hints = parsedRewrite?.hints || rewriteChallenge?.hints || {};
 
   // Helper to find which banned words are typed in real-time
   const getViolatedBannedWords = (text: string) => {
     const words = text.toLowerCase().split(/\s+/).map(w => w.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, ""));
-    return activeFilterPrompt.banned.filter(bannedWord => words.includes(bannedWord));
+    return bannedWords.filter((bannedWord: string) => words.includes(bannedWord.toLowerCase()));
   };
 
   const violatedWords = getViolatedBannedWords(filterText);
   const hasTextLength = filterText.trim().length >= 15;
   const isFilterValid = violatedWords.length === 0 && hasTextLength;
 
-  const submitFilterRewrite = () => {
-    if (!isFilterValid) return;
-
-    // Award success score
-    setFilterResult({
-      score: 100,
-      xpAwarded: 20,
-      feedback: "Congratulations! You successfully rewrote the sentence by swapping basic words with advanced adjectives.",
-      tamilFeedback: "வாழ்த்துகள்! எளிய சொற்களுக்குப் பதிலாக மேம்பட்ட சொற்களைப் பயன்படுத்தி வாக்கியத்தை வெற்றிகரமாக மாற்றியமைத்துள்ளீர்கள்."
-    });
+  const submitFilterRewrite = async () => {
+    if (!isFilterValid || !rewriteChallenge) return;
+    setIsFilterSubmitting(true);
+    setFilterError(null);
+    try {
+      const res = await fetch("/api/communication/evaluate-rewrite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contentId: rewriteChallenge.id,
+          userRewrite: filterText
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setFilterResult({
+          score: data.score,
+          xpAwarded: data.xpAwarded,
+          feedback: data.feedback,
+          tamilFeedback: data.tamilFeedback
+        });
+      } else {
+        setFilterError(data.error || "Failed to evaluate rewrite.");
+      }
+    } catch (e) {
+      console.error(e);
+      setFilterError("Connection error. Please try again.");
+    } finally {
+      setIsFilterSubmitting(false);
+    }
   };
 
   const resetFilterRewrite = () => {
     setFilterText("");
     setFilterResult(null);
+    setFilterError(null);
   };
 
   return (
@@ -337,20 +383,20 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
       )}
 
       {/* 2. RENDER TAB: IMAGE DESCRIBER */}
-      {activeFeature === "image" && (
+      {activeFeature === "image" && imageChallenge && (
         <div className="space-y-6 animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
             <h3 className="text-[17px] font-bold text-foreground mb-2 flex items-center gap-2">
               <ImageIcon className="w-5 h-5 text-purple-400" /> Creative Scene Describer
             </h3>
             <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-6">
-              Study the scenery prompt below. Write a creative summary describing its mood, weather, lights, and items in at least 15 words.
+              {imageChallenge.content || "Study the scenery image below. Write a creative summary describing its mood, weather, lights, and items in at least 15 words."}
             </p>
 
             <div className="flex justify-center mb-6">
               <img
-                src="/images/creative_writing_scene.png"
-                alt="Cozy library scene"
+                src={`https://image.pollinations.ai/prompt/${encodeURIComponent(imageChallenge.imagePrompt || imageChallenge.content || "A cozy library cafe")}`}
+                alt={imageChallenge.title || "Creative Scene to Describe"}
                 className="w-full max-w-md h-auto rounded-3xl border border-white/10 shadow-xl object-cover max-h-[220px]"
               />
             </div>
@@ -381,23 +427,19 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                 </button>
               </div>
             ) : (
-              <div className="p-5 bg-purple-500/5 border border-purple-500/25 rounded-2xl space-y-3">
+              <div className="p-5 bg-purple-500/5 border border-purple-500/25 rounded-2xl space-y-3 animate-in fade-in">
                 <h4 className="font-bold text-[15px] text-foreground flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-green-500 dark:text-green-400" /> Summary Grade
                 </h4>
                 <p className="text-[13px] text-zinc-600 dark:text-gray-300 leading-relaxed">{imageResult.feedback}</p>
-                <p className="text-[13px] text-purple-600 dark:text-purple-300 italic">{imageResult.tamilFeedback}</p>
+                {imageResult.tamilFeedback && (
+                  <p className="text-[13px] text-purple-600 dark:text-purple-300 italic">{imageResult.tamilFeedback}</p>
+                )}
 
-                {imageResult.sensoryMatches.length > 0 && (
-                  <div className="text-xs">
-                    <span className="text-purple-400 font-semibold">Matched Sensory Keywords:</span>
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {imageResult.sensoryMatches.map((w: string, idx: number) => (
-                        <span key={idx} className="px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded border border-purple-500/30">
-                          {w}
-                        </span>
-                      ))}
-                    </div>
+                {imageResult.improvedVersion && (
+                  <div className="mt-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-xs space-y-1">
+                    <span className="text-blue-400 font-semibold block">Improved AI Version:</span>
+                    <p className="text-gray-300 italic">"{imageResult.improvedVersion}"</p>
                   </div>
                 )}
 
@@ -414,31 +456,13 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
       )}
 
       {/* 3. RENDER TAB: NO-FILTER REWRITE */}
-      {activeFeature === "filter" && (
+      {activeFeature === "filter" && rewriteChallenge && (
         <div className="space-y-6 max-w-lg mx-auto animate-in fade-in">
           <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-[17px] font-bold text-foreground flex items-center gap-2">
                 <ShieldAlert className="w-5 h-5 text-orange-400 animate-pulse" /> No-Filter Constraints
               </h3>
-              <div className="flex gap-1">
-                {NO_FILTER_PROMPTS.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setFilterIdx(i);
-                      resetFilterRewrite();
-                    }}
-                    className={`w-5 h-5 rounded text-[10px] font-bold border transition-colors ${
-                      filterIdx === i 
-                        ? "bg-purple-600 border-purple-500 text-white" 
-                        : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-zinc-500 dark:text-gray-400 hover:text-foreground"
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
             </div>
 
             <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-6 leading-relaxed">
@@ -447,14 +471,14 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
 
             <div className="p-4 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl space-y-2 mb-6">
               <span className="text-[10px] text-zinc-500 dark:text-gray-400 font-bold uppercase tracking-wider block">Boring Sentence:</span>
-              <p className="text-foreground text-[15px] font-semibold">"{activeFilterPrompt.original}"</p>
+              <p className="text-foreground text-[15px] font-semibold">"{rewriteChallenge.content}"</p>
             </div>
 
             {/* Banned word tokens */}
             <div className="mb-6 space-y-2">
               <span className="text-[10px] text-orange-400 font-bold uppercase tracking-wider block">Banned Filter Words:</span>
               <div className="flex flex-wrap gap-2">
-                {activeFilterPrompt.banned.map((w) => (
+                {bannedWords.map((w: string) => (
                   <span key={w} className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-300 rounded-lg text-xs font-bold">
                     🚫 {w}
                   </span>
@@ -463,17 +487,25 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
             </div>
 
             {/* Hints list */}
-            <div className="p-4 bg-purple-500/5 border border-purple-500/10 rounded-2xl mb-6 space-y-2">
-              <span className="text-[10px] text-purple-300 font-bold uppercase tracking-wider block">Vocab Suggestions (Hints):</span>
-              <div className="grid grid-cols-1 gap-2 text-xs">
-                {Object.entries(activeFilterPrompt.hints).map(([key, words]) => (
-                  <div key={key} className="flex items-start gap-1">
-                    <span className="text-gray-400 font-bold capitalize select-none">{key} alternatives:</span>
-                    <span className="text-purple-200">{words.join(", ")}</span>
-                  </div>
-                ))}
+            {Object.keys(hints).length > 0 && (
+              <div className="p-4 bg-purple-500/5 border border-purple-500/10 rounded-2xl mb-6 space-y-2">
+                <span className="text-[10px] text-purple-300 font-bold uppercase tracking-wider block">Vocab Suggestions (Hints):</span>
+                <div className="grid grid-cols-1 gap-2 text-xs">
+                  {Object.entries(hints).map(([key, words]: [string, any]) => (
+                    <div key={key} className="flex items-start gap-1">
+                      <span className="text-gray-400 font-bold capitalize select-none">{key} alternatives:</span>
+                      <span className="text-purple-200">{Array.isArray(words) ? words.join(", ") : String(words)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {filterError && (
+              <div className="text-[13px] text-red-600 dark:text-red-400 bg-red-500/10 p-2.5 rounded-lg border border-red-500/20 mb-4">
+                {filterError}
+              </div>
+            )}
 
             {!filterResult ? (
               <div className="space-y-4">
@@ -513,24 +545,26 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
 
                 <button
                   onClick={submitFilterRewrite}
-                  disabled={!isFilterValid}
+                  disabled={!isFilterValid || isFilterSubmitting}
                   className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white text-xs font-bold rounded-xl transition-all shadow"
                 >
-                  Verify Rewrite
+                  {isFilterSubmitting ? "AI verifying rewrite..." : "Verify Rewrite"}
                 </button>
               </div>
             ) : (
-              <div className="p-4 bg-green-500/10 border border-green-500/25 rounded-2xl space-y-3">
+              <div className="p-4 bg-green-500/10 border border-green-500/25 rounded-2xl space-y-3 animate-in fade-in">
                 <h4 className="font-bold text-[15px] text-green-600 dark:text-green-400 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" /> Rewrite Approved!
+                  <CheckCircle2 className="w-4 h-4" /> Rewrite Evaluated!
                 </h4>
                 <p className="text-[13px] text-zinc-600 dark:text-gray-200 leading-relaxed">
                   {filterResult.feedback}
                 </p>
-                <p className="text-[13px] text-purple-600 dark:text-purple-300 italic">{filterResult.tamilFeedback}</p>
+                {filterResult.tamilFeedback && (
+                  <p className="text-[13px] text-purple-600 dark:text-purple-300 italic">{filterResult.tamilFeedback}</p>
+                )}
 
                 <div className="flex justify-between items-center text-[13px] text-yellow-600 dark:text-yellow-500 font-bold pt-3 border-t border-black/5 dark:border-white/5">
-                  <span>+{filterResult.xpAwarded} XP Earned</span>
+                  <span>Score: {filterResult.score}% (+{filterResult.xpAwarded} XP Earned)</span>
                   <button onClick={resetFilterRewrite} className="text-purple-400 hover:underline">
                     Try another sentence
                   </button>

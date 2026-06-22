@@ -94,7 +94,7 @@ export default function SubmissionsPage() {
   }
 
   // Grade submission
-  const handleGradeSubmission = async () => {
+  const handleGradeSubmission = async (targetStatus: "DRAFT" | "GRADED") => {
     if (!selectedSub || gradeInput === "") return
     try {
       setSubmitting(true)
@@ -105,11 +105,12 @@ export default function SubmissionsPage() {
           submissionId: selectedSub.id,
           grade: Number(gradeInput),
           feedback: feedbackInput,
+          status: targetStatus,
         }),
       })
 
       if (res.ok) {
-        alert("Submission graded successfully! Rewards awarded to student.")
+        alert(targetStatus === "DRAFT" ? "Draft grade saved successfully." : "Grade returned to student! Rewards awarded.")
         setSelectedSub(null)
         loadSubmissions()
       } else {
@@ -181,7 +182,8 @@ export default function SubmissionsPage() {
               >
                 <option value="all">All Statuses</option>
                 <option value="SUBMITTED">Pending Review</option>
-                <option value="GRADED">Graded</option>
+                <option value="DRAFT">Draft Graded</option>
+                <option value="GRADED">Graded & Returned</option>
               </select>
             </div>
           </div>
@@ -238,7 +240,14 @@ export default function SubmissionsPage() {
                     {sub.status === "GRADED" ? (
                       <div className="flex flex-col items-end">
                         <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                          <CheckCircle2 className="w-3 h-3" /> Graded
+                          <CheckCircle2 className="w-3 h-3" /> Returned
+                        </span>
+                        <span className="text-xs font-extrabold text-foreground mt-1">{sub.grade}%</span>
+                      </div>
+                    ) : sub.status === "DRAFT" ? (
+                      <div className="flex flex-col items-end">
+                        <span className="flex items-center gap-1 text-[10px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded-full">
+                          <AlertCircle className="w-3 h-3" /> Draft
                         </span>
                         <span className="text-xs font-extrabold text-foreground mt-1">{sub.grade}%</span>
                       </div>
@@ -317,14 +326,23 @@ export default function SubmissionsPage() {
                   />
                 </div>
 
-                <button
-                  onClick={handleGradeSubmission}
-                  disabled={gradeInput === "" || submitting}
-                  className="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:scale-[1.01] transition-all text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-lg cursor-pointer"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>{selectedSub.status === "GRADED" ? "Update Grade" : "Submit Grade"}</span>
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleGradeSubmission("DRAFT")}
+                    disabled={gradeInput === "" || submitting}
+                    className="flex-1 py-2.5 bg-white/5 border border-white/10 text-foreground font-bold text-xs rounded-xl hover:bg-white/10 transition-all shadow-md cursor-pointer"
+                  >
+                    Save Draft
+                  </button>
+                  <button
+                    onClick={() => handleGradeSubmission("GRADED")}
+                    disabled={gradeInput === "" || submitting}
+                    className="flex-1 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:scale-[1.02] active:scale-[0.98] transition-all text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 shadow-lg cursor-pointer border border-emerald-400/20"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>Return Grade</span>
+                  </button>
+                </div>
               </div>
 
             </div>

@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 interface Stage1ClientProps {
-  initialContent: Record<ActivityType, Stage1ContentDTO[]>;
+  initialContent: Partial<Record<ActivityType, Stage1ContentDTO[]>>;
 }
 
 const MAIN_FEATURES = [

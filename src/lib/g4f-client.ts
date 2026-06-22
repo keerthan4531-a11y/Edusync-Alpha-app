@@ -58,7 +58,8 @@ import { AI_MODELS } from '@/api/aiEngine';
 export async function createChatCompletion(
   request: G4FCompletionRequest,
   useProxy: boolean = true,
-  baseUrl?: string
+  baseUrl?: string,
+  signal?: AbortSignal
 ): Promise<G4FCompletionResponse> {
   const modelStr = request.model;
   
@@ -78,6 +79,7 @@ export async function createChatCompletion(
         messages: request.messages,
         temperature: request.temperature ?? 0.7,
       }),
+      signal,
     };
     
     try {
@@ -119,6 +121,7 @@ export async function createChatCompletion(
         messages: request.messages,
         temperature: request.temperature ?? 0.7,
       }),
+      signal,
     };
     
     try {
@@ -146,6 +149,7 @@ export async function createChatCompletion(
     'Accept': 'application/json',
     'Origin': `http://127.0.0.1:${port}`,
     'Referer': `http://127.0.0.1:${port}/`,
+    'X-Internal-Request': 'true'
   };
 
   if (process.env.INIXA_PROXY_SECRET) {
@@ -162,6 +166,7 @@ export async function createChatCompletion(
       temperature: request.temperature ?? 0.7,
       max_tokens: request.max_tokens ?? 4096,
     }),
+    signal,
   };
 
   const response = await fetch(url, fetchOptions);

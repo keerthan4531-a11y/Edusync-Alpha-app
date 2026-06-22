@@ -14,6 +14,7 @@ import { db } from './db';
 import { createChatCompletion, fetchAvailableModels, testModelHealth, getKnownModels } from './g4f-client';
 import { sanitizeResponse, getSanitizedHeaders, getInixaDisplayName } from './ai-obfuscator';
 import { getProxyUrl, reportProxyFailure, reportProxySuccess } from './proxy-manager';
+import { turboRace } from './turbo-race';
 
 export interface INIXAContext {
   stage: string;        // "stage-1", "stage-2", "stage-3", "stage-4", "general"
@@ -61,7 +62,7 @@ export async function generateResponse(
   const modelChain = await getModelChain(context.stage, role, context.feature);
 
   // Helper to execute a single model request
-  const runModel = async (modelId: string): Promise<INIXAResponse> => {
+  const runModel = async (modelId: string, signal?: AbortSignal): Promise<INIXAResponse> => {
     const reqStartTime = Date.now();
     try {
       const result = await createChatCompletion(
@@ -70,7 +71,9 @@ export async function generateResponse(
           messages,
           temperature,
         },
-        true // Use proxy
+        true, // Use proxy
+        undefined,
+        signal
       );
 
       const responseTime = Date.now() - reqStartTime;
@@ -113,20 +116,37 @@ export async function generateResponse(
     }
   };
 
+  const primaryControllers = modelChain.map(() => new AbortController());
+
   try {
     // 2. Race all primary configured models concurrently
-    const primaryPromises = modelChain.map(modelId => runModel(modelId));
-    return await Promise.any(primaryPromises);
+    const primaryPromises = modelChain.map((modelId, index) => runModel(modelId, primaryControllers[index].signal));
+    const winner = await Promise.any(primaryPromises);
+    
+    // Abort other running primary fetches
+    primaryControllers.forEach((ctrl) => ctrl.abort());
+    return winner;
   } catch (primaryAggregateError) {
+    // Cleanup any lingering primary requests
+    primaryControllers.forEach((ctrl) => ctrl.abort());
+
     console.warn(`[INIXA] All primary models failed. Falling back to Pollinations and LLM7...`);
     
     // 3. Fallback race between direct API providers
     const fallbackModels = ['pollination-gptoss', 'llm7-models'];
+    const fallbackControllers = fallbackModels.map(() => new AbortController());
     
     try {
-      const fallbackPromises = fallbackModels.map(modelId => runModel(modelId));
-      return await Promise.any(fallbackPromises);
+      const fallbackPromises = fallbackModels.map((modelId, index) => runModel(modelId, fallbackControllers[index].signal));
+      const winner = await Promise.any(fallbackPromises);
+      
+      // Abort other running fallback fetches
+      fallbackControllers.forEach((ctrl) => ctrl.abort());
+      return winner;
     } catch (fallbackAggregateError) {
+      // Cleanup lingering fallback requests
+      fallbackControllers.forEach((ctrl) => ctrl.abort());
+
       // 4. Everything failed
       return {
         success: false,
@@ -287,6 +307,44 @@ async function logRequest(data: {
     // Silently fail logging — don't break the actual AI request
     console.error('[INIXA] Failed to log request:', error);
   }
+}
+
+/**
+ * TURBO: Generate response using multi-model race engine
+ * 
+ * Fires requests to ~16 models concurrently — first response wins.
+ * Use this for question/challenge generation where speed > model selection.
+ * Falls back to proxy race if direct IP hits rate limits.
+ */
+export async function generateResponseTurbo(
+  messages: INIXAMessage[],
+  context: INIXAContext,
+  temperature?: number
+): Promise<INIXAResponse> {
+  const startTime = Date.now();
+
+  console.log(`[INIXA-TURBO] 🚀 Turbo race for ${context.stage}/${context.feature} (user: ${context.userId || 'anon'})`);
+
+  const result = await turboRace(messages, temperature, undefined);
+
+  // Log the turbo request
+  await logRequest({
+    userId: context.userId || 'anonymous',
+    stage: context.stage,
+    feature: context.feature,
+    modelUsed: `turbo:${result.modelUsed}`,
+    responseTime: result.responseTime,
+    success: result.success,
+    errorMessage: result.error,
+  }).catch(() => {}); // Don't fail on logging errors
+
+  if (result.success) {
+    console.log(`[INIXA-TURBO] ✅ Done in ${result.responseTime}ms via ${result.modelUsed}`);
+  } else {
+    console.error(`[INIXA-TURBO] ❌ Failed after ${result.responseTime}ms`);
+  }
+
+  return result;
 }
 
 /**

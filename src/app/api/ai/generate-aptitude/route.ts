@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { generateResponse, type INIXAMessage } from "@/lib/inixa-ai";
+import { generateResponseTurbo, type INIXAMessage } from "@/lib/inixa-ai";
 
 export async function GET() {
   try {
@@ -25,7 +25,7 @@ Schema for each object:
       { role: "user", content: "Generate 5 aptitude questions." }
     ];
 
-    const aiRes = await generateResponse(
+    const aiRes = await generateResponseTurbo(
       messages,
       {
         stage: "stage-4",
