@@ -129,7 +129,7 @@ export async function POST(req: Request) {
     const userId = session.user.id;
 
     const body = await req.json();
-    const { name, bio, skills, github, linkedin } = body;
+    const { name, bio, skills, github, linkedin, phone, dob, gender, rollNumber, department, yearOfStudy, interests, careerGoals, weakAreas } = body;
 
     // Validate inputs
     if (name !== undefined && name.trim() === "") {
@@ -144,6 +144,15 @@ export async function POST(req: Request) {
         ...(skills !== undefined && { skills: Array.isArray(skills) ? skills.join(",") : skills.trim() }),
         ...(github !== undefined && { github: github.trim() }),
         ...(linkedin !== undefined && { linkedin: linkedin.trim() })
+        // Note: For fields not in the schema (phone, dob, gender, etc), 
+        // they are currently handled via localStorage on the client side per our open questions.
+        // If they are added to Prisma later, they can be uncommented here:
+        // ...(phone !== undefined && { phone: phone.trim() }),
+        // ...(dob !== undefined && { dob: dob }),
+        // ...(gender !== undefined && { gender: gender }),
+        // ...(rollNumber !== undefined && { rollNumber: rollNumber.trim() }),
+        // ...(department !== undefined && { department: { connect: { name: department } } }),
+        // ...(yearOfStudy !== undefined && { yearOfStudy: parseInt(yearOfStudy) }),
       }
     });
 
@@ -162,3 +171,4 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Failed to update profile info" }, { status: 500 });
   }
 }
+

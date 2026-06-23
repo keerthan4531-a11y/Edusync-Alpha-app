@@ -102,7 +102,13 @@ export function Topbar({ user }: TopbarProps) {
         )}
 
         {/* Notification bell with glass styling */}
-        <button className="glass-panel flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 relative text-muted-foreground hover:text-foreground">
+        <button 
+          onClick={() => {
+            const basePath = user.role === 'FACULTY' ? '/faculty-dashboard' : user.role === 'HOD' ? '/hod-dashboard' : '/student-dashboard'
+            router.push(`${basePath}/notifications`)
+          }}
+          className="glass-panel flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-300 relative text-muted-foreground hover:text-foreground cursor-pointer"
+        >
           <Bell className="w-5 h-5 relative z-10" />
           <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-background shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse z-20"></span>
         </button>
@@ -120,19 +126,22 @@ export function Topbar({ user }: TopbarProps) {
               )}
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-64 p-2" align="end" sideOffset={10}>
+          <DropdownMenuContent className="w-64 p-2 !bg-[hsl(240,10%,10%)] dark:!bg-[hsl(240,10%,10%)] !backdrop-blur-2xl !border-white/15 !shadow-[0_20px_60px_-12px_rgba(0,0,0,0.8)]" align="end" sideOffset={10}>
             {/* User info card */}
-            <div className="flex flex-col space-y-1.5 px-3 py-3 font-normal bg-[var(--glass-bg)] rounded-xl mb-2 border border-[var(--glass-border-subtle)]">
-              <p className="text-sm font-bold text-foreground">{displayName}</p>
-              <p className="text-xs leading-none text-primary font-medium">
+            <div className="flex flex-col space-y-1.5 px-3 py-3 font-normal bg-white/5 rounded-xl mb-2 border border-white/10">
+              <p className="text-sm font-bold text-white">{displayName}</p>
+              <p className="text-xs leading-none text-violet-400 font-medium">
                 {displayEmail}
               </p>
             </div>
-            <DropdownMenuItem onClick={() => router.push('/student-dashboard/profile')} className="cursor-pointer rounded-xl px-3 py-2.5">
+            <DropdownMenuItem onClick={() => {
+              const basePath = user.role === 'FACULTY' ? '/faculty-dashboard' : user.role === 'HOD' ? '/hod-dashboard' : '/student-dashboard'
+              router.push(`${basePath}/profile`)
+            }} className="cursor-pointer rounded-xl px-3 py-2.5 !text-gray-200 hover:!bg-white/10">
               <UserIcon className="mr-3 h-4 w-4" />
               <span className="font-semibold">Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive rounded-xl px-3 py-2.5 mt-1">
+            <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer !text-red-400 hover:!bg-red-500/10 rounded-xl px-3 py-2.5 mt-1">
               <LogOut className="mr-3 h-4 w-4" />
               <span className="font-semibold">Log out</span>
             </DropdownMenuItem>
