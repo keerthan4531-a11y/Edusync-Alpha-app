@@ -3,11 +3,11 @@
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { useState, useEffect } from "react"
 import { 
-  User, Mail, Phone, FileText, LogOut, Edit, Flame, RefreshCw, ChevronLeft
+  User, Mail, Phone, FileText, LogOut, Edit, RefreshCw, ChevronLeft
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
 import { signOut } from "next-auth/react"
+import { GlobalSpinner } from "@/components/ui/GlobalSpinner"
 
 export default function ProfileViewPage() {
   const router = useRouter()
@@ -20,6 +20,10 @@ export default function ProfileViewPage() {
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
   const [bio, setBio] = useState("")
+  const [studentId, setStudentId] = useState("")
+  const [department, setDepartment] = useState("")
+  const [batch, setBatch] = useState("")
+
 
   const fetchProfileData = async () => {
     setLoading(true)
@@ -31,6 +35,12 @@ export default function ProfileViewPage() {
         setFullName(data.name || "")
         setEmail(data.email || "")
         setBio(data.bio || "")
+        setDepartment(data.department || "")
+        if (data.studentProfile) {
+          setPhone(data.studentProfile.phone || "")
+          setStudentId(data.studentProfile.studentId || "")
+          setBatch(data.studentProfile.batch || "")
+        }
       }
     } catch (e) {
       console.error(e)
@@ -45,7 +55,7 @@ export default function ProfileViewPage() {
     if (savedAvatar) setAvatarUrl(savedAvatar)
     
     const savedPhone = localStorage.getItem("student_phone")
-    if (savedPhone) setPhone(savedPhone)
+    if (savedPhone && !phone) setPhone(savedPhone)
     
     const handleUpdate = () => {
       setAvatarUrl(localStorage.getItem("userAvatar"))
@@ -57,7 +67,7 @@ export default function ProfileViewPage() {
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <RefreshCw className="w-8 h-8 animate-spin text-indigo-400" />
+        <GlobalSpinner />
       </div>
     )
   }
@@ -74,8 +84,15 @@ export default function ProfileViewPage() {
           <ChevronLeft className="w-6 h-6 text-zinc-600 dark:text-gray-300" />
         </button>
         <h1 className="text-xl font-bold tracking-wide">Profile</h1>
-        <div className="w-auto">
+        <div className="flex items-center gap-2">
           <ThemeToggle />
+          <button 
+            onClick={() => router.push('/student-dashboard/profile/edit')} 
+            className="w-10 h-10 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors backdrop-blur-md"
+            aria-label="Edit Profile"
+          >
+            <Edit className="w-5 h-5 text-zinc-600 dark:text-gray-300" />
+          </button>
         </div>
       </div>
 
@@ -93,33 +110,17 @@ export default function ProfileViewPage() {
         
         <div className="flex gap-4 text-xs font-bold text-zinc-600 dark:text-gray-300 bg-white/70 dark:bg-white/5 px-6 py-3 rounded-full border border-black/10 dark:border-white/10 shadow-lg backdrop-blur-xl">
           <span className="flex flex-col items-center">
-            <span className="text-lg font-black text-foreground">{profile?.level || 1}</span>
-            <span className="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-gray-500">Level</span>
+            <span className="text-lg font-black text-indigo-400">{profile?.xp || 0}</span>
+            <span className="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-gray-500">XP</span>
           </span>
           <div className="w-px h-8 bg-black/10 dark:bg-white/10"></div>
           <span className="flex flex-col items-center">
             <span className="text-lg font-black text-yellow-400">{profile?.coins || 0}</span>
-            <span className="text-[10px] uppercase tracking-wider text-gray-500">Coins</span>
-          </span>
-          <div className="w-px h-8 bg-black/10 dark:bg-white/10"></div>
-          <span className="flex flex-col items-center">
-            <span className="text-lg font-black text-amber-500 flex items-center gap-1">
-              <Flame className="w-4 h-4" /> {profile?.currentStreak || 0}
-            </span>
-            <span className="text-[10px] uppercase tracking-wider text-zinc-500 dark:text-gray-500">Streak</span>
+            <span className="text-[10px] uppercase tracking-wider text-gray-500">Points</span>
           </span>
         </div>
       </div>
 
-      {/* Edit Profile Button */}
-      <div className="flex justify-center mb-10">
-        <Button 
-          onClick={() => router.push('/student-dashboard/profile/edit')} 
-          className="bg-black/5 dark:bg-white/10 border border-black/10 dark:border-white/20 hover:bg-black/10 dark:hover:bg-white/20 text-foreground rounded-full px-8 py-6 text-base font-bold flex items-center gap-2 transition-all shadow-lg backdrop-blur-md w-full max-w-xs"
-        >
-          <Edit className="w-5 h-5" /> Edit Profile
-        </Button>
-      </div>
 
       {/* Info List Card */}
       <div className="bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-[32px] p-2 backdrop-blur-2xl shadow-2xl">
@@ -144,6 +145,20 @@ export default function ProfileViewPage() {
               <span className="text-foreground font-semibold">{email || "student@example.com"}</span>
             </div>
           </div>
+
+          {(studentId || batch || department) && (
+            <div className="flex items-center gap-4 p-5 md:p-6 border-b border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+              <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0">
+                <User className="w-5 h-5 text-zinc-500 dark:text-gray-300" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] text-zinc-500 dark:text-gray-500 font-bold uppercase tracking-wider">Academic Details</span>
+                <span className="text-foreground font-semibold">
+                  {[studentId, department, batch].filter(Boolean).join(" • ")}
+                </span>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center gap-4 p-5 md:p-6 border-b border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
             <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center shrink-0">

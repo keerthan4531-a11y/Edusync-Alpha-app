@@ -223,21 +223,13 @@ async function getModelChain(
       });
     }
 
-    if (config) {
-      const chain = [config.primaryModel];
-      if (config.fallback1) chain.push(config.fallback1);
-      if (config.fallback2) chain.push(config.fallback2);
-      if (config.fallback3) chain.push(config.fallback3);
-      if (config.fallback4) chain.push(config.fallback4);
-      if (config.fallback5) chain.push(config.fallback5);
-      return chain;
-    }
+    return ['gemini-3.5-flash', 'ddg-gpt-4o-mini'];
   } catch (error) {
     console.warn('[INIXA] Failed to fetch model config from DB:', error);
   }
 
   // Default chain if no config found
-  return [DEFAULT_PRIMARY_MODEL, ...DEFAULT_FALLBACK_MODELS];
+  return ['gemini-3.5-flash', 'ddg-gpt-4o-mini'];
 }
 
 /**

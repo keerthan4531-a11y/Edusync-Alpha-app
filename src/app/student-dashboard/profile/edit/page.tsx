@@ -7,19 +7,20 @@ import {
   Plus, X, Briefcase, GraduationCap, Clock, Key, Lock,
   Camera, Code, Heart, Target, AlertTriangle, ChartBar,
   Trophy, Projector, BookOpen, Settings, Mail, History, Cog,
-  ChevronLeft
+  ChevronLeft, LayoutGrid, Users, MapPin, Activity
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import { GlobalSpinner } from "@/components/ui/GlobalSpinner"
 
 export default function StudentEditProfilePage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error" | null, message: string }>({ type: null, message: "" })
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
 
+  // Avatar local persistence (mocked)
   useEffect(() => {
     const saved = localStorage.getItem("userAvatar")
     if (saved) setAvatarUrl(saved)
@@ -34,35 +35,57 @@ export default function StudentEditProfilePage() {
         setAvatarUrl(base64String)
         localStorage.setItem("userAvatar", base64String)
         window.dispatchEvent(new Event("avatarUpdated"))
-        showToast("Profile picture updated!")
       }
       reader.readAsDataURL(file)
     }
   }
 
-  // Profile Data States
-  const [profile, setProfile] = useState<any>(null)
+  // ---- FORM STATES ----
   
-  // Personal Info Form
+  // Basic / Core
   const [fullName, setFullName] = useState("")
-  const [email, setEmail] = useState("")
+  const [email, setEmail] = useState("") // from User model (read-only for now)
   const [phone, setPhone] = useState("")
+  const [alternatePhone, setAlternatePhone] = useState("")
   const [dob, setDob] = useState("")
   const [gender, setGender] = useState("")
+  const [bloodGroup, setBloodGroup] = useState("")
+  const [aadharNo, setAadharNo] = useState("")
   const [bio, setBio] = useState("")
-
-  // Education Form
-  const [rollNumber, setRollNumber] = useState("")
-  const [department, setDepartment] = useState("")
-  const [yearOfStudy, setYearOfStudy] = useState("")
   
-  // Skills & Interests
-  const [skills, setSkills] = useState<string[]>([])
-  const [newSkill, setNewSkill] = useState("")
-  const [interests, setInterests] = useState<string[]>([])
-  const [newInterest, setNewInterest] = useState("")
-  const [goals, setGoals] = useState<string[]>([])
-  const [newGoal, setNewGoal] = useState("")
+  // Academic
+  const [studentId, setStudentId] = useState("")
+  const [rollNumber, setRollNumber] = useState("")
+  const [admissionNo, setAdmissionNo] = useState("")
+  const [emisNo, setEmisNo] = useState("")
+  const [department, setDepartment] = useState("") // Currently stored as a string name in user, could be updated
+  const [batch, setBatch] = useState("")
+  const [semester, setSemester] = useState("")
+  const [year, setYear] = useState("")
+  const [admissionType, setAdmissionType] = useState("")
+  const [feeStatus, setFeeStatus] = useState("")
+  
+  // Demographics / Location
+  const [nationality, setNationality] = useState("")
+  const [religion, setReligion] = useState("")
+  const [category, setCategory] = useState("")
+  const [motherTongue, setMotherTongue] = useState("")
+  const [residenceType, setResidenceType] = useState("")
+  
+  // Address (stored as JSON)
+  const [addressStreet, setAddressStreet] = useState("")
+  const [addressCity, setAddressCity] = useState("")
+  const [addressState, setAddressState] = useState("")
+  const [addressPincode, setAddressPincode] = useState("")
+  
+  // Family Info (stored as JSON)
+  const [fatherName, setFatherName] = useState("")
+  const [fatherPhone, setFatherPhone] = useState("")
+  const [fatherOccupation, setFatherOccupation] = useState("")
+  
+  const [motherName, setMotherName] = useState("")
+  const [motherPhone, setMotherPhone] = useState("")
+  const [motherOccupation, setMotherOccupation] = useState("")
 
   const fetchProfileData = async () => {
     setLoading(true)
@@ -70,25 +93,65 @@ export default function StudentEditProfilePage() {
       const res = await fetch("/api/student/profile")
       const data = await res.json()
       if (res.ok) {
-        setProfile(data)
         setFullName(data.name || "")
         setEmail(data.email || "")
         setBio(data.bio || "")
-        setSkills(data.skills || [])
+        
+        // Extract student profile data if available
+        if (data.studentProfile) {
+          const sp = data.studentProfile;
+          setPhone(sp.phone || "");
+          setAlternatePhone(sp.alternatePhone || "");
+          setDob(sp.dateOfBirth ? sp.dateOfBirth.split("T")[0] : "");
+          setGender(sp.gender || "");
+          setBloodGroup(sp.bloodGroup || "");
+          setAadharNo(sp.aadharNo || "");
+          
+          setStudentId(sp.studentId || "");
+          setRollNumber(sp.rollNumber || "");
+          setAdmissionNo(sp.admissionNo || "");
+          setEmisNo(sp.emisNo || "");
+          setBatch(sp.batch || "");
+          setSemester(sp.semester ? sp.semester.toString() : "");
+          setYear(sp.year ? sp.year.toString() : "");
+          setAdmissionType(sp.admissionType || "");
+          setFeeStatus(sp.feeStatus || "");
+          
+          setNationality(sp.nationality || "");
+          setReligion(sp.religion || "");
+          setCategory(sp.category || "");
+          setMotherTongue(sp.motherTongue || "");
+          setResidenceType(sp.residenceType || "");
+          
+          // Parse JSON Address
+          if (sp.address) {
+            try {
+              const addr = JSON.parse(sp.address);
+              setAddressStreet(addr.street || "");
+              setAddressCity(addr.city || "");
+              setAddressState(addr.state || "");
+              setAddressPincode(addr.pincode || "");
+            } catch (e) {}
+          }
+          
+          // Parse JSON Parent Info
+          if (sp.parentInfo) {
+            try {
+              const parent = JSON.parse(sp.parentInfo);
+              if (parent.father) {
+                setFatherName(parent.father.name || "");
+                setFatherPhone(parent.father.phone || "");
+                setFatherOccupation(parent.father.occupation || "");
+              }
+              if (parent.mother) {
+                setMotherName(parent.mother.name || "");
+                setMotherPhone(parent.mother.phone || "");
+                setMotherOccupation(parent.mother.occupation || "");
+              }
+            } catch (e) {}
+          }
+        }
       }
-      
-      // Load local-only fields
-      const lPhone = localStorage.getItem("student_phone")
-      if (lPhone) setPhone(lPhone)
-      const lDob = localStorage.getItem("student_dob")
-      if (lDob) setDob(lDob)
-      const lGender = localStorage.getItem("student_gender")
-      if (lGender) setGender(lGender)
-      const lRoll = localStorage.getItem("student_rollNumber")
-      if (lRoll) setRollNumber(lRoll)
-      const lYear = localStorage.getItem("student_yearOfStudy")
-      if (lYear) setYearOfStudy(lYear)
-      
     } catch (e) {
       console.error(e)
     } finally {
@@ -100,14 +163,24 @@ export default function StudentEditProfilePage() {
     fetchProfileData()
   }, [])
 
-  const showToast = (message: string, type: "success" | "error" = "success") => {
-    setStatusMessage({ type, message })
-    setTimeout(() => setStatusMessage({ type: null, message: "" }), 3000)
-  }
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
+    
+    // Construct Address
+    const address = {
+      street: addressStreet,
+      city: addressCity,
+      state: addressState,
+      pincode: addressPincode
+    };
+    
+    // Construct Parent Info
+    const parentInfo = {
+      father: { name: fatherName, phone: fatherPhone, occupation: fatherOccupation },
+      mother: { name: motherName, phone: motherPhone, occupation: motherOccupation }
+    };
+
     try {
       const res = await fetch("/api/student/profile", {
         method: "POST",
@@ -115,61 +188,36 @@ export default function StudentEditProfilePage() {
         body: JSON.stringify({
           name: fullName,
           bio,
-          skills
+          
+          // Student Profile Schema
+          phone, alternatePhone, dateOfBirth: dob || null, gender, bloodGroup, aadharNo,
+          studentId, rollNumber, admissionNo, emisNo, 
+          batch, semester: semester ? parseInt(semester) : null, year: year ? parseInt(year) : null, 
+          admissionType, feeStatus,
+          nationality, religion, category, motherTongue, residenceType,
+          address, parentInfo
         })
       })
       if (res.ok) {
-        // Save extra fields to localStorage
-        localStorage.setItem("student_phone", phone)
-        localStorage.setItem("student_dob", dob)
-        localStorage.setItem("student_gender", gender)
-        localStorage.setItem("student_rollNumber", rollNumber)
-        localStorage.setItem("student_yearOfStudy", yearOfStudy)
-        
         window.dispatchEvent(new Event("profileUpdated"))
-        showToast("Changes saved successfully!")
-      } else {
-        showToast("Failed to save changes", "error")
       }
     } catch (error) {
-      showToast("Network error occurred", "error")
+      console.error(error)
     } finally {
       setSaving(false)
     }
   }
 
-  const addChip = (e: React.FormEvent, item: string, setItem: any, list: string[], setList: any) => {
-    e.preventDefault()
-    if (!item.trim() || list.includes(item.trim())) return
-    setList([...list, item.trim()])
-    setItem("")
-  }
-
-  const removeChip = (item: string, list: string[], setList: any) => {
-    setList(list.filter((i: string) => i !== item))
-  }
-
   if (loading) {
     return (
       <div className="flex h-[50vh] items-center justify-center">
-        <RefreshCw className="w-8 h-8 animate-spin text-indigo-400" />
+        <GlobalSpinner />
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col h-full max-w-2xl mx-auto text-foreground pb-24">
-      {/* Toast Notification */}
-      {statusMessage.type && (
-        <div className={cn(
-          "fixed top-20 right-4 z-50 p-4 rounded-xl border flex items-center gap-3 shadow-2xl animate-in slide-in-from-right",
-          statusMessage.type === "success" ? "bg-emerald-500/90 border-emerald-400 text-white" : "bg-red-500/90 border-red-400 text-white"
-        )}>
-          {statusMessage.type === "success" ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-          <span className="font-semibold text-sm">{statusMessage.message}</span>
-        </div>
-      )}
-
+    <div className="flex flex-col h-full max-w-4xl mx-auto text-foreground pb-24">
       {/* Top Header */}
       <div className="flex items-center justify-between mb-8 px-2 md:px-0">
         <button 
@@ -179,7 +227,7 @@ export default function StudentEditProfilePage() {
           <ChevronLeft className="w-6 h-6 text-zinc-600 dark:text-gray-300" />
         </button>
         <h1 className="text-xl font-bold tracking-wide">Edit Profile</h1>
-        <div className="w-10 h-10"></div> {/* Spacer to perfectly center the title */}
+        <div className="w-10 h-10"></div> 
       </div>
 
       {/* Avatar Section */}
@@ -194,7 +242,7 @@ export default function StudentEditProfilePage() {
               )}
             </div>
           </label>
-          <div className="absolute bottom-1 right-0 w-8 h-8 bg-blue-500 rounded-full border-4 border-[#080A10] flex items-center justify-center shadow-lg hover:bg-blue-400 transition-colors pointer-events-none">
+          <div className="absolute bottom-1 right-0 w-8 h-8 bg-indigo-500 rounded-full border-4 border-[#080A10] flex items-center justify-center shadow-lg hover:bg-indigo-400 transition-colors pointer-events-none">
             <Edit className="w-3.5 h-3.5 text-white" />
           </div>
           <input 
@@ -207,176 +255,178 @@ export default function StudentEditProfilePage() {
         </div>
       </div>
 
-      {/* SECTION 1: PERSONAL DETAILS */}
-      <div className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <h2 className="text-2xl font-bold text-foreground mb-6 px-4 md:px-2">Personal Details</h2>
-        <div className="bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-[32px] p-6 md:p-8 backdrop-blur-2xl shadow-2xl mx-2 md:mx-0">
-          <form onSubmit={handleSave} className="space-y-5">
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-300">Full Name</label>
-              <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-blue-500 transition-colors" placeholder="e.g. John Doe" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-300">Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-blue-500 transition-colors" placeholder="you@example.com" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-300">Phone Number</label>
-              <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+1 812-xxxx" className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-blue-500 transition-colors" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-300">Date of Birth</label>
-              <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-blue-500 transition-colors [color-scheme:dark]" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-gray-300">Gender</label>
-              <select value={gender} onChange={e => setGender(e.target.value)} className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-blue-500 transition-colors">
-                <option value="" className="bg-[#0B0F19]">Select gender</option>
-                <option value="male" className="bg-[#0B0F19]">Male</option>
-                <option value="female" className="bg-[#0B0F19]">Female</option>
-                <option value="other" className="bg-[#0B0F19]">Other</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-semibold text-zinc-600 dark:text-gray-300">Bio</label>
-              <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="Tell us about yourself..." className="w-full bg-black/5 dark:bg-transparent border border-black/20 dark:border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none" />
-            </div>
-
-            <Button type="submit" disabled={saving} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-6 mt-6 rounded-2xl text-base shadow-[0_4px_20px_rgba(59,130,246,0.3)] transition-all">
-              {saving ? <RefreshCw className="w-5 h-5 animate-spin mr-2" /> : null} Save Changes
-            </Button>
-          </form>
-        </div>
-      </div>
-
-      {/* SECTION 2: EDUCATION (Contains Education, Skills, Achievements, Badges) */}
-      <div className="mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <h2 className="text-2xl font-bold text-foreground mb-6 px-4 md:px-2">Education</h2>
-        <div className="bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-[32px] p-6 md:p-8 backdrop-blur-2xl shadow-2xl mx-2 md:mx-0 space-y-12">
+      {/* All Form Sections Sequential */}
+      <div className="mx-2 md:mx-0 animate-in fade-in zoom-in-95 duration-300">
+        <form onSubmit={handleSave} className="space-y-8">
           
-          {/* Sub-section: Education */}
-          <div>
-            <h3 className="text-lg font-bold text-indigo-400 flex items-center gap-2 mb-4">
-              <GraduationCap className="w-5 h-5" /> Academic Info
-            </h3>
-            <form onSubmit={handleSave} className="space-y-5">
+          {/* SECTION 1: BASIC INFO */}
+          <div className="bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-[32px] p-6 md:p-8 backdrop-blur-2xl shadow-2xl">
+            <h3 className="text-xl font-bold mb-6 text-indigo-500 border-b border-black/5 dark:border-white/5 pb-2">Basic Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InputField label="Full Name" value={fullName} onChange={setFullName} />
+              <InputField label="Email (Read Only)" value={email} onChange={() => {}} disabled />
+              <InputField label="Primary Phone" value={phone} onChange={setPhone} type="tel" />
+              <InputField label="Alternate Phone" value={alternatePhone} onChange={setAlternatePhone} type="tel" />
+              <InputField label="Date of Birth" value={dob} onChange={setDob} type="date" />
+              
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-300">Roll Number</label>
-                <input type="text" value={rollNumber} onChange={e => setRollNumber(e.target.value)} placeholder="e.g. CS2024001" className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-blue-500 transition-colors" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-300">Department</label>
-                <select value={department} onChange={e => setDepartment(e.target.value)} className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-blue-500 transition-colors">
-                  <option value="" className="bg-[#0B0F19]">Select department</option>
-                  <option value="CSE" className="bg-[#0B0F19]">Computer Science</option>
-                  <option value="IT" className="bg-[#0B0F19]">Information Technology</option>
-                  <option value="ECE" className="bg-[#0B0F19]">Electronics</option>
+                <label className="text-sm font-semibold text-gray-300">Gender</label>
+                <select value={gender} onChange={e => setGender(e.target.value)} className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+                  <option value="" className="bg-[#0B0F19] text-white">Select gender</option>
+                  <option value="Male" className="bg-[#0B0F19] text-white">Male</option>
+                  <option value="Female" className="bg-[#0B0F19] text-white">Female</option>
+                  <option value="Other" className="bg-[#0B0F19] text-white">Other</option>
                 </select>
               </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-300">Blood Group</label>
+                <select value={bloodGroup} onChange={e => setBloodGroup(e.target.value)} className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+                  <option value="" className="bg-[#0B0F19] text-white">Select blood group</option>
+                  <option value="A+" className="bg-[#0B0F19] text-white">A+</option>
+                  <option value="O+" className="bg-[#0B0F19] text-white">O+</option>
+                  <option value="B+" className="bg-[#0B0F19] text-white">B+</option>
+                  <option value="AB+" className="bg-[#0B0F19] text-white">AB+</option>
+                  <option value="A-" className="bg-[#0B0F19] text-white">A-</option>
+                  <option value="O-" className="bg-[#0B0F19] text-white">O-</option>
+                  <option value="B-" className="bg-[#0B0F19] text-white">B-</option>
+                  <option value="AB-" className="bg-[#0B0F19] text-white">AB-</option>
+                </select>
+              </div>
+
+              <InputField label="Aadhar Number" value={aadharNo} onChange={setAadharNo} />
+            </div>
+            <div className="mt-6 space-y-2">
+              <label className="text-sm font-semibold text-zinc-600 dark:text-gray-300">Short Bio</label>
+              <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} placeholder="Tell us about yourself..." className="w-full bg-black/5 dark:bg-transparent border border-black/20 dark:border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-indigo-500 transition-colors resize-none" />
+            </div>
+          </div>
+
+          {/* SECTION 2: ACADEMIC */}
+          <div className="bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-[32px] p-6 md:p-8 backdrop-blur-2xl shadow-2xl">
+            <h3 className="text-xl font-bold mb-6 text-indigo-500 border-b border-black/5 dark:border-white/5 pb-2">Academic Records</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InputField label="Student ID" value={studentId} onChange={setStudentId} />
+              <InputField label="Roll Number" value={rollNumber} onChange={setRollNumber} />
+              <InputField label="Admission Number" value={admissionNo} onChange={setAdmissionNo} />
+              <InputField label="EMIS Number" value={emisNo} onChange={setEmisNo} />
+              <InputField label="Batch (e.g. 2024-2028)" value={batch} onChange={setBatch} />
+              
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-300">Semester</label>
+                <select value={semester} onChange={e => setSemester(e.target.value)} className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+                  <option value="" className="bg-[#0B0F19] text-white">Select semester</option>
+                  {[1,2,3,4,5,6,7,8].map(s => <option key={s} value={s} className="bg-[#0B0F19] text-white">Semester {s}</option>)}
+                </select>
+              </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-gray-300">Year of Study</label>
-                <select value={yearOfStudy} onChange={e => setYearOfStudy(e.target.value)} className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-blue-500 transition-colors">
-                  <option value="" className="bg-[#0B0F19]">Select year</option>
-                  <option value="1" className="bg-[#0B0F19]">First Year</option>
-                  <option value="2" className="bg-[#0B0F19]">Second Year</option>
-                  <option value="3" className="bg-[#0B0F19]">Third Year</option>
-                  <option value="4" className="bg-[#0B0F19]">Fourth Year</option>
+                <select value={year} onChange={e => setYear(e.target.value)} className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+                  <option value="" className="bg-[#0B0F19] text-white">Select year</option>
+                  {[1,2,3,4].map(s => <option key={s} value={s} className="bg-[#0B0F19] text-white">Year {s}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-300">Admission Type</label>
+                <select value={admissionType} onChange={e => setAdmissionType(e.target.value)} className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+                  <option value="" className="bg-[#0B0F19] text-white">Select admission type</option>
+                  <option value="Merit" className="bg-[#0B0F19] text-white">Merit / Regular</option>
+                  <option value="Management" className="bg-[#0B0F19] text-white">Management Quota</option>
+                  <option value="Lateral" className="bg-[#0B0F19] text-white">Lateral Entry</option>
                 </select>
               </div>
               
-              <div className="pt-4 space-y-4">
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-bold text-purple-400">Challenges</span>
-                    <span className="text-xs text-gray-400">12 / 100</span>
-                  </div>
-                  <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 w-[12%]" />
-                  </div>
-                </div>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-bold text-emerald-400">Projects</span>
-                    <span className="text-xs text-gray-400">1 / 10</span>
-                  </div>
-                  <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 w-[10%]" />
-                  </div>
-                </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-gray-300">Fee Status</label>
+                <select value={feeStatus} onChange={e => setFeeStatus(e.target.value)} className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+                  <option value="" className="bg-[#0B0F19] text-white">Select status</option>
+                  <option value="Paid" className="bg-[#0B0F19] text-white">Paid</option>
+                  <option value="Pending" className="bg-[#0B0F19] text-white">Pending</option>
+                  <option value="Scholarship" className="bg-[#0B0F19] text-white">Scholarship / Free</option>
+                </select>
               </div>
+            </div>
+          </div>
+
+          {/* SECTION 3: DEMOGRAPHICS */}
+          <div className="bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-[32px] p-6 md:p-8 backdrop-blur-2xl shadow-2xl">
+            <h3 className="text-xl font-bold mb-6 text-indigo-500 border-b border-black/5 dark:border-white/5 pb-2">Demographics & Address</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <InputField label="Nationality" value={nationality} onChange={setNationality} />
+              <InputField label="Religion" value={religion} onChange={setReligion} />
+              <InputField label="Category" value={category} onChange={setCategory} />
+              <InputField label="Mother Tongue" value={motherTongue} onChange={setMotherTongue} />
               
-              <Button type="submit" disabled={saving} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-6 mt-4 rounded-2xl text-base shadow-[0_4px_20px_rgba(59,130,246,0.3)] transition-all">
-                Save Academic Info
-              </Button>
-            </form>
-          </div>
-
-          <hr className="border-white/10" />
-
-          {/* Sub-section: Skills */}
-          <div>
-            <h3 className="text-lg font-bold text-emerald-400 flex items-center gap-2 mb-4">
-              <Code className="w-5 h-5" /> Skills & Interests
-            </h3>
-            
-            <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-300">Technical Skills</label>
-                <form onSubmit={(e) => addChip(e, newSkill, setNewSkill, skills, setSkills)} className="flex gap-2">
-                  <input type="text" value={newSkill} onChange={e => setNewSkill(e.target.value)} placeholder="e.g. Python, React" className="flex-1 bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-blue-500 transition-colors" />
-                  <Button type="submit" className="bg-white/10 hover:bg-white/20 text-white rounded-xl h-auto px-5"><Plus className="w-4 h-4"/></Button>
-                </form>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {skills.map(s => (
-                    <span key={s} className="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2">
-                      {s} <X className="w-3.5 h-3.5 cursor-pointer hover:text-blue-400" onClick={() => removeChip(s, skills, setSkills)} />
-                    </span>
-                  ))}
-                </div>
+                <label className="text-sm font-semibold text-gray-300">Residence Type</label>
+                <select value={residenceType} onChange={e => setResidenceType(e.target.value)} className="w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
+                  <option value="" className="bg-[#0B0F19] text-white">Select type</option>
+                  <option value="Hostel" className="bg-[#0B0F19] text-white">Hosteller</option>
+                  <option value="Day Scholar" className="bg-[#0B0F19] text-white">Day Scholar</option>
+                </select>
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-gray-300">Career Goals</label>
-                <form onSubmit={(e) => addChip(e, newGoal, setNewGoal, goals, setGoals)} className="flex gap-2">
-                  <input type="text" value={newGoal} onChange={e => setNewGoal(e.target.value)} placeholder="e.g. Software Engineer" className="flex-1 bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none focus:border-blue-500 transition-colors" />
-                  <Button type="submit" className="bg-white/10 hover:bg-white/20 text-white rounded-xl h-auto px-5"><Plus className="w-4 h-4"/></Button>
-                </form>
-                <div className="flex flex-wrap gap-2 mt-3">
-                  {goals.map(s => (
-                    <span key={s} className="bg-white/10 text-white border border-white/20 px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2">
-                      {s} <X className="w-3.5 h-3.5 cursor-pointer hover:text-blue-400" onClick={() => removeChip(s, goals, setGoals)} />
-                    </span>
-                  ))}
-                </div>
+            <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Permanent Address</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <InputField label="Street / Flat No." value={addressStreet} onChange={setAddressStreet} />
               </div>
+              <InputField label="City" value={addressCity} onChange={setAddressCity} />
+              <InputField label="State" value={addressState} onChange={setAddressState} />
+              <InputField label="Pincode" value={addressPincode} onChange={setAddressPincode} />
             </div>
           </div>
 
-          <hr className="border-white/10" />
-
-          {/* Sub-section: Achievements & Badges */}
-          <div>
-            <h3 className="text-lg font-bold text-yellow-400 flex items-center gap-2 mb-4">
-              <Trophy className="w-5 h-5" /> Achievements & Badges
-            </h3>
+          {/* SECTION 4: FAMILY INFO */}
+          <div className="bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-[32px] p-6 md:p-8 backdrop-blur-2xl shadow-2xl">
+            <h3 className="text-xl font-bold mb-6 text-indigo-500 border-b border-black/5 dark:border-white/5 pb-2">Family Information</h3>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-black/5 dark:bg-black/20 p-6 rounded-2xl border border-black/5 dark:border-white/5 flex flex-col items-center justify-center text-center hover:bg-black/10 dark:hover:bg-white/5 transition-colors cursor-pointer group backdrop-blur-md">
-                <Trophy className="w-10 h-10 text-indigo-500 dark:text-indigo-400 mb-3 group-hover:scale-110 transition-transform" />
-                <span className="text-base font-bold text-foreground">Achievements</span>
-                <span className="text-xs text-indigo-600/70 dark:text-indigo-300/70 mt-1 font-semibold tracking-wide">View History</span>
-              </div>
-              <div className="bg-black/5 dark:bg-black/20 p-6 rounded-2xl border border-black/5 dark:border-white/5 flex flex-col items-center justify-center text-center hover:bg-black/10 dark:hover:bg-white/5 transition-colors cursor-pointer group backdrop-blur-md">
-                <Award className="w-10 h-10 text-yellow-500 dark:text-yellow-400 mb-3 group-hover:scale-110 transition-transform" />
-                <span className="text-base font-bold text-foreground">Badges</span>
-                <span className="text-xs text-yellow-600/70 dark:text-yellow-300/70 mt-1 font-semibold tracking-wide">View Collection</span>
-              </div>
+            <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Father's Details</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <InputField label="Name" value={fatherName} onChange={setFatherName} />
+              <InputField label="Phone Number" value={fatherPhone} onChange={setFatherPhone} type="tel" />
+              <InputField label="Occupation" value={fatherOccupation} onChange={setFatherOccupation} />
+            </div>
+
+            <h4 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Mother's Details</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <InputField label="Name" value={motherName} onChange={setMotherName} />
+              <InputField label="Phone Number" value={motherPhone} onChange={setMotherPhone} type="tel" />
+              <InputField label="Occupation" value={motherOccupation} onChange={setMotherOccupation} />
             </div>
           </div>
 
-        </div>
+          <div className="pt-2 mt-8">
+            <Button type="submit" disabled={saving} className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-6 rounded-2xl text-base shadow-[0_4px_20px_rgba(59,130,246,0.3)] transition-all">
+              {saving ? <RefreshCw className="w-5 h-5 animate-spin mr-2" /> : null} Save All Changes
+            </Button>
+          </div>
+        </form>
       </div>
 
     </div>
   )
 }
+
+function InputField({ label, value, onChange, type = "text", disabled = false }: { label: string, value: string, onChange: (v: string) => void, type?: string, disabled?: boolean }) {
+  return (
+    <div className="space-y-2">
+      <label className="text-sm font-semibold text-gray-300">{label}</label>
+      <input 
+        type={type} 
+        value={value} 
+        onChange={e => onChange(e.target.value)} 
+        disabled={disabled}
+        className={cn(
+          "w-full bg-transparent border border-white/20 rounded-xl px-4 py-3.5 text-sm focus:outline-none transition-colors",
+          disabled ? "opacity-50 cursor-not-allowed bg-black/10" : "focus:border-indigo-500",
+          type === "date" ? "[color-scheme:dark]" : ""
+        )} 
+      />
+    </div>
+  )
+}
+

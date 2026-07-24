@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { awardXp } from "@/lib/gamification";
 import { EvaluateRequestInput } from "@/schemas/communication";
 import { Question } from "@/types/communication";
+import { esChat } from "@/lib/es-engine";
 
 export async function evaluateMCQ(userId: string, data: EvaluateRequestInput) {
   // 1. Fetch content and questions
@@ -41,7 +42,7 @@ export async function evaluateMCQ(userId: string, data: EvaluateRequestInput) {
     xpAwarded = 10; // Partial score
   }
 
-  // 4. Record Activity
+  // 4. Record Activity & Call AI fallback chain for custom feedback
   let feedback = `You scored ${score}% (${correctCount}/${totalCount} correct).`;
   let tamilFeedback = `நீங்கள் ${score}% மதிப்பெண் பெற்றுள்ளீர்கள் (${correctCount}/${totalCount} சரியானவை).`;
   
@@ -51,6 +52,33 @@ export async function evaluateMCQ(userId: string, data: EvaluateRequestInput) {
   } else {
     feedback += " Keep practicing!";
     tamilFeedback += " தொடர்ந்து பயிற்சி செய்யுங்கள்!";
+  }
+
+  try {
+    const systemPrompt = "You are a friendly and professional English teacher evaluating a student's listening/reading MCQ quiz performance.";
+    const prompt = `The student scored ${score}% on the quiz (${correctCount}/${totalCount} correct answers).
+    Provide detailed encouraging feedback in English (1-2 sentences) and a helpful Tamil translation.
+    Return ONLY a valid JSON object:
+    {
+      "feedback": "English feedback here",
+      "tamilFeedback": "Tamil translation/feedback here"
+    }`;
+
+    const aiResponse = await esChat([
+      { role: "system", content: systemPrompt },
+      { role: "user", content: prompt }
+    ]);
+
+    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      const parsedAi = JSON.parse(jsonMatch[0]);
+      if (parsedAi.feedback && parsedAi.tamilFeedback) {
+        feedback = parsedAi.feedback;
+        tamilFeedback = parsedAi.tamilFeedback;
+      }
+    }
+  } catch (err) {
+    console.warn("[ES-ENGINE] evaluateMCQ AI failed, using fallback:", err);
   }
 
   // @ts-ignore: Bypassing stale IDE cache

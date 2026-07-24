@@ -140,13 +140,13 @@ export function MockInterviews() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <LiquidGlassCard className="p-6" accentColor="#10b981">
-            <h4 className="font-semibold text-[17px] text-emerald-500 mb-3 flex items-center gap-2">
+            <h4 className="font-semibold text-[17px] text-indigo-500 mb-3 flex items-center gap-2">
               <i className="fas fa-check-circle"></i> Strengths
             </h4>
             <ul className="text-[15px] text-zinc-600 dark:text-gray-300 space-y-2.5">
               {result.evaluation.strengths.map((s: string, i: number) => (
                 <li key={i} className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 shrink-0" />
                   {s}
                 </li>
               ))}

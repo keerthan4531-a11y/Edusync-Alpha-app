@@ -61,7 +61,7 @@ export function JobMatcher() {
         </LiquidGlassCard>
 
         {/* Detailed Breakdown */}
-        <LiquidGlassCard className="p-6 md:col-span-2 space-y-5" accentColor="#3b82f6">
+        <LiquidGlassCard className="p-6 md:col-span-2 space-y-5" accentColor="#6366f1">
           <h3 className="text-[17px] font-semibold text-foreground">AI Fit Breakdown</h3>
           
           <div className="space-y-4">
@@ -72,9 +72,9 @@ export function JobMatcher() {
                   <div className="flex items-center gap-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-semibold border ${
                       crit.status === "perfect" 
-                        ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" 
+                        ? "bg-indigo-500/10 text-indigo-500 border-indigo-500/20" 
                         : crit.status === "good"
-                        ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                        ? "bg-indigo-500/10 text-indigo-500 border-indigo-500/20"
                         : "bg-amber-500/10 text-amber-500 border-amber-500/20"
                     }`}>
                       {crit.score}%
@@ -85,7 +85,7 @@ export function JobMatcher() {
                 <div className="w-full h-2 bg-black/5 dark:bg-white/5 rounded-full overflow-hidden border border-black/5 dark:border-white/5 shadow-inner">
                   <div 
                     className={`h-full rounded-full transition-all duration-1000 ${
-                      crit.status === "perfect" ? "bg-emerald-500" : crit.status === "good" ? "bg-blue-500" : "bg-amber-500"
+                      crit.status === "perfect" ? "bg-indigo-500" : crit.status === "good" ? "bg-indigo-500" : "bg-amber-500"
                     }`}
                     style={{ width: `${crit.score}%` }}
                   />

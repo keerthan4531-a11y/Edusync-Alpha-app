@@ -4,6 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { Stage1ContentDTO } from "@/types/communication";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { useSpeaking } from "../hooks/useSpeaking";
+import { ChallengeSkeleton } from "./ChallengeSkeleton";
+import { DifficultyPicker, Difficulty } from "./DifficultyPicker";
+import Image from "next/image";
 import { 
   Mic, 
   Square, 
@@ -29,6 +32,8 @@ interface SpeakingModuleProps {
   challenges?: Stage1ContentDTO[];
   onFinish: () => void;
   onSubFeatureOpen?: (isOpen: boolean) => void;
+  difficulty?: string;
+  onComplete?: (score: number, timeSec: number) => void;
 }
 
 const SHADOW_SENTENCES = [
@@ -38,20 +43,65 @@ const SHADOW_SENTENCES = [
 ];
 
 const SPEAKING_FEATURES = [
-  { id: "read-aloud" as const, label: "Read Aloud", icon: Mic, color: "text-blue-400", bgColor: "bg-blue-400/10", borderColor: "border-blue-400/20" },
-  { id: "shadowing" as const, label: "Shadow Practice", icon: Sparkles, color: "text-purple-400", bgColor: "bg-purple-400/10", borderColor: "border-purple-400/20" },
-  { id: "analyzer" as const, label: "Pitch Analyzer", icon: Activity, color: "text-cyan-400", bgColor: "bg-cyan-400/10", borderColor: "border-cyan-400/20" },
-  { id: "roleplay" as const, label: "AI Roleplay Arena", icon: MessageSquareCode, color: "text-orange-400", bgColor: "bg-orange-400/10", borderColor: "border-orange-400/20" },
+  { id: "speak-it" as const, label: "Speak It", icon: Volume2, color: "text-indigo-400", bgColor: "bg-indigo-400/10", borderColor: "border-indigo-400/20" },
+  { id: "shadowing" as const, label: "Listen & Speak", icon: Volume2, color: "text-indigo-400", bgColor: "bg-indigo-400/10", borderColor: "border-indigo-400/20" },
+  { id: "analyzer" as const, label: "Practice Speaking", icon: Volume2, color: "text-indigo-400", bgColor: "bg-indigo-400/10", borderColor: "border-indigo-400/20" },
 ];
 
-export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatureOpen }: SpeakingModuleProps) {
-  const [activeFeature, setActiveFeature] = useState<"read-aloud" | "shadowing" | "analyzer" | "roleplay" | null>(null);
+const WordByWordText = ({ text, delay = 200, isStarted = true }: { text: string, delay?: number, isStarted?: boolean }) => {
+  const [words, setWords] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [hasTriggered, setHasTriggered] = useState(false);
+
+  useEffect(() => {
+    setWords(text.split(" "));
+    setCurrentIndex(0);
+    setHasTriggered(false);
+  }, [text]);
+
+  useEffect(() => {
+    if (isStarted) setHasTriggered(true);
+  }, [isStarted]);
+
+  useEffect(() => {
+    if (!hasTriggered) return;
+    
+    if (currentIndex < words.length) {
+      const timeout = setTimeout(() => {
+        setCurrentIndex(prev => prev + 1);
+      }, delay);
+      return () => clearTimeout(timeout);
+    }
+  }, [currentIndex, words, delay, hasTriggered]);
+
+  if (!hasTriggered && currentIndex === 0) {
+    return <span className="inline-block text-zinc-400 dark:text-zinc-600 italic">Click the mic to reveal the text...</span>;
+  }
+
+  return (
+    <span className="inline-block">
+      {words.slice(0, currentIndex).map((word, idx) => (
+        <span key={idx} className="mr-1.5 inline-block animate-in fade-in duration-300">
+          {word}
+        </span>
+      ))}
+      {currentIndex < words.length && (
+         <span className="inline-block w-1.5 h-[0.8em] ml-0.5 bg-indigo-500 animate-pulse align-middle rounded-sm" />
+      )}
+    </span>
+  );
+};
+
+export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatureOpen, difficulty, onComplete }: SpeakingModuleProps) {
+  const [activeFeature, setActiveFeature] = useState<"speak-it" | "shadowing" | "analyzer" | null>(null);
+  const [pendingFeature, setPendingFeature] = useState<"speak-it" | "shadowing" | "analyzer" | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>("MEDIUM");
 
   useEffect(() => {
     if (onSubFeatureOpen) {
-      onSubFeatureOpen(activeFeature !== null);
+      onSubFeatureOpen(activeFeature !== null || pendingFeature !== null);
     }
-  }, [activeFeature, onSubFeatureOpen]);
+  }, [activeFeature, pendingFeature, onSubFeatureOpen]);
 
   // Read Aloud Speech Hook
   const {
@@ -68,6 +118,40 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
   } = useSpeaking(content);
 
   const [useFallback, setUseFallback] = useState(false);
+
+  // Dynamic Speak It Content
+  const [dynamicSpeakItContent, setDynamicSpeakItContent] = useState<Stage1ContentDTO | null>(null);
+  const [isGeneratingSpeakIt, setIsGeneratingSpeakIt] = useState(false);
+
+  const loadDynamicSpeakIt = async (diff?: string | any) => {
+    setIsGeneratingSpeakIt(true);
+    setDynamicSpeakItContent(null);
+    resetReadAloud();
+    setReadAloudText(""); // explicitly clear to prevent race conditions
+    
+    try {
+      const targetDiff = (typeof diff === "string" ? diff : undefined) || selectedDifficulty || "MEDIUM";
+      const res = await fetch("/api/communication/generate-speaking-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ difficulty: targetDiff })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDynamicSpeakItContent(data.content);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsGeneratingSpeakIt(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeFeature === "speak-it" && !dynamicSpeakItContent && !isGeneratingSpeakIt) {
+      loadDynamicSpeakIt();
+    }
+  }, [activeFeature]);
 
   // Stop any speechSynthesis on unmount
   useEffect(() => {
@@ -88,80 +172,118 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
   };
 
   // ----------------------------------------------------
-  // SHADOW PRACTICE LOGIC
+  // LISTEN & SPEAK LOGIC
   // ----------------------------------------------------
-  const [shadowSentenceIdx, setShadowSentenceIdx] = useState(0);
-  const [shadowTranscribed, setShadowTranscribed] = useState("");
-  const [isShadowRecording, setIsShadowRecording] = useState(false);
-  const [shadowResult, setShadowResult] = useState<any>(null);
-  const [shadowError, setShadowError] = useState<string | null>(null);
-  const shadowRecognitionRef = useRef<any>(null);
+  const [listenSpeakContent, setListenSpeakContent] = useState<Stage1ContentDTO | null>(null);
+  const [isGeneratingListenSpeak, setIsGeneratingListenSpeak] = useState(false);
+  const [listenSpeakTranscribed, setListenSpeakTranscribed] = useState("");
+  const [isListenSpeakRecording, setIsListenSpeakRecording] = useState(false);
+  const [listenSpeakResult, setListenSpeakResult] = useState<any>(null);
+  const [listenSpeakError, setListenSpeakError] = useState<string | null>(null);
+  const [isListenSpeakSubmitting, setIsListenSpeakSubmitting] = useState(false);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const listenSpeakRecognitionRef = useRef<any>(null);
 
-  const activeShadow = SHADOW_SENTENCES[shadowSentenceIdx];
+  const loadListenSpeakContent = async (diff?: string | any) => {
+    setIsGeneratingListenSpeak(true);
+    setListenSpeakContent(null);
+    setListenSpeakTranscribed("");
+    setListenSpeakResult(null);
+    setListenSpeakError(null);
+    try {
+      const targetDiff = (typeof diff === "string" ? diff : undefined) || selectedDifficulty || "MEDIUM";
+      const res = await fetch("/api/communication/generate-listen-speak-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ difficulty: targetDiff })
+      });
+      const data = await res.json();
+      if (data.success) setListenSpeakContent(data.content);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsGeneratingListenSpeak(false);
+    }
+  };
 
-  const startShadowRecord = () => {
-    setShadowError(null);
-    setShadowTranscribed("");
-    setShadowResult(null);
-    
+  useEffect(() => {
+    if (activeFeature === "shadowing" && !listenSpeakContent && !isGeneratingListenSpeak) {
+      loadListenSpeakContent();
+    }
+  }, [activeFeature]);
+
+  const playListenSpeakAudio = () => {
+    if (!listenSpeakContent || typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(listenSpeakContent.content);
+    utterance.lang = "en-US";
+    utterance.rate = 0.85;
+    utterance.onstart = () => setIsAudioPlaying(true);
+    utterance.onend = () => setIsAudioPlaying(false);
+    utterance.onerror = () => setIsAudioPlaying(false);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const startListenSpeakRecord = () => {
+    setListenSpeakError(null);
+    setListenSpeakTranscribed("");
+    setListenSpeakResult(null);
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      setShadowError("Speech recognition is not supported in your browser.");
+      setListenSpeakError("Speech recognition is not supported in your browser.");
       return;
     }
-
     try {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const rec = new SpeechRecognition();
-      rec.continuous = false;
-      rec.interimResults = false;
+      rec.continuous = true;
+      rec.interimResults = true;
       rec.lang = 'en-US';
-
-      rec.onstart = () => setIsShadowRecording(true);
+      rec.onstart = () => setIsListenSpeakRecording(true);
       rec.onresult = (e: any) => {
-        const resultText = e.results[0][0].transcript;
-        setShadowTranscribed(resultText);
+        let t = '';
+        for (let i = 0; i < e.results.length; ++i) t += e.results[i][0].transcript;
+        setListenSpeakTranscribed(t);
       };
       rec.onerror = (e: any) => {
-        console.error(e);
-        setShadowError(`Microphone error: ${e.error}`);
-        setIsShadowRecording(false);
+        setListenSpeakError(`Microphone error: ${e.error}`);
+        setIsListenSpeakRecording(false);
       };
-      rec.onend = () => setIsShadowRecording(false);
-
+      rec.onend = () => setIsListenSpeakRecording(false);
       rec.start();
-      shadowRecognitionRef.current = rec;
+      listenSpeakRecognitionRef.current = rec;
     } catch (e: any) {
-      setShadowError(e.message);
+      setListenSpeakError(e.message);
     }
   };
 
-  const stopShadowRecord = () => {
-    if (shadowRecognitionRef.current) {
-      shadowRecognitionRef.current.stop();
+  const stopListenSpeakRecord = () => {
+    if (listenSpeakRecognitionRef.current) {
+      listenSpeakRecognitionRef.current.stop();
     }
+    setIsListenSpeakRecording(false);
   };
 
-  const evaluateShadowPractice = () => {
-    if (!shadowTranscribed) return;
-    const targetWords = activeShadow.text.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").split(/\s+/);
-    const userWords = shadowTranscribed.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, "").split(/\s+/);
-
-    const matches = userWords.filter(w => targetWords.includes(w));
-    const score = Math.round((matches.length / targetWords.length) * 100);
-
-    const mispronounced = targetWords.filter(w => !userWords.includes(w));
-
-    setShadowResult({
-      score,
-      xpAwarded: score >= 80 ? 20 : 5,
-      mispronounced,
-      feedback: score >= 80 
-        ? "Excellent shadowing accuracy! You matched almost every word." 
-        : "Some words were missed. Focus on copying the exact sentence rhythm.",
-      tamilFeedback: score >= 80 
-        ? "அருமையான உச்சரிப்பு துல்லியம்! அனைத்து வார்த்தைகளையும் சரியாகப் பேசினீர்கள்."
-        : "சில வார்த்தைகள் விடுபட்டுள்ளன. வார்த்தைகளின் உச்சரிப்பு வேகத்தைக் கவனித்து மீண்டும் முயலவும்."
-    });
+  const submitListenSpeak = async () => {
+    if (!listenSpeakContent || listenSpeakTranscribed.trim().length < 2) return;
+    setIsListenSpeakSubmitting(true);
+    setListenSpeakError(null);
+    try {
+      const res = await fetch("/api/communication/speaking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contentId: listenSpeakContent.id,
+          transcribedText: listenSpeakTranscribed.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Evaluation failed");
+      setListenSpeakResult(data);
+    } catch (err: any) {
+      setListenSpeakError(err.message || "An unexpected error occurred");
+    } finally {
+      setIsListenSpeakSubmitting(false);
+    }
   };
 
   // ----------------------------------------------------
@@ -258,7 +380,7 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
               const grad = ctx.createLinearGradient(0, h, 0, h - barHeight);
               grad.addColorStop(0, "#a78bfa"); // light purple
               grad.addColorStop(0.5, "#6366f1"); // primary indigo
-              grad.addColorStop(1, "#06b6d4"); // cyan
+              grad.addColorStop(1, "#6366f1"); // cyan
 
               ctx.fillStyle = grad;
               ctx.fillRect(x, h - barHeight, barWidth - 4, barHeight);
@@ -298,10 +420,23 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
   };
 
   const evaluateAnalyzerResults = () => {
-    const text = analyzerTranscribed || "Mock transcription of clear academic communication text for visual presentation feedback.";
-    const seconds = analyzerSeconds || 8;
+    const text = analyzerTranscribed.trim();
+    if (!text) {
+      setAnalyzerResult({
+        wpm: 0,
+        fillerCount: 0,
+        fillersUsed: [],
+        confidenceScore: 0,
+        accuracyScore: 0,
+        paceFeedback: "No speech detected. Please check your microphone and speak clearly.",
+        transcript: ""
+      });
+      return;
+    }
+
+    const seconds = analyzerSeconds || 1;
     const words = text.split(/\s+/).filter(Boolean).length;
-    const wpm = seconds > 0 ? Math.round((words / seconds) * 60) : 120;
+    const wpm = Math.round((words / seconds) * 60);
 
     // Detect fillers
     const fillers = ["um", "uh", "like", "so", "basically", "actually"];
@@ -313,7 +448,11 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
       }
     });
 
-    const fluencyScore = Math.max(30, 100 - (foundFillers.length * 8) - Math.abs(130 - wpm) * 0.3);
+    // Confidence Level: High pacing (near 130wpm) and low fillers = high confidence
+    const confidenceScore = Math.max(30, 100 - (foundFillers.length * 8) - Math.abs(130 - wpm) * 0.3);
+    
+    // Accuracy Level: Estimated based on fluency and fewer filler distractions
+    const accuracyScore = Math.max(65, Math.min(98, 100 - (foundFillers.length * 2) - Math.floor(Math.random() * 5)));
 
     let paceFeedback = "Perfect rhythm! Your communication flow is clear and dynamic.";
     if (wpm < 100) {
@@ -326,136 +465,13 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
       wpm,
       fillerCount: foundFillers.length,
       fillersUsed: Array.from(new Set(foundFillers)),
-      fluencyScore: Math.round(fluencyScore),
+      confidenceScore: Math.round(confidenceScore),
+      accuracyScore: Math.round(accuracyScore),
       paceFeedback,
-      xpAwarded: 25,
       transcript: text
     });
   };
 
-  // ----------------------------------------------------
-  // AI ROLEPLAY ARENA LOGIC
-  // ----------------------------------------------------
-  const [roleplayMode, setRoleplayMode] = useState<"lobby" | "chat" | "report">("lobby");
-  const [roleplayCharacter, setRoleplayCharacter] = useState<"interviewer" | "clerk" | "professor">("interviewer");
-  const [roleplayDifficulty, setRoleplayDifficulty] = useState<"easy" | "medium" | "hard">("medium");
-  const [roleplayHistory, setRoleplayHistory] = useState<{ role: "assistant" | "user"; content: string }[]>([]);
-  const [roleplayInput, setRoleplayInput] = useState("");
-  const [isRoleplayThinking, setIsRoleplayThinking] = useState(false);
-  const [roleplayTurns, setRoleplayTurns] = useState(0);
-  const [roleplayRecordText, setRoleplayRecordText] = useState("");
-  const [isRoleplayRecording, setIsRoleplayRecording] = useState(false);
-  const roleplayRecognitionRef = useRef<any>(null);
-
-  const characterMeta = {
-    interviewer: { icon: "💼", name: "Job Interviewer", intro: "Hello! Welcome to your technical interview today. Can you tell me about a complex project you worked on recently?" },
-    clerk: { icon: "🛎️", name: "Hotel Front Desk", intro: "Good day! Welcome to Grand Plaza. I see you'd like to check-in. Under what name is your room reservation?" },
-    professor: { icon: "🎓", name: "Academic Advisor", intro: "Come in! Take a seat. How is your semester research paper going? Let me know what questions you have." }
-  };
-
-  const startRoleplaySession = () => {
-    const character = roleplayCharacter;
-    const meta = characterMeta[character];
-    setRoleplayHistory([
-      { role: "assistant", content: meta.intro }
-    ]);
-    setRoleplayTurns(0);
-    setRoleplayInput("");
-    setRoleplayMode("chat");
-  };
-
-  // Roleplay mic toggle
-  const toggleRoleplayRecord = () => {
-    if (isRoleplayRecording) {
-      if (roleplayRecognitionRef.current) roleplayRecognitionRef.current.stop();
-      setIsRoleplayRecording(false);
-      return;
-    }
-
-    setRoleplayRecordText("");
-    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      alert("Voice input not supported. Please write your message.");
-      return;
-    }
-
-    try {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      const rec = new SpeechRecognition();
-      rec.continuous = false;
-      rec.interimResults = false;
-      rec.lang = 'en-US';
-
-      rec.onstart = () => setIsRoleplayRecording(true);
-      rec.onresult = (e: any) => {
-        const text = e.results[0][0].transcript;
-        setRoleplayInput(prev => (prev ? prev + " " + text : text));
-      };
-      rec.onend = () => setIsRoleplayRecording(false);
-      rec.start();
-      roleplayRecognitionRef.current = rec;
-    } catch(e) {}
-  };
-
-  const sendRoleplayMessage = async () => {
-    const textToSend = roleplayInput.trim();
-    if (!textToSend || isRoleplayThinking) return;
-
-    setRoleplayInput("");
-    const newHistory = [...roleplayHistory, { role: "user" as const, content: textToSend }];
-    setRoleplayHistory(newHistory);
-    setIsRoleplayThinking(true);
-
-    try {
-      const res = await fetch("/api/communication/roleplay", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: textToSend,
-          history: newHistory,
-          character: roleplayCharacter
-        })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setRoleplayHistory(prev => [...prev, { role: "assistant", content: data.response }]);
-        const nextTurn = roleplayTurns + 1;
-        setRoleplayTurns(nextTurn);
-        if (nextTurn >= 5) {
-          // Max turns reached, trigger report
-          setTimeout(() => evaluateRoleplaySession(newHistory), 2000);
-        }
-      } else {
-        setRoleplayHistory(prev => [...prev, { role: "assistant", content: "I'd like to hear more about that. Could you expand on your answer?" }]);
-      }
-    } catch (e) {
-      console.error(e);
-      setRoleplayHistory(prev => [...prev, { role: "assistant", content: "Could you repeat that? I didn't quite catch it." }]);
-    } finally {
-      setIsRoleplayThinking(false);
-    }
-  };
-
-  const evaluateRoleplaySession = (finalHistory: any[]) => {
-    setRoleplayMode("report");
-    // Generate static roleplay report details
-    // Calculate total conversation words
-    const userMessages = finalHistory.filter(m => m.role === "user");
-    const totalWords = userMessages.reduce((acc, m) => acc + m.content.split(" ").length, 0);
-    const vocabScore = Math.min(100, 50 + userMessages.length * 10);
-    const overallScore = Math.round((vocabScore + 85 + 90) / 3);
-
-    setRoleplayResult({
-      overall: overallScore,
-      communication: 90,
-      confidence: 85,
-      vocabulary: vocabScore,
-      xpAwarded: 30,
-      feedback: "Great session! You responded clearly and stayed in character throughout. Your vocabulary choice shows confidence and situational professional awareness.",
-      tamilFeedback: "மிகச்சிறந்த உரையாடல்! நீங்கள் கதாபாத்திரத்திற்கு ஏற்ப சிறப்பாக பதிலளித்தீர்கள். உங்கள் வார்த்தை தேர்வுகள் தொழில்முறை திறனை காட்டுகின்றன."
-    });
-  };
-
-  const [roleplayResult, setRoleplayResult] = useState<any>(null);
 
   const handleBackToOptions = () => {
     setActiveFeature(null);
@@ -463,25 +479,61 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
       window.speechSynthesis.cancel();
     }
     if (isReadAloudRecording) stopReadAloudRecord();
-    if (isShadowRecording) stopShadowRecord();
+    if (isListenSpeakRecording) stopListenSpeakRecord();
     if (isAnalyzerRecording) stopPitchAnalyzer();
-    if (isRoleplayRecording) toggleRoleplayRecord();
   };
+
+  const titles = {
+    "speak-it": "Speak It",
+    shadowing: "Listen & Speak",
+    analyzer: "Practice Speaking",
+  };
+
+  if (pendingFeature) {
+    return (
+      <DifficultyPicker
+        title={titles[pendingFeature] || "Select Difficulty"}
+        onSelect={(diff) => {
+          setSelectedDifficulty(diff);
+          const feat = pendingFeature;
+          setActiveFeature(feat);
+          setPendingFeature(null);
+          if (feat === "speak-it") loadDynamicSpeakIt(diff);
+          else if (feat === "shadowing") loadListenSpeakContent(diff);
+        }}
+        onBack={() => {
+          setPendingFeature(null);
+          onSubFeatureOpen?.(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
       {!activeFeature ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
           {SPEAKING_FEATURES.map((feature) => {
-            const Icon = feature.icon;
             return (
               <button
                 key={feature.id}
-                onClick={() => setActiveFeature(feature.id)}
-                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+                onClick={() => {
+                  setPendingFeature(feature.id);
+                  onSubFeatureOpen?.(true);
+                }}
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl shadow-indigo-500/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
               >
-                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${feature.bgColor} ${feature.borderColor} border transition-transform duration-300 group-hover:scale-110`}>
-                  <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-indigo-500/10 dark:bg-indigo-950/30 border-2 border-indigo-400/20 transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400/50 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+                  <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
+                    <Image 
+                      src="/images/communication/speaking.png" 
+                      alt={feature.label}
+                      fill
+                      className="object-contain mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
+                      sizes="(max-width: 768px) 64px, 80px"
+                      priority
+                    />
+                  </div>
                 </div>
                 <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
                   {feature.label}
@@ -502,105 +554,86 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
             </button>
           </div>
 
-          {/* 1. READ ALOUD TAB */}
-          {activeFeature === "read-aloud" && content && (
-        <div className="space-y-6 animate-in fade-in">
-          <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
-            <h2 className="text-[22px] font-bold text-foreground mb-2">{content.title}</h2>
-            <div className="p-6 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/10 dark:border-white/10 text-center shadow-[inset_0_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
-              <p className="text-zinc-600 dark:text-gray-200 text-[28px] font-medium leading-relaxed">
-                "{content.content}"
-              </p>
-            </div>
-          </LiquidGlassCard>
-
-          {!readAloudResult ? (
-            <LiquidGlassCard className="p-6 border-black/10 dark:border-white/10 flex flex-col items-center" accentColor="#8b5cf6">
-              <div className="w-full flex justify-end mb-4">
-                <button 
-                  onClick={() => setUseFallback(!useFallback)}
-                  className="text-[15px] text-zinc-500 dark:text-gray-400 hover:text-foreground transition-colors flex items-center gap-1"
-                >
-                  <Type className="w-4 h-4" />
-                  {useFallback ? "Use Microphone" : "Keyboard Fallback"}
-                </button>
-              </div>
-
-              {useFallback ? (
-                <div className="w-full">
-                  <label className="block text-[15px] font-medium text-zinc-600 dark:text-gray-300 mb-2">
-                    Type what you would have said (Fallback Mode)
-                  </label>
-                  <textarea
-                    value={readAloudText}
-                    onChange={(e) => setReadAloudText(e.target.value)}
-                    disabled={isReadAloudSubmitting}
-                    rows={4}
-                    className="w-full bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-2xl p-4 text-[15px] text-foreground focus:border-purple-500 transition-all resize-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"
-                  />
-                </div>
-              ) : (
-                <div className="flex flex-col items-center space-y-6 my-4 w-full">
-                  <button
-                    onClick={isReadAloudRecording ? stopReadAloudRecord : startReadAloudRecord}
-                    disabled={isReadAloudSubmitting}
-                    className={`w-28 h-28 rounded-full flex items-center justify-center transition-all duration-500 ${
-                      isReadAloudRecording 
-                        ? "bg-red-500 hover:bg-red-600 animate-pulse shadow-[0_0_30px_rgba(239,68,68,0.5)]" 
-                        : "bg-purple-500/20 hover:bg-purple-500/40 border border-purple-500/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
-                    }`}
-                  >
-                    {isReadAloudRecording ? (
-                      <Square className="w-10 h-10 text-white" fill="currentColor" />
-                    ) : (
-                      <Mic className="w-12 h-12 text-purple-400" />
-                    )}
-                  </button>
-                  
-                  <p className="text-zinc-500 dark:text-gray-400 font-medium text-[15px]">
-                    {isReadAloudRecording ? "Recording... Click to stop." : "Click to start speaking"}
-                  </p>
-
-                  {readAloudText && (
-                    <div className="w-full p-4 bg-black/5 dark:bg-black/40 rounded-2xl border border-black/10 dark:border-white/10 text-zinc-600 dark:text-gray-300 text-[15px]">
-                      <span className="text-[13px] text-purple-600 dark:text-purple-400 font-semibold block mb-1">Heard:</span>
-                      {readAloudText}
+          {/* 1. SPEAK IT TAB */}
+          {activeFeature === "speak-it" && (
+            <div className="space-y-6 animate-in fade-in">
+              {isGeneratingSpeakIt ? (
+                <ChallengeSkeleton variant="speaking-speak-it" />
+              ) : dynamicSpeakItContent && (
+                <>
+                  <LiquidGlassCard className="p-6" accentColor="#6366f1">
+                    <div className="flex justify-between items-center mb-4">
+                      <h2 className="text-[22px] font-bold text-foreground">Speak It</h2>
                     </div>
-                  )}
-                </div>
-              )}
+                    <div className="p-6 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/10 dark:border-white/10 text-center shadow-[inset_0_1px_1px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] min-h-[120px] flex items-center justify-center">
+                      <p className="text-zinc-600 dark:text-gray-200 text-[22px] font-medium leading-relaxed max-w-xl mx-auto">
+                        <WordByWordText text={`"${dynamicSpeakItContent.content}"`} delay={800} isStarted={isReadAloudRecording} />
+                      </p>
+                    </div>
+                  </LiquidGlassCard>
 
-              {readAloudError && (
-                <div className="w-full mt-4 text-red-600 dark:text-red-400 text-[15px] font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
-                  {readAloudError}
-                </div>
-              )}
+                  {!readAloudResult ? (
+                    <div className="flex flex-col items-center pt-2">
+                        <div className="flex flex-col items-center space-y-6 my-4 w-full">
+                          <button
+                            onClick={isReadAloudRecording ? stopReadAloudRecord : startReadAloudRecord}
+                            disabled={isReadAloudSubmitting}
+                            className={`w-28 h-28 rounded-full flex items-center justify-center transition-all duration-500 ${
+                              isReadAloudRecording 
+                                ? "bg-red-500 hover:bg-red-600 animate-pulse shadow-[0_0_30px_rgba(239,68,68,0.5)]" 
+                                : "bg-indigo-500/20 hover:bg-indigo-500/40 border border-indigo-500/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
+                            }`}
+                          >
+                            {isReadAloudRecording ? (
+                              <Square className="w-10 h-10 text-white" fill="currentColor" />
+                            ) : (
+                              <Mic className="w-12 h-12 text-indigo-400" />
+                            )}
+                          </button>
+                          
+                          <p className="text-zinc-500 dark:text-gray-400 font-medium text-[15px]">
+                            {isReadAloudRecording ? "Recording... Click to stop." : "Click to start speaking"}
+                          </p>
 
-              <button
-                onClick={submitReadAloud}
-                disabled={isReadAloudSubmitting || readAloudText.trim().length < 2}
-                className="w-full mt-6 py-3 rounded-2xl bg-purple-600 text-white font-semibold text-[17px] shadow-md hover:bg-purple-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isReadAloudSubmitting ? "AI is analyzing speech..." : "Submit Speech Evaluation"}
-              </button>
-            </LiquidGlassCard>
-          ) : (
-            <LiquidGlassCard className="p-6 border-purple-500/30 bg-purple-500/5" accentColor="#8b5cf6">
+                          {readAloudText && (
+                            <div className="w-full p-4 bg-black/5 dark:bg-black/40 rounded-2xl border border-black/10 dark:border-white/10 text-zinc-600 dark:text-gray-300 text-[15px]">
+                              <span className="text-[13px] text-indigo-600 dark:text-indigo-400 font-semibold block mb-1">Heard:</span>
+                              {readAloudText}
+                            </div>
+                          )}
+                        </div>
+
+                      {readAloudError && (
+                        <div className="w-full mt-4 text-red-600 dark:text-red-400 text-[15px] font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                          {readAloudError}
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => submitReadAloud(dynamicSpeakItContent || undefined)}
+                        disabled={isReadAloudSubmitting || readAloudText.trim().length < 2}
+                        className="w-full mt-6 py-4 rounded-2xl bg-[#6366f1] text-white font-semibold text-[17px] shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:bg-[#5254cc] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {isReadAloudSubmitting ? "Evaluating..." : "Submit"}
+                      </button>
+                    </div>
+                  ) : (
+                    <LiquidGlassCard className="p-6 border-indigo-500/30 bg-indigo-500/5" accentColor="#6366f1">
               <h3 className="text-[28px] font-bold text-foreground mb-4">Pronunciation Feedback</h3>
               
               <div className="space-y-4">
                 <div className="p-4 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/10 dark:border-white/10">
-                  <h4 className="text-purple-600 dark:text-purple-400 font-semibold mb-1 text-[15px]">Coach's Notes</h4>
+                  <h4 className="text-indigo-600 dark:text-indigo-400 font-semibold mb-1 text-[15px]">Coach's Notes</h4>
                   <p className="text-zinc-600 dark:text-gray-200 text-[15px]">{readAloudResult.evaluation.feedback}</p>
                   <p className="text-zinc-500 dark:text-gray-400 text-[13px] mt-2 italic">{readAloudResult.evaluation.tamilFeedback}</p>
                 </div>
 
                 {readAloudResult.evaluation.mispronouncedWords?.length > 0 ? (
-                  <div className="p-4 bg-orange-500/10 rounded-2xl border border-orange-500/20">
-                    <h4 className="text-orange-600 dark:text-orange-400 font-semibold mb-2 text-[15px]">Words to Practice</h4>
+                  <div className="p-4 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
+                    <h4 className="text-indigo-600 dark:text-indigo-400 font-semibold mb-2 text-[15px]">Words to Practice</h4>
                     <div className="flex flex-wrap gap-2">
                       {readAloudResult.evaluation.mispronouncedWords.map((word: string, idx: number) => (
-                        <span key={idx} className="px-3 py-1 bg-black/5 dark:bg-black/40 border border-orange-500/30 rounded-lg text-orange-600 dark:text-orange-200 text-[13px]">
+                        <span key={idx} className="px-3 py-1 bg-black/5 dark:bg-black/40 border border-indigo-500/30 rounded-lg text-indigo-600 dark:text-indigo-200 text-[13px]">
                           {word}
                         </span>
                       ))}
@@ -614,7 +647,7 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
               </div>
 
               <div className="mt-8 flex items-center gap-4">
-                <span className="px-4 py-2 rounded-full bg-purple-500/20 text-purple-300 font-bold border border-purple-500/50">
+                <span className="px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/50">
                   Accuracy: {readAloudResult.score}%
                 </span>
                 <span className="px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/50">
@@ -622,7 +655,7 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                 </span>
                 <div className="flex-1" />
                 <button
-                  onClick={resetReadAloud}
+                  onClick={() => loadDynamicSpeakIt()}
                   className="px-6 py-2.5 rounded-xl border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-foreground font-medium transition-all"
                 >
                   Try Again
@@ -630,145 +663,147 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
               </div>
             </LiquidGlassCard>
           )}
-        </div>
-      )}
+                </>
+              )}
+            </div>
+          )}
 
-      {/* 2. SHADOW PRACTICE TAB */}
+      {/* 2. LISTEN & SPEAK TAB */}
       {activeFeature === "shadowing" && (
-        <div className="space-y-6 max-w-xl mx-auto animate-in fade-in">
-          <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
-            <h3 className="text-[17px] font-bold text-foreground mb-4 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-400" /> Shadowing repetition practice
-            </h3>
-
-            {/* List of Shadow prompts */}
-            <div className="flex gap-2 mb-6">
-              {SHADOW_SENTENCES.map((item, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => {
-                    setShadowSentenceIdx(idx);
-                    setShadowTranscribed("");
-                    setShadowResult(null);
-                    setShadowError(null);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-[13px] font-semibold border transition-all ${
-                    shadowSentenceIdx === idx
-                      ? "bg-purple-600 border-purple-500 text-white"
-                      : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-zinc-500 dark:text-gray-400 hover:text-foreground"
-                  }`}
-                >
-                  {item.difficulty} Prompt
-                </button>
-              ))}
-            </div>
-
-            <div className="p-5 bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-2xl text-center space-y-4 mb-6">
-              <p className="text-zinc-500 dark:text-gray-400 text-[13px] uppercase font-bold tracking-wider">Listen carefully & Shadow:</p>
-              <p className="text-foreground text-[22px] font-medium leading-relaxed">
-                "{activeShadow.text}"
-              </p>
-              <button
-                onClick={() => speakText(activeShadow.text, 0.85)}
-                className="mx-auto flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/40 hover:bg-purple-500/20 text-purple-600 dark:text-purple-300 text-[13px] font-semibold rounded-xl transition-all"
-              >
-                <Volume2 className="w-4 h-4" /> Listen to Audio guide
-              </button>
-            </div>
-
-            {/* Mic control */}
-            <div className="flex flex-col items-center space-y-4">
-              <button
-                onClick={isShadowRecording ? stopShadowRecord : startShadowRecord}
-                className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${
-                  isShadowRecording 
-                    ? "bg-red-500 animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.5)]" 
-                    : "bg-purple-500/20 border border-purple-500/50 hover:bg-purple-500/30"
-                }`}
-              >
-                {isShadowRecording ? (
-                  <Square className="w-8 h-8 text-white" fill="currentColor" />
-                ) : (
-                  <Mic className="w-10 h-10 text-purple-400" />
-                )}
-              </button>
-              <p className="text-[13px] text-zinc-500 dark:text-gray-400 font-medium">
-                {isShadowRecording ? "Recording... repeat the phrase now." : "Click microphone and speak"}
-              </p>
-
-              {shadowTranscribed && (
-                <div className="w-full p-4 bg-black/5 dark:bg-black/30 border border-black/10 dark:border-white/10 rounded-xl space-y-2">
-                  <span className="text-[13px] text-purple-600 dark:text-purple-400 font-semibold block">You said:</span>
-                  <p className="text-[15px] text-zinc-600 dark:text-gray-300">"{shadowTranscribed}"</p>
-                  
-                  {!shadowResult && (
-                    <button
-                      onClick={evaluateShadowPractice}
-                      className="mt-3 px-4 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-[13px] font-bold w-full transition-all"
-                    >
-                      Compare Pronunciation
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {shadowError && (
-                <div className="text-[13px] text-red-600 dark:text-red-400 bg-red-500/10 p-2.5 rounded-lg border border-red-500/20">
-                  {shadowError}
-                </div>
-              )}
-            </div>
-
-            {shadowResult && (
-              <div className="mt-6 p-4 bg-purple-500/5 border border-purple-500/30 rounded-2xl space-y-3 animate-in slide-in-from-bottom-3">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-bold text-[15px] text-foreground flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 dark:text-green-400" /> Accuracy Breakdown
-                  </h4>
-                  <span className="px-2.5 py-0.5 bg-purple-500/10 text-purple-600 dark:text-purple-300 rounded-full text-[13px] font-bold border border-purple-500/30">
-                    Match Score: {shadowResult.score}%
-                  </span>
-                </div>
-                <p className="text-[13px] text-zinc-600 dark:text-gray-300">{shadowResult.feedback}</p>
-                <p className="text-[13px] text-purple-600 dark:text-purple-300 italic">{shadowResult.tamilFeedback}</p>
-
-                {shadowResult.mispronounced.length > 0 && (
-                  <div className="text-[13px] space-y-1">
-                    <span className="text-orange-500 dark:text-orange-400 font-semibold">Focus pronunciation on:</span>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {shadowResult.mispronounced.map((word: string, i: number) => (
-                        <span key={i} className="px-2 py-0.5 bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-200 rounded">
-                          {word}
-                        </span>
-                      ))}
+        <div className="space-y-6 animate-in fade-in">
+          {isGeneratingListenSpeak ? (
+            <ChallengeSkeleton variant="speaking-listen-speak" />
+          ) : listenSpeakContent && (
+            <>
+              {!listenSpeakResult ? (
+                <>
+                  {/* Sentence Card */}
+                  <LiquidGlassCard className="p-6" accentColor="#6366f1">
+                    <h2 className="text-[22px] font-bold text-foreground mb-4">Listen & Speak</h2>
+                    <div className="text-center">
+                      {/* Play Button */}
+                      <button
+                        onClick={playListenSpeakAudio}
+                        disabled={isAudioPlaying}
+                        className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-[14px] transition-all ${
+                          isAudioPlaying
+                            ? "bg-indigo-500/30 text-indigo-300 cursor-not-allowed"
+                            : "bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/40 text-indigo-600 dark:text-indigo-300"
+                        }`}
+                      >
+                        <Volume2 className={`w-4 h-4 ${isAudioPlaying ? "animate-pulse" : ""}`} />
+                        {isAudioPlaying ? "Playing..." : "Listen"}
+                      </button>
                     </div>
+                  </LiquidGlassCard>
+
+                  {/* Mic + Submit */}
+                  <div className="flex flex-col items-center pt-2">
+                    <div className="flex flex-col items-center space-y-6 my-4 w-full">
+                      <button
+                        onClick={isListenSpeakRecording ? stopListenSpeakRecord : startListenSpeakRecord}
+                        disabled={isListenSpeakSubmitting}
+                        className={`w-28 h-28 rounded-full flex items-center justify-center transition-all duration-500 ${
+                          isListenSpeakRecording
+                            ? "bg-red-500 hover:bg-red-600 animate-pulse shadow-[0_0_30px_rgba(239,68,68,0.5)]"
+                            : "bg-indigo-500/20 hover:bg-indigo-500/40 border border-indigo-500/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
+                        }`}
+                      >
+                        {isListenSpeakRecording ? (
+                          <Square className="w-10 h-10 text-white" fill="currentColor" />
+                        ) : (
+                          <Mic className="w-12 h-12 text-indigo-400" />
+                        )}
+                      </button>
+
+                      <p className="text-zinc-500 dark:text-gray-400 font-medium text-[15px]">
+                        {isListenSpeakRecording ? "Recording... Click to stop." : "Listen first, then click to speak"}
+                      </p>
+
+                      {listenSpeakTranscribed && (
+                        <div className="w-full p-4 bg-black/5 dark:bg-black/40 rounded-2xl border border-black/10 dark:border-white/10 text-zinc-600 dark:text-gray-300 text-[15px]">
+                          <span className="text-[13px] text-indigo-600 dark:text-indigo-400 font-semibold block mb-1">Heard:</span>
+                          {listenSpeakTranscribed}
+                        </div>
+                      )}
+                    </div>
+
+                    {listenSpeakError && (
+                      <div className="w-full mb-4 text-red-600 dark:text-red-400 text-[15px] font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                        {listenSpeakError}
+                      </div>
+                    )}
+
+                    <button
+                      onClick={submitListenSpeak}
+                      disabled={isListenSpeakSubmitting || listenSpeakTranscribed.trim().length < 2}
+                      className="w-full py-4 rounded-2xl bg-[#6366f1] text-white font-semibold text-[17px] shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:bg-[#5254cc] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {isListenSpeakSubmitting ? "Evaluating..." : "Submit"}
+                    </button>
                   </div>
-                )}
-                
-                <div className="flex justify-between items-center text-[13px] text-yellow-600 dark:text-yellow-500 font-bold pt-2">
-                  <span>+{shadowResult.xpAwarded} XP Earned</span>
-                  <button
-                    onClick={() => {
-                      setShadowResult(null);
-                      setShadowTranscribed("");
-                    }}
-                    className="text-purple-400 hover:underline"
-                  >
-                    Repeat Practice
-                  </button>
-                </div>
-              </div>
-            )}
-          </LiquidGlassCard>
+                </>
+              ) : (
+                /* Result Card */
+                <LiquidGlassCard className="p-6 border-indigo-500/30 bg-indigo-500/5" accentColor="#6366f1">
+                  <h3 className="text-[28px] font-bold text-foreground mb-4">Pronunciation Feedback</h3>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/10 dark:border-white/10">
+                      <h4 className="text-indigo-600 dark:text-indigo-400 font-semibold mb-1 text-[15px]">Coach's Notes</h4>
+                      <p className="text-zinc-600 dark:text-gray-200 text-[15px]">{listenSpeakResult.evaluation?.feedback}</p>
+                      <p className="text-zinc-500 dark:text-gray-400 text-[13px] mt-2 italic">{listenSpeakResult.evaluation?.tamilFeedback}</p>
+                    </div>
+
+                    {listenSpeakResult.evaluation?.mispronouncedWords?.length > 0 ? (
+                      <div className="p-4 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
+                        <h4 className="text-indigo-600 dark:text-indigo-400 font-semibold mb-2 text-[15px]">Words to Practice</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {listenSpeakResult.evaluation.mispronouncedWords.map((word: string, idx: number) => (
+                            <span key={idx} className="px-3 py-1 bg-black/5 dark:bg-black/40 border border-indigo-500/30 rounded-lg text-indigo-600 dark:text-indigo-200 text-[13px]">
+                              {word}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 bg-green-500/10 rounded-2xl border border-green-500/20 text-[15px]">
+                        <p className="text-green-600 dark:text-green-400 font-medium">Perfect pronunciation! No missed words detected.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-8 flex items-center gap-4">
+                    <span className="px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/50">
+                      Accuracy: {listenSpeakResult.score}%
+                    </span>
+                    <span className="px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/50">
+                      +{listenSpeakResult.xpAwarded} XP
+                    </span>
+                    <div className="flex-1" />
+                    <button
+                      onClick={() => {
+                        setListenSpeakResult(null);
+                        setListenSpeakTranscribed("");
+                        loadListenSpeakContent();
+                      }}
+                      className="px-6 py-2.5 rounded-xl border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-foreground font-medium transition-all"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                </LiquidGlassCard>
+              )}
+            </>
+          )}
         </div>
       )}
 
-      {/* 3. SPEECH PITCH ANALYZER TAB */}
+      {/* 3. PRACTICE SPEAKING TAB */}
       {activeFeature === "analyzer" && (
         <div className="space-y-6 max-w-xl mx-auto animate-in fade-in">
-          <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
+          <LiquidGlassCard className="p-6" accentColor="#6366f1">
             <h3 className="text-[17px] font-bold text-foreground mb-2 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-cyan-400 animate-pulse" /> Speech Pitch & Pacing Analyzer
+              <Activity className="w-5 h-5 text-indigo-400 animate-pulse" /> Practice Speaking
             </h3>
             <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-6 leading-relaxed">
               Read any academic or work sentence aloud. We will trace your voice frequency variations on the visualizer and analyze words-per-minute pacing.
@@ -795,13 +830,13 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                 className={`w-20 h-20 rounded-full flex items-center justify-center transition-all ${
                   isAnalyzerRecording 
                     ? "bg-red-500 animate-pulse shadow-[0_0_20px_rgba(239,68,68,0.5)]" 
-                    : "bg-cyan-500/20 border border-cyan-500/50 hover:bg-cyan-500/30"
+                    : "bg-indigo-500/20 border border-indigo-500/50 hover:bg-indigo-500/30"
                 }`}
               >
                 {isAnalyzerRecording ? (
                   <Square className="w-8 h-8 text-white" fill="currentColor" />
                 ) : (
-                  <Mic className="w-10 h-10 text-cyan-400" />
+                  <Mic className="w-10 h-10 text-indigo-400" />
                 )}
               </button>
               <p className="text-[13px] text-zinc-500 dark:text-gray-400 font-medium">
@@ -810,19 +845,19 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
 
               {analyzerTranscribed && (
                 <div className="w-full p-3 bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-xl">
-                  <span className="text-[10px] text-cyan-600 dark:text-cyan-400 font-bold uppercase tracking-wider block mb-1">Transcribed words:</span>
+                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider block mb-1">Transcribed words:</span>
                   <p className="text-[13px] text-zinc-600 dark:text-gray-300">"{analyzerTranscribed}"</p>
                 </div>
               )}
             </div>
 
             {analyzerResult && (
-              <div className="mt-6 p-5 bg-cyan-500/10 border border-cyan-500/20 rounded-2xl space-y-4 animate-in slide-in-from-bottom-4">
-                <h4 className="font-bold text-[15px] text-cyan-600 dark:text-cyan-400 flex items-center gap-2">
+              <div className="mt-6 p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl space-y-4 animate-in slide-in-from-bottom-4">
+                <h4 className="font-bold text-[15px] text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
                   <Activity className="w-4 h-4" /> Speaking metrics report
                 </h4>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-4 gap-3">
                   <div className="p-3 bg-black/5 dark:bg-black/40 rounded-xl border border-black/10 dark:border-white/5 text-center">
                     <span className="text-[22px] font-extrabold text-foreground">{analyzerResult.wpm}</span>
                     <span className="block text-[10px] text-zinc-500 dark:text-gray-400 font-medium mt-0.5">Words/Min</span>
@@ -832,8 +867,12 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                     <span className="block text-[10px] text-zinc-500 dark:text-gray-400 font-medium mt-0.5">Filler Words</span>
                   </div>
                   <div className="p-3 bg-black/5 dark:bg-black/40 rounded-xl border border-black/10 dark:border-white/5 text-center">
-                    <span className="text-[22px] font-extrabold text-cyan-600 dark:text-cyan-400">{analyzerResult.fluencyScore}%</span>
-                    <span className="block text-[10px] text-zinc-500 dark:text-gray-400 font-medium mt-0.5">Fluency Score</span>
+                    <span className="text-[22px] font-extrabold text-indigo-600 dark:text-indigo-400">{analyzerResult.confidenceScore}%</span>
+                    <span className="block text-[10px] text-zinc-500 dark:text-gray-400 font-medium mt-0.5">Confidence</span>
+                  </div>
+                  <div className="p-3 bg-black/5 dark:bg-black/40 rounded-xl border border-black/10 dark:border-white/5 text-center">
+                    <span className="text-[22px] font-extrabold text-indigo-600 dark:text-indigo-400">{analyzerResult.accuracyScore}%</span>
+                    <span className="block text-[10px] text-zinc-500 dark:text-gray-400 font-medium mt-0.5">Accuracy</span>
                   </div>
                 </div>
 
@@ -845,10 +884,10 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
 
                   {analyzerResult.fillersUsed.length > 0 && (
                     <div>
-                      <span className="font-semibold text-orange-500 dark:text-orange-400">Filler words detected:</span>
+                      <span className="font-semibold text-indigo-500 dark:text-indigo-400">Filler words detected:</span>
                       <div className="flex gap-1.5 mt-1.5">
                         {analyzerResult.fillersUsed.map((word: string, i: number) => (
-                          <span key={i} className="px-2 py-0.5 bg-orange-500/10 text-orange-600 dark:text-orange-200 border border-orange-500/20 rounded text-[10px]">
+                          <span key={i} className="px-2 py-0.5 bg-indigo-500/10 text-indigo-600 dark:text-indigo-200 border border-indigo-500/20 rounded text-[10px]">
                             {word}
                           </span>
                         ))}
@@ -857,14 +896,14 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                   )}
                 </div>
 
-                <div className="flex justify-between items-center text-xs text-yellow-500 font-bold border-t border-white/5 pt-3">
-                  <span>+{analyzerResult.xpAwarded} XP Awarded</span>
+                <div className="flex justify-between items-center text-xs border-t border-black/10 dark:border-white/5 pt-3">
+                  <span className="text-zinc-500 dark:text-gray-400 font-medium flex items-center gap-1.5"><Activity className="w-3.5 h-3.5" /> Practice Mode (No XP)</span>
                   <button
                     onClick={() => {
                       setAnalyzerResult(null);
                       setAnalyzerTranscribed("");
                     }}
-                    className="text-cyan-400 hover:underline"
+                    className="text-indigo-400 hover:underline"
                   >
                     Record New Analysis
                   </button>
@@ -875,218 +914,7 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
         </div>
       )}
 
-      {/* 4. AI ROLEPLAY ARENA TAB */}
-      {activeFeature === "roleplay" && (
-        <div className="space-y-6 animate-in fade-in">
-          {/* LOBBY MODE */}
-          {roleplayMode === "lobby" && (
-            <LiquidGlassCard className="p-6 max-w-lg mx-auto" accentColor="#8b5cf6">
-              <h3 className="text-[17px] font-bold text-foreground mb-2 flex items-center gap-2">
-                <MessageSquareCode className="w-5 h-5 text-purple-400" /> AI Conversational Roleplay Arena
-              </h3>
-              <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-6">
-                Test your communication adaptability by chatting with special AI characters in simulated scenarios.
-              </p>
 
-              {/* Character selection */}
-              <div className="space-y-4 mb-6">
-                <label className="block text-[10px] font-bold text-zinc-600 dark:text-gray-300 uppercase tracking-wider">Select Roleplay Character:</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {(Object.keys(characterMeta) as Array<keyof typeof characterMeta>).map((char) => {
-                    const meta = characterMeta[char];
-                    const selected = roleplayCharacter === char;
-                    return (
-                      <button
-                        key={char}
-                        onClick={() => setRoleplayCharacter(char)}
-                        className={`p-4 rounded-xl border text-left transition-all ${
-                          selected
-                            ? "bg-purple-600/20 border-purple-500 text-purple-600 dark:text-white shadow-md"
-                            : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-zinc-500 dark:text-gray-400 hover:text-foreground"
-                        }`}
-                      >
-                        <span className="text-[28px] block mb-1">{meta.icon}</span>
-                        <span className="text-[13px] font-bold block">{meta.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Difficulty selection */}
-              <div className="space-y-2 mb-6">
-                <label className="block text-[10px] font-bold text-zinc-600 dark:text-gray-300 uppercase tracking-wider">Conversation Difficulty:</label>
-                <div className="flex gap-2">
-                  {["easy", "medium", "hard"].map((diff) => (
-                    <button
-                      key={diff}
-                      onClick={() => setRoleplayDifficulty(diff as any)}
-                      className={`flex-1 py-2 rounded-xl text-[13px] font-bold border capitalize transition-all ${
-                        roleplayDifficulty === diff
-                          ? "bg-purple-600 text-white border-purple-500"
-                          : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-zinc-500 dark:text-gray-400 hover:text-foreground"
-                      }`}
-                    >
-                      {diff}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                onClick={startRoleplaySession}
-                className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl shadow-lg transition-all"
-              >
-                Start Roleplay Session
-              </button>
-            </LiquidGlassCard>
-          )}
-
-          {/* CHAT SESSION MODE */}
-          {roleplayMode === "chat" && (
-            <LiquidGlassCard className="p-6 max-w-2xl mx-auto flex flex-col h-[500px]" accentColor="#8b5cf6">
-              {/* Header */}
-              <div className="flex justify-between items-center border-b border-black/10 dark:border-white/10 pb-4 mb-4 select-none">
-                <div className="flex items-center gap-2">
-                  <span className="text-[28px]">{characterMeta[roleplayCharacter].icon}</span>
-                  <div>
-                    <h4 className="font-bold text-[15px] text-foreground">{characterMeta[roleplayCharacter].name}</h4>
-                    <span className="text-[10px] text-zinc-500 dark:text-gray-400 font-medium capitalize">Difficulty: {roleplayDifficulty}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="px-2.5 py-0.5 bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 rounded-full text-[10px] font-bold">
-                    Turns: {roleplayTurns}/5
-                  </span>
-                  <button
-                    onClick={() => evaluateRoleplaySession(roleplayHistory)}
-                    className="text-[13px] text-red-600 dark:text-red-400 hover:underline font-bold"
-                  >
-                    End Session
-                  </button>
-                </div>
-              </div>
-
-              {/* Chat bubbles */}
-              <div className="flex-1 overflow-y-auto space-y-4 pr-1 mb-4 no-scrollbar scroll-smooth">
-                {roleplayHistory.map((msg, idx) => {
-                  const isUser = msg.role === "user";
-                  return (
-                    <div
-                      key={idx}
-                      className={`flex gap-2.5 max-w-[85%] ${isUser ? "ml-auto flex-row-reverse" : "mr-auto"}`}
-                    >
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] flex-shrink-0 ${
-                        isUser ? "bg-purple-600 text-white" : "bg-black/5 dark:bg-white/10 text-zinc-600 dark:text-gray-200"
-                      }`}>
-                        {isUser ? <User className="w-4 h-4" /> : characterMeta[roleplayCharacter].icon}
-                      </div>
-                      <div className={`p-3.5 rounded-2xl text-[13px] leading-relaxed shadow ${
-                        isUser 
-                          ? "bg-purple-600 text-white rounded-tr-none" 
-                          : "bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 text-zinc-600 dark:text-gray-200 rounded-tl-none"
-                      }`}>
-                        {msg.content}
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {isRoleplayThinking && (
-                  <div className="flex gap-2.5 max-w-[80%] mr-auto items-center">
-                    <div className="w-7 h-7 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center text-[13px]">
-                      {characterMeta[roleplayCharacter].icon}
-                    </div>
-                    <div className="p-3 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl rounded-tl-none text-[11px] text-zinc-500 dark:text-gray-400 animate-pulse">
-                      Typing response...
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Input section */}
-              <div className="flex gap-2 items-center border-t border-black/10 dark:border-white/10 pt-4">
-                <button
-                  onClick={toggleRoleplayRecord}
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center border flex-shrink-0 transition-colors ${
-                    isRoleplayRecording 
-                      ? "bg-red-500/20 border-red-500 text-red-600 dark:text-red-400 animate-pulse" 
-                      : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-zinc-500 dark:text-gray-400 hover:text-foreground"
-                  }`}
-                >
-                  <Mic className="w-4 h-4" />
-                </button>
-                <input
-                  type="text"
-                  placeholder={isRoleplayRecording ? "Listening... speak now." : "Type your response..."}
-                  value={roleplayInput}
-                  onChange={(e) => setRoleplayInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") sendRoleplayMessage();
-                  }}
-                  className="flex-1 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-[13px] text-foreground placeholder:text-zinc-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-purple-500"
-                />
-                <button
-                  onClick={sendRoleplayMessage}
-                  disabled={!roleplayInput.trim() || isRoleplayThinking}
-                  className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-xl text-[13px] font-bold transition-all shadow"
-                >
-                  Send
-                </button>
-              </div>
-            </LiquidGlassCard>
-          )}
-
-          {/* REPORT SUMMARY MODE */}
-          {roleplayMode === "report" && roleplayResult && (
-            <LiquidGlassCard className="p-6 max-w-lg mx-auto" accentColor="#8b5cf6">
-              <h3 className="text-[22px] font-bold text-foreground mb-2 flex items-center gap-2">
-                <Crown className="w-6 h-6 text-yellow-500" /> Conversational Evaluation Report
-              </h3>
-              <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-6">
-                Your performance details and conversation analysis.
-              </p>
-
-              <div className="feature-card text-center p-6 bg-purple-500/5 border border-purple-500/30 rounded-2xl mb-6">
-                <div className="text-[48px] font-extrabold text-purple-600 dark:text-purple-400 mb-2">{roleplayResult.overall}%</div>
-                <div className="text-[10px] text-zinc-500 dark:text-gray-400 font-bold uppercase tracking-wider">Overall Roleplay Grade</div>
-              </div>
-
-              {/* Stat list */}
-              <div className="space-y-3 mb-6 text-[13px]">
-                <div className="flex justify-between items-center py-1.5 border-b border-black/5 dark:border-white/5">
-                  <span className="text-zinc-500 dark:text-gray-400">Grammar & Structure:</span>
-                  <span className="font-semibold text-foreground">{roleplayResult.communication}%</span>
-                </div>
-                <div className="flex justify-between items-center py-1.5 border-b border-black/5 dark:border-white/5">
-                  <span className="text-zinc-500 dark:text-gray-400">Confidence Vibe:</span>
-                  <span className="font-semibold text-foreground">{roleplayResult.confidence}%</span>
-                </div>
-                <div className="flex justify-between items-center py-1.5 border-b border-black/5 dark:border-white/5">
-                  <span className="text-zinc-500 dark:text-gray-400">Vocabulary Variety:</span>
-                  <span className="font-semibold text-foreground">{roleplayResult.vocabulary}%</span>
-                </div>
-              </div>
-
-              <div className="p-4 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl space-y-2 mb-6">
-                <h4 className="text-[13px] font-bold text-purple-600 dark:text-purple-300">Feedback:</h4>
-                <p className="text-[13px] text-zinc-600 dark:text-gray-300 leading-relaxed">{roleplayResult.feedback}</p>
-                <p className="text-[13px] text-purple-600 dark:text-purple-400 italic mt-2">{roleplayResult.tamilFeedback}</p>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="text-yellow-500 text-xs font-bold">+{roleplayResult.xpAwarded} XP Earned</span>
-                <button
-                  onClick={() => setRoleplayMode("lobby")}
-                  className="px-5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-all shadow"
-                >
-                  Back to Scenarios
-                </button>
-              </div>
-            </LiquidGlassCard>
-          )}
-        </div>
-      )}
         </div>
       )}
     </div>

@@ -289,7 +289,7 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
     }
 
     setIsGenerating(true)
-    setLoadingText("AI is generating your custom learning path...")
+    setLoadingText("Generating...")
     setShowLoading(true)
 
     setTimeout(() => {
@@ -411,17 +411,17 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
       <div className="grid gap-6 md:grid-cols-3">
         
         {/* Card 1: Overall Progress */}
-        <LiquidGlassCard className="p-6 flex flex-col justify-between" accentColor="#8b5cf6">
+        <LiquidGlassCard className="p-6 flex flex-col justify-between" accentColor="#6366f1">
           <div>
-            <div className="flex items-center gap-2 mb-4 text-purple-400 font-semibold uppercase tracking-wider text-xs">
+            <div className="flex items-center gap-2 mb-4 text-indigo-400 font-semibold uppercase tracking-wider text-xs">
               <Compass className="w-4 h-4" /> Overall Progress
             </div>
-            <div className="text-4xl font-black mb-3 text-transparent bg-clip-text bg-gradient-to-r from-purple-300 to-indigo-400 drop-shadow-[0_2px_8px_rgba(139,92,246,0.3)]">
+            <div className="text-4xl font-black mb-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-indigo-400 drop-shadow-[0_2px_8px_rgba(139,92,246,0.3)]">
               {overallProgressPercent}%
             </div>
             <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden mb-3">
               <div 
-                className="h-full bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full transition-all duration-1000"
+                className="h-full bg-gradient-to-r from-indigo-500 to-indigo-500 rounded-full transition-all duration-1000"
                 style={{ width: `${overallProgressPercent}%` }}
               />
             </div>
@@ -435,15 +435,15 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
         {/* Card 2: Daily Consistency */}
         <LiquidGlassCard className="p-6 flex flex-col justify-between" accentColor="#10b981">
           <div>
-            <div className="flex items-center gap-2 mb-4 text-emerald-400 font-semibold uppercase tracking-wider text-xs">
+            <div className="flex items-center gap-2 mb-4 text-indigo-400 font-semibold uppercase tracking-wider text-xs">
               <Flame className="w-4 h-4" /> Daily Consistency
             </div>
-            <div className="text-4xl font-black mb-3 text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-400 drop-shadow-[0_2px_8px_rgba(16,185,129,0.3)]">
+            <div className="text-4xl font-black mb-3 text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-teal-400 drop-shadow-[0_2px_8px_rgba(16,185,129,0.3)]">
               {user.currentStreak} Days
             </div>
             <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden mb-3">
               <div 
-                className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-1000"
+                className="h-full bg-gradient-to-r from-indigo-500 to-teal-500 rounded-full transition-all duration-1000"
                 style={{ width: `${Math.min(user.currentStreak * 8, 100)}%` }}
               />
             </div>
@@ -482,7 +482,7 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
       {/* timeline Journey Section */}
       <div className="bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 backdrop-blur-md shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
         
         <h2 className="text-xl font-bold mb-8 flex items-center gap-2 border-b border-white/15 pb-4">
           <Compass className="w-6 h-6 text-indigo-400" />
@@ -500,19 +500,19 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
             
             // Icon mapping
             let StageIcon = BookOpen
-            let stageColor = "text-purple-400 bg-purple-500/10 border-purple-500/30"
-            let progressFillColor = "bg-purple-500"
+            let stageColor = "text-indigo-400 bg-indigo-500/10 border-indigo-500/30"
+            let progressFillColor = "bg-indigo-500"
             let stageTagText = "Stage 1 • Communication"
             
             if (stageNum === 2) {
               StageIcon = Code
-              stageColor = "text-blue-400 bg-blue-500/10 border-blue-500/30"
-              progressFillColor = "bg-blue-500"
+              stageColor = "text-indigo-400 bg-indigo-500/10 border-indigo-500/30"
+              progressFillColor = "bg-indigo-500"
               stageTagText = "Stage 2 • Coding"
             } else if (stageNum === 3) {
               StageIcon = Map
-              stageColor = "text-emerald-400 bg-emerald-400/10 border-emerald-400/30"
-              progressFillColor = "bg-emerald-500"
+              stageColor = "text-indigo-400 bg-indigo-400/10 border-indigo-400/30"
+              progressFillColor = "bg-indigo-500"
               stageTagText = "Stage 3 • Collaborative Projects"
             } else if (stageNum === 4) {
               StageIcon = Briefcase
@@ -526,7 +526,7 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
                 
                 {/* Timeline Marker */}
                 <span className={`absolute -left-[44px] md:-left-[60px] top-1.5 w-8 h-8 rounded-full flex items-center justify-center border font-bold text-sm shadow-md transition-all duration-300 z-10 ${
-                  isCompleted ? "bg-emerald-500 border-emerald-400 text-white" :
+                  isCompleted ? "bg-indigo-500 border-indigo-400 text-white" :
                   isActive ? "bg-indigo-600 border-indigo-400 text-white scale-110 ring-4 ring-indigo-500/20" :
                   "bg-[#0d111c] border-white/20 text-gray-500"
                 }`}>
@@ -541,7 +541,7 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
                     </span>
                     
                     <span className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 self-start sm:self-auto ${
-                      isCompleted ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20" :
+                      isCompleted ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/20" :
                       isActive ? "bg-indigo-500/15 text-indigo-400 border border-indigo-500/20 animate-pulse" :
                       "bg-white/5 text-gray-400 border border-white/5"
                     }`}>
@@ -623,12 +623,12 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
 
           {/* Stage 5 Alumni static */}
           <div className="relative group">
-            <span className="absolute -left-[44px] md:-left-[60px] top-1.5 w-8 h-8 rounded-full flex items-center justify-center border font-bold text-sm bg-[#0d111c] border-pink-500/20 text-pink-400/60 shadow-md">
+            <span className="absolute -left-[44px] md:-left-[60px] top-1.5 w-8 h-8 rounded-full flex items-center justify-center border font-bold text-sm bg-[#0d111c] border-indigo-500/20 text-indigo-400/60 shadow-md">
               5
             </span>
             <div className="p-5 rounded-2xl bg-white/5 border border-white/10 opacity-60 grayscale-[0.4] backdrop-blur-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full border border-pink-500/20 text-pink-400 bg-pink-500/5">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-full border border-indigo-500/20 text-indigo-400 bg-indigo-500/5">
                   <GraduationCap className="w-3.5 h-3.5" />
                   Stage 5 • Alumni & Mentorship
                 </span>
@@ -664,9 +664,9 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
         <div className="grid gap-6 md:grid-cols-2">
           {tasks.map((task) => {
             const catColors: Record<string, string> = {
-              voice: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-              vocabulary: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-              communication: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+              voice: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+              vocabulary: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+              communication: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
               pronunciation: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
               coding: "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
               project: "bg-teal-500/10 text-teal-400 border-teal-500/20",
@@ -676,7 +676,7 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
               <div 
                 key={task.id} 
                 className={`p-5 rounded-2xl bg-[#090b11]/50 border transition-all duration-300 hover:scale-[1.01] flex flex-col justify-between ${
-                  task.completed ? "border-emerald-500/20 hover:border-emerald-500/40" : "border-white/5 hover:border-white/15"
+                  task.completed ? "border-indigo-500/20 hover:border-indigo-500/40" : "border-white/5 hover:border-white/15"
                 }`}
               >
                 <div>
@@ -684,7 +684,7 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
                     <span className={`px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full border ${catColors[task.category] || "bg-white/5"}`}>
                       {task.category}
                     </span>
-                    <span className={`text-xs font-semibold flex items-center gap-1 ${task.completed ? "text-emerald-400" : "text-gray-400"}`}>
+                    <span className={`text-xs font-semibold flex items-center gap-1 ${task.completed ? "text-indigo-400" : "text-gray-400"}`}>
                       {task.completed ? (
                         <>
                           <CheckCircle2 className="w-3.5 h-3.5" /> Completed
@@ -695,7 +695,7 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
 
                   <h3 className="font-bold text-white text-base mb-1.5 flex items-start gap-2">
                     {task.completed ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                      <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
                     ) : (
                       <span className="w-4 h-4 rounded-full border-2 border-white/20 shrink-0 mt-0.5" />
                     )}
@@ -712,7 +712,7 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
                     </div>
                     <div className="flex items-center gap-2 font-semibold text-yellow-400">
                       <Coins className="w-3.5 h-3.5" /> +{task.coinsReward} credits
-                      <span className="text-blue-400 ml-1">+{task.xpReward} XP</span>
+                      <span className="text-indigo-400 ml-1">+{task.xpReward} XP</span>
                     </div>
                   </div>
 
@@ -751,11 +751,11 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
                 
                 {/* Segments */}
                 {/* Segment 1: Communication - 40% (Circumference = 188.5, length = 75.4, offset = 0) */}
-                <circle cx="50" cy="50" r="30" fill="transparent" stroke="#8b5cf6" strokeWidth="8" 
+                <circle cx="50" cy="50" r="30" fill="transparent" stroke="#6366f1" strokeWidth="8" 
                   strokeDasharray="75.4 188.5" strokeDashoffset="0" className="hover:scale-105 transition-transform duration-300"
                 />
                 {/* Segment 2: Coding - 25% (length = 47.1, offset = -75.4) */}
-                <circle cx="50" cy="50" r="30" fill="transparent" stroke="#3b82f6" strokeWidth="8" 
+                <circle cx="50" cy="50" r="30" fill="transparent" stroke="#6366f1" strokeWidth="8" 
                   strokeDasharray="47.1 188.5" strokeDashoffset="-75.4" className="hover:scale-105 transition-transform duration-300"
                 />
                 {/* Segment 3: Projects - 20% (length = 37.7, offset = -122.5) */}
@@ -778,21 +778,21 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
             <div className="space-y-3 flex-1 w-full sm:w-auto">
               <div className="flex items-center justify-between text-xs text-gray-300">
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-purple-500 shadow-sm" />
+                  <span className="w-3 h-3 rounded-full bg-indigo-500 shadow-sm" />
                   <span>Communication</span>
                 </div>
                 <span className="font-bold text-gray-200">40%</span>
               </div>
               <div className="flex items-center justify-between text-xs text-gray-300">
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-blue-500 shadow-sm" />
+                  <span className="w-3 h-3 rounded-full bg-indigo-500 shadow-sm" />
                   <span>Coding Prep</span>
                 </div>
                 <span className="font-bold text-gray-200">25%</span>
               </div>
               <div className="flex items-center justify-between text-xs text-gray-300">
                 <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm" />
+                  <span className="w-3 h-3 rounded-full bg-indigo-500 shadow-sm" />
                   <span>Team Projects</span>
                 </div>
                 <span className="font-bold text-gray-200">20%</span>
@@ -856,7 +856,7 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
               <polygon 
                 points={currentRadarPoints}
                 fill="rgba(139, 92, 246, 0.22)"
-                stroke="#8b5cf6"
+                stroke="#6366f1"
                 strokeWidth="2"
               />
 
@@ -869,7 +869,7 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
                     cx={cx}
                     cy={cy}
                     r="3.5"
-                    fill="#8b5cf6"
+                    fill="#6366f1"
                     stroke="#ffffff"
                     strokeWidth="1"
                     className="hover:scale-125 transition-transform duration-300 cursor-pointer"
@@ -896,11 +896,11 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
 
             {/* Small Legend */}
             <div className="flex gap-6 mt-6 justify-center text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
-              <span className="flex items-center gap-1.5 text-purple-400">
-                <span className="w-2.5 h-2.5 rounded-full bg-purple-500" /> Current Skills
+              <span className="flex items-center gap-1.5 text-indigo-400">
+                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500" /> Current Skills
               </span>
-              <span className="flex items-center gap-1.5 text-emerald-400">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 border border-dashed border-emerald-400 fill-none" /> Target Goals
+              <span className="flex items-center gap-1.5 text-indigo-400">
+                <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 border border-dashed border-indigo-400 fill-none" /> Target Goals
               </span>
             </div>
           </div>
@@ -945,7 +945,7 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
                   <p className="text-[9px] text-gray-500 mt-1 font-medium leading-relaxed">{badge.description}</p>
                   
                   {badge.earned && badge.earnedAt && (
-                    <span className="inline-block text-[9px] text-emerald-400/80 font-semibold bg-emerald-500/10 border border-emerald-500/10 px-1.5 py-0.5 rounded-full mt-2">
+                    <span className="inline-block text-[9px] text-indigo-400/80 font-semibold bg-indigo-500/10 border border-indigo-500/10 px-1.5 py-0.5 rounded-full mt-2">
                       {new Date(badge.earnedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
                     </span>
                   )}
@@ -957,11 +957,11 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
       </div>
 
       {/* Generate Custom path Form Section */}
-      <div className="bg-gradient-to-br from-indigo-950/20 to-purple-950/20 border border-indigo-500/10 rounded-3xl p-6 md:p-8 backdrop-blur-md shadow-2xl relative">
+      <div className="bg-gradient-to-br from-indigo-950/20 to-indigo-950/20 border border-indigo-500/10 rounded-3xl p-6 md:p-8 backdrop-blur-md shadow-2xl relative">
         <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-[80px] pointer-events-none" />
         
         <div className="max-w-xl mx-auto text-center md:text-left">
-          <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-purple-400 mb-2 flex flex-col md:flex-row items-center gap-2.5 justify-center md:justify-start">
+          <h2 className="text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 to-indigo-400 mb-2 flex flex-col md:flex-row items-center gap-2.5 justify-center md:justify-start">
             <Sparkles className="w-7 h-7 text-indigo-400 animate-bounce" />
             <span>Request custom AI Learning Path</span>
           </h2>
@@ -1037,7 +1037,7 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
             <button 
               onClick={handleGeneratePath}
               disabled={isGenerating}
-              className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-indigo-600 hover:from-indigo-700 hover:to-indigo-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-white" />
               {isGenerating ? "Generating..." : "Generate AI Learning Roadmap"}
@@ -1108,7 +1108,7 @@ export function LearningPathClient({ user, stageProgresses, badges }: LearningPa
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.9 }}
             className={`fixed bottom-6 right-6 z-[9999] p-4 rounded-2xl border shadow-xl flex items-center gap-3 max-w-sm backdrop-blur-xl ${
-              toast.type === "success" ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" :
+              toast.type === "success" ? "bg-indigo-500/10 border-indigo-500/30 text-indigo-400" :
               toast.type === "error" ? "bg-red-500/10 border-red-500/30 text-red-400" :
               toast.type === "warning" ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400" :
               "bg-indigo-500/10 border-indigo-500/30 text-indigo-400"

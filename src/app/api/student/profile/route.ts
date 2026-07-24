@@ -9,11 +9,16 @@ export async function GET() {
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const userId = session.user.id;
 
-    // Fetch user details
+    // Fetch user details including the new student profile
     const user = await db.user.findUnique({
       where: { id: userId },
       include: {
         department: true,
+        studentProfile: {
+          include: {
+            class: true
+          }
+        },
         badges: {
           include: {
             badge: true
@@ -95,6 +100,10 @@ export async function GET() {
       github: user.github,
       linkedin: user.linkedin,
       department: user.department?.name || "Unassigned Department",
+      
+      // Pass the complete student profile object if it exists
+      studentProfile: user.studentProfile || null,
+
       badges: allBadges.map(badge => {
         const earnedRecord = user.badges.find(ub => ub.badgeId === badge.id);
         return {
@@ -129,13 +138,22 @@ export async function POST(req: Request) {
     const userId = session.user.id;
 
     const body = await req.json();
-    const { name, bio, skills, github, linkedin } = body;
+    const { 
+      // Base user fields
+      name, bio, skills, github, linkedin, 
+      
+      // New profile fields
+      studentId, rollNumber, admissionNo, emisNo, firstName, lastName, phone, gender,
+      batch, semester, year, admissionDate, admissionType, feeStatus, status,
+      alternatePhone, dateOfBirth, bloodGroup, nationality, religion, category, motherTongue, aadharNo, residenceType,
+      address, parentInfo, references, previousEdu, scholarships, documents
+    } = body;
 
-    // Validate inputs
     if (name !== undefined && name.trim() === "") {
       return NextResponse.json({ error: "Name cannot be empty" }, { status: 400 });
     }
 
+    // 1. Update Base User Table
     const updatedUser = await db.user.update({
       where: { id: userId },
       data: {
@@ -147,6 +165,42 @@ export async function POST(req: Request) {
       }
     });
 
+    // 2. Upsert Student Profile Table
+    const updatedProfile = await db.studentProfile.upsert({
+      where: { userId },
+      update: {
+        studentId, rollNumber, admissionNo, emisNo, firstName, lastName, phone, gender,
+        batch, semester, year, 
+        admissionDate: admissionDate ? new Date(admissionDate) : null, 
+        admissionType, feeStatus, status,
+        alternatePhone, 
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        bloodGroup, nationality, religion, category, motherTongue, aadharNo, residenceType,
+        address: address ? JSON.stringify(address) : null,
+        parentInfo: parentInfo ? JSON.stringify(parentInfo) : null,
+        references: references ? JSON.stringify(references) : null,
+        previousEdu: previousEdu ? JSON.stringify(previousEdu) : null,
+        scholarships: scholarships ? JSON.stringify(scholarships) : null,
+        documents: documents ? JSON.stringify(documents) : null,
+      },
+      create: {
+        userId,
+        studentId, rollNumber, admissionNo, emisNo, firstName, lastName, phone, gender,
+        batch, semester, year, 
+        admissionDate: admissionDate ? new Date(admissionDate) : null, 
+        admissionType, feeStatus, status,
+        alternatePhone, 
+        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+        bloodGroup, nationality, religion, category, motherTongue, aadharNo, residenceType,
+        address: address ? JSON.stringify(address) : null,
+        parentInfo: parentInfo ? JSON.stringify(parentInfo) : null,
+        references: references ? JSON.stringify(references) : null,
+        previousEdu: previousEdu ? JSON.stringify(previousEdu) : null,
+        scholarships: scholarships ? JSON.stringify(scholarships) : null,
+        documents: documents ? JSON.stringify(documents) : null,
+      }
+    });
+
     return NextResponse.json({
       success: true,
       user: {
@@ -154,7 +208,8 @@ export async function POST(req: Request) {
         bio: updatedUser.bio,
         skills: updatedUser.skills ? updatedUser.skills.split(",") : [],
         github: updatedUser.github,
-        linkedin: updatedUser.linkedin
+        linkedin: updatedUser.linkedin,
+        studentProfile: updatedProfile
       }
     });
   } catch (error) {

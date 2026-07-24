@@ -41,3 +41,34 @@ export async function awardXp(userId: string, amount: number, reason: string) {
 
   return updatedUser
 }
+
+/**
+ * Deduct coins from a user.
+ */
+export async function deductCoins(userId: string, amount: number, reason: string) {
+  const user = await db.user.findUnique({
+    where: { id: userId },
+    select: { id: true, coins: true }
+  })
+
+  if (!user) {
+    throw new Error("User not found")
+  }
+
+  if (user.coins < amount) {
+    throw new Error("Not enough coins")
+  }
+
+  const newCoins = user.coins - amount
+
+  const updatedUser = await db.user.update({
+    where: { id: userId },
+    data: {
+      coins: newCoins
+    }
+  })
+
+  console.log(`Deducted ${amount} coins from user ${userId} for: ${reason}`)
+
+  return updatedUser
+}

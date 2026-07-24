@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, LayoutDashboard, BookOpen, Code, Briefcase, GraduationCap, Users, BarChart, Mail, Languages, School, User, Map, Layers, Monitor, Compass } from "lucide-react"
+import { Home, LayoutDashboard, BookOpen, Code, Briefcase, GraduationCap, Users, BarChart3, Mail, Languages, School, User, Map, Layers, Monitor, Compass, CheckSquare, Package, FileText, Settings, BookMarked } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface SidebarProps {
@@ -32,15 +32,22 @@ const getMenuByRole = (role: string): MenuItem[] => {
   if (role === "FACULTY") {
     return [
       { name: "Dashboard", href: "/faculty-dashboard", icon: LayoutDashboard },
-      { name: "Classrooms", href: "/faculty-dashboard/classrooms", icon: Users },
-      { name: "Submissions", href: "/faculty-dashboard/submissions", icon: BookOpen },
+      { name: "Classrooms", href: "/faculty-dashboard/classrooms", icon: Monitor },
+      { name: "Students", href: "/faculty-dashboard/students", icon: Users },
+      { name: "Attendance", href: "/faculty-dashboard/attendance", icon: User },
+      { name: "Schedule", href: "/faculty-dashboard/schedule", icon: Compass },
     ]
   }
   if (role === "HOD") {
     return [
       { name: "Dashboard", href: "/hod-dashboard", icon: LayoutDashboard },
-      { name: "Analytics", href: "/hod-dashboard/analytics", icon: BarChart },
-      { name: "Faculty Directory", href: "/hod-dashboard/faculty", icon: Users },
+      { name: "Faculty", href: "/hod-dashboard/faculty", icon: Users },
+      { name: "Curriculum", href: "/hod-dashboard/curriculum", icon: BookMarked },
+      { name: "Analytics", href: "/hod-dashboard/analytics", icon: BarChart3 },
+      { name: "Approvals", href: "/hod-dashboard/approvals", icon: CheckSquare },
+      { name: "Resources", href: "/hod-dashboard/resources", icon: Package },
+      { name: "Reports", href: "/hod-dashboard/reports", icon: FileText },
+      { name: "Settings", href: "/hod-dashboard/settings", icon: Settings },
     ]
   }
   return []
@@ -51,7 +58,9 @@ export function Sidebar({ role, isMobileNavVisible = true }: SidebarProps) {
   const pathname = usePathname()
 
   return (
-    <div className={cn(
+    <div 
+      id="app-sidebar"
+      className={cn(
       "flex md:h-full w-[calc(100%-1rem)] md:w-64 flex-col border md:border-t-0 md:border-b-0 md:border-l-0 md:border-r border-black/10 dark:border-white/10 bg-white/70 dark:bg-[#080A10]/60 md:dark:bg-white/5 backdrop-blur-2xl shrink-0 z-50 order-2 md:order-1 fixed bottom-2 left-2 right-2 md:bottom-auto md:left-auto md:right-auto rounded-2xl md:rounded-none shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)] md:dark:shadow-none transition-transform duration-500 ease-in-out",
       !isMobileNavVisible ? "translate-y-[150%] md:translate-y-0" : "translate-y-0"
     )}>

@@ -79,7 +79,7 @@ export function JobPortal() {
     <div className="space-y-6 animate-in fade-in duration-500 relative">
       {/* Toast Notification */}
       {showToast && (
-        <div className="fixed top-24 right-6 z-50 p-4 rounded-2xl bg-emerald-500 text-white shadow-2xl border border-emerald-400 flex items-center gap-3 animate-in slide-in-from-right duration-300">
+        <div className="fixed top-24 right-6 z-50 p-4 rounded-2xl bg-indigo-500 text-white shadow-2xl border border-indigo-400 flex items-center gap-3 animate-in slide-in-from-right duration-300">
           <i className="fas fa-check-circle text-lg"></i>
           <span className="font-semibold text-[15px]">{toastMessage}</span>
         </div>
@@ -90,8 +90,8 @@ export function JobPortal() {
           <h2 className="text-[22px] font-semibold text-foreground tracking-tight mb-1">Job Portal</h2>
           <p className="text-[15px] text-zinc-500 dark:text-gray-400">Discover placement opportunities matching your technical skills.</p>
         </div>
-        <div className="px-4 py-1.5 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-full text-xs font-semibold shadow-sm flex items-center gap-2 self-start md:self-auto">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+        <div className="px-4 py-1.5 bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 rounded-full text-xs font-semibold shadow-sm flex items-center gap-2 self-start md:self-auto">
+          <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
           {MOCK_JOBS.length} Jobs Available
         </div>
       </div>
@@ -117,10 +117,10 @@ export function JobPortal() {
               <div>
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <span className="text-[13px] font-semibold text-emerald-500 uppercase tracking-wider">{job.company}</span>
+                    <span className="text-[13px] font-semibold text-indigo-500 uppercase tracking-wider">{job.company}</span>
                     <h3 className="text-[17px] font-semibold text-foreground mt-0.5 leading-snug">{job.role}</h3>
                   </div>
-                  <span className="px-3 py-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-full text-[12px] font-semibold shadow-sm">
+                  <span className="px-3 py-1 bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 rounded-full text-[12px] font-semibold shadow-sm">
                     {job.type}
                   </span>
                 </div>
@@ -156,7 +156,7 @@ export function JobPortal() {
                 className={`w-full font-semibold py-3 rounded-xl transition-all text-sm flex items-center justify-center gap-2 ${
                   isApplied
                     ? "bg-zinc-100 dark:bg-white/10 text-zinc-400 dark:text-gray-500 border border-black/5 dark:border-white/5 cursor-not-allowed"
-                    : "bg-emerald-500 hover:bg-emerald-600 text-white shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:-translate-y-0.5 active:translate-y-0"
+                    : "bg-indigo-500 hover:bg-indigo-600 text-white shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:-translate-y-0.5 active:translate-y-0"
                 }`}
               >
                 {isApplied ? (

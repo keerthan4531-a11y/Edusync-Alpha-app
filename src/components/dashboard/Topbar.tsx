@@ -4,6 +4,7 @@ import { signOut } from "next-auth/react"
 import { LogOut, User as UserIcon, Bell } from "lucide-react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
+import Link from "next/link"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -87,10 +88,10 @@ export function Topbar({ user }: TopbarProps) {
       </div>
       
       <div className="flex items-center gap-3">
-        <button className="flex h-10 w-10 items-center justify-center rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors relative text-zinc-600 dark:text-gray-300">
+        <Link href="/student-dashboard/notifications" className="flex h-10 w-10 items-center justify-center rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors relative text-zinc-600 dark:text-gray-300">
           <Bell className="w-5 h-5" />
           <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-[#0B0F19]"></span>
-        </button>
+        </Link>
         <DropdownMenu>
           <DropdownMenuTrigger className="flex h-10 w-10 items-center justify-center rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors outline-none ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 overflow-hidden text-zinc-600 dark:text-gray-300">
             <Avatar className="h-full w-full bg-transparent flex items-center justify-center">

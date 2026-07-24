@@ -3,15 +3,12 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
-
-import { XPBar } from "@/components/gamification/XPBar"
-import { LevelBadge } from "@/components/gamification/LevelBadge"
-import { StreakCounter } from "@/components/gamification/StreakCounter"
+import { Trophy, Clock, Target, Flame, Sparkles, Award, Zap, Coins } from "lucide-react"
 import { Leaderboard, StudentLeaderboardEntry } from "@/components/gamification/Leaderboard"
 
-import { StageProgressOverview } from "@/components/dashboard/StageProgressOverview"
 import { DailyChallengesWidget } from "@/components/dashboard/DailyChallengesWidget"
 import { RecentBadges } from "@/components/dashboard/RecentBadges"
+import { PromoSlider } from "@/components/dashboard/PromoSlider"
 
 export default async function StudentDashboardPage() {
   const session = await getServerSession(authOptions)
@@ -22,7 +19,7 @@ export default async function StudentDashboardPage() {
   // Fetch real user from DB
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { xp: true, coins: true, level: true, currentStreak: true }
+    select: { xp: true, coins: true, level: true, currentStreak: true, name: true }
   })
 
   if (!user) {
@@ -48,35 +45,37 @@ export default async function StudentDashboardPage() {
 
   return (
     <div className="flex flex-col gap-8 max-w-5xl mx-auto pb-12">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground drop-shadow-md">Student Dashboard</h1>
-          <p className="text-zinc-500 dark:text-gray-400 mt-1">Welcome back! Here is your learning progress.</p>
+      {/* Gamification Top Stats - Compact (XP and Points) */}
+      <div className="flex flex-row gap-4 w-full md:w-[60%] lg:w-[50%]">
+        {/* XP Badge */}
+        <div className="flex-1 flex items-center gap-4 p-4 rounded-[20px] bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 shadow-md backdrop-blur-xl hover:bg-white/80 dark:hover:bg-white/10 transition-colors">
+          <div className="w-12 h-12 shrink-0 rounded-2xl bg-[#0a0a0a] border border-purple-500/30 flex items-center justify-center overflow-hidden shadow-inner">
+            <img src="/images/xp_icon.png" alt="XP" className="w-[120%] h-[120%] object-cover mix-blend-screen hover:scale-110 transition-transform duration-300" />
+          </div>
+          <div>
+            <p className="text-[10px] sm:text-xs font-bold text-zinc-500 dark:text-gray-400 uppercase tracking-widest mb-0.5">XP.</p>
+            <div className="text-xl sm:text-2xl font-extrabold text-foreground leading-none">
+              {user.xp}
+            </div>
+          </div>
         </div>
-        <StreakCounter streak={user.currentStreak} />
-      </div>
-
-      {/* Stage Progress Overview row */}
-      <StageProgressOverview userId={session.user.id} />
-
-      {/* Gamification Top Stats */}
-      <div className="grid gap-6 md:grid-cols-3">
-        <LiquidGlassCard className="md:col-span-2 p-6 flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-4 sm:gap-6 text-center sm:text-left" accentColor="#3b82f6">
-          <LevelBadge level={user.level} />
-          <div className="flex-1 w-full">
-            <h3 className="text-lg font-bold text-foreground mb-2">Current Progress</h3>
-            <XPBar xp={user.xp} level={user.level} />
-          </div>
-        </LiquidGlassCard>
         
-        <LiquidGlassCard className="p-6 flex flex-col justify-center items-center text-center" accentColor="#eab308">
-          <h3 className="tracking-tight text-sm font-semibold text-zinc-500 dark:text-gray-400 uppercase mb-2">Total Coins</h3>
-          <div className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-yellow-400 to-yellow-600 drop-shadow-[0_2px_10px_rgba(234,179,8,0.4)]">
-            {user.coins}
+        {/* Points Badge */}
+        <div className="flex-1 flex items-center gap-4 p-4 rounded-[20px] bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 shadow-md backdrop-blur-xl hover:bg-white/80 dark:hover:bg-white/10 transition-colors">
+          <div className="w-12 h-12 shrink-0 rounded-2xl bg-[#0a0a0a] border border-yellow-500/30 flex items-center justify-center overflow-hidden shadow-inner">
+            <img src="/images/points_icon.png" alt="Points" className="w-[120%] h-[120%] object-cover mix-blend-screen hover:scale-110 transition-transform duration-300" />
           </div>
-          <p className="text-xs text-zinc-500 dark:text-gray-500 mt-2 font-medium">Earn more by solving challenges!</p>
-        </LiquidGlassCard>
+          <div>
+            <p className="text-[10px] sm:text-xs font-bold text-zinc-500 dark:text-gray-400 uppercase tracking-widest mb-0.5">Points</p>
+            <div className="text-xl sm:text-2xl font-extrabold text-foreground leading-none">
+              {user.coins}
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* Promo Slider */}
+      <PromoSlider />
 
       {/* New Widgets row */}
       <div className="grid gap-6 md:grid-cols-2">

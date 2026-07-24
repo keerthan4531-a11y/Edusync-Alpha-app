@@ -19,10 +19,22 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
   const isHomePage = pathname === '/student-dashboard' || pathname === '/faculty-dashboard' || pathname === '/hod-dashboard'
-  const isProfileRelated = pathname.startsWith('/student-dashboard/profile')
+  const isFullScreenPage = pathname.startsWith('/student-dashboard/profile') || pathname.startsWith('/student-dashboard/notifications')
   const isStage1 = pathname.startsWith('/student-dashboard/stage-1-communication')
-  const hideBackButton = isHomePage || isProfileRelated || isStage1
+  const isStage2 = pathname.startsWith('/student-dashboard/stage-2-coding')
+  // Hide for faculty individual classroom pages
+  const isFacultyClassroomDetail = pathname.match(/^\/faculty-dashboard\/classrooms\/[a-zA-Z0-9-]+/) !== null
+  const hideBackButton = isHomePage || isFullScreenPage || isStage1 || isStage2 || isFacultyClassroomDetail
+  // Hide topbar on full screen pages (they have their own header)
+  const hideTopbar = isFullScreenPage
   
+  const handleBackClick = () => {
+    if (user.role === "STUDENT") router.push('/student-dashboard')
+    else if (user.role === "FACULTY") router.push('/faculty-dashboard')
+    else if (user.role === "HOD") router.push('/hod-dashboard')
+    else router.push('/')
+  }
+
   const [isNavVisible, setIsNavVisible] = useState(true)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -61,16 +73,17 @@ export function DashboardLayout({ children, user }: DashboardLayoutProps) {
 
   return (
     <div className="flex flex-col md:flex-row h-screen overflow-hidden bg-transparent relative">
-      <Sidebar role={user.role} isMobileNavVisible={isNavVisible} />
+      <Sidebar role={user.role} isMobileNavVisible={isNavVisible && !isFullScreenPage && !isStage1} />
       <div className="flex flex-1 flex-col overflow-hidden bg-transparent md:pb-0">
-        <Topbar user={user} />
+        {!hideTopbar && <Topbar user={user} />}
         <main 
+          id="app-main"
           className="flex-1 overflow-auto p-4 md:p-6 pb-24 md:pb-6 bg-transparent transition-all"
         >
           {!hideBackButton && (
-            <div className="mb-4 shrink-0">
+            <div id="global-back-btn" className="mb-4 shrink-0">
               <button 
-                onClick={() => router.back()}
+                onClick={handleBackClick}
                 className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
                 aria-label="Go back"
               >

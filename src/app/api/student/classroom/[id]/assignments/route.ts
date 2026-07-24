@@ -48,6 +48,8 @@ export async function GET(
         due_date: a.dueDate,
         xp_reward: a.xpReward,
         coin_reward: a.coinReward,
+        max_points: a.maxPoints,
+        createdAt: a.createdAt,
         submission: sub ? {
           id: sub.id,
           code: sub.code,

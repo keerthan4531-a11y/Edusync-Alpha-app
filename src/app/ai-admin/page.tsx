@@ -93,18 +93,18 @@ export default function AIAdminPage() {
       <header className="sticky top-0 z-50 backdrop-blur-2xl bg-white/[0.03] border-b border-white/[0.06]">
         <div className="max-w-[1600px] mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 via-violet-500 to-fuchsia-500 flex items-center justify-center text-lg font-bold shadow-lg shadow-violet-500/20">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-400 via-indigo-500 to-indigo-500 flex items-center justify-center text-lg font-bold shadow-lg shadow-indigo-500/20">
               ✦
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-300 via-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-300 via-indigo-300 to-indigo-300 bg-clip-text text-transparent">
                 INIXA AI Admin
               </h1>
               <p className="text-xs text-white/40">Model Management & Monitoring</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+            <div className="px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-medium">
               System Online
             </div>
             <a
@@ -126,7 +126,7 @@ export default function AIAdminPage() {
               onClick={() => setActiveTab(tab.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                 activeTab === tab.id
-                  ? "bg-gradient-to-r from-violet-600/20 to-fuchsia-600/20 text-white border border-violet-500/30 shadow-lg shadow-violet-500/5"
+                  ? "bg-gradient-to-r from-indigo-600/20 to-indigo-600/20 text-white border border-indigo-500/30 shadow-lg shadow-indigo-500/5"
                   : "text-white/50 hover:text-white/80 hover:bg-white/5"
               }`}
             >
@@ -173,7 +173,7 @@ function LoadingState() {
   return (
     <div className="flex items-center justify-center h-64">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-12 h-12 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
+        <div className="w-12 h-12 rounded-full border-2 border-indigo-500/30 border-t-violet-500 animate-spin" />
         <p className="text-white/40 text-sm">Loading AI System...</p>
       </div>
     </div>
@@ -187,25 +187,25 @@ function OverviewTab({ stats, configs }: { stats: any; configs: ModelConfig[] })
       label: "Total Requests",
       value: stats?.totalRequests || 0,
       icon: "📡",
-      gradient: "from-cyan-500 to-blue-600",
+      gradient: "from-indigo-500 to-indigo-600",
     },
     {
       label: "Success Rate",
       value: `${stats?.successRate || 100}%`,
       icon: "✅",
-      gradient: "from-emerald-500 to-green-600",
+      gradient: "from-indigo-500 to-green-600",
     },
     {
       label: "Avg Response",
       value: `${stats?.avgResponseTime || 0}ms`,
       icon: "⚡",
-      gradient: "from-amber-500 to-orange-600",
+      gradient: "from-amber-500 to-indigo-600",
     },
     {
       label: "Active Configs",
       value: configs.length,
       icon: "⚙️",
-      gradient: "from-violet-500 to-fuchsia-600",
+      gradient: "from-indigo-500 to-indigo-600",
     },
   ];
 
@@ -251,7 +251,7 @@ function OverviewTab({ stats, configs }: { stats: any; configs: ModelConfig[] })
                         initial={{ width: 0 }}
                         animate={{ width: `${pct}%` }}
                         transition={{ duration: 0.8, delay: 0.2 }}
-                        className="h-full rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-600"
+                        className="h-full rounded-full bg-gradient-to-r from-indigo-600 to-indigo-600"
                       />
                     </div>
                     <span className="text-xs text-white/40 w-10 text-right">{count}</span>
@@ -288,7 +288,7 @@ function OverviewTab({ stats, configs }: { stats: any; configs: ModelConfig[] })
                     <td className="py-3 px-3">{config.role}</td>
                     <td className="py-3 px-3">{config.feature}</td>
                     <td className="py-3 px-3">
-                      <span className="px-2 py-1 rounded-md bg-violet-500/10 text-violet-300 text-xs font-mono">
+                      <span className="px-2 py-1 rounded-md bg-indigo-500/10 text-indigo-300 text-xs font-mono">
                         {config.primaryModel}
                       </span>
                     </td>
@@ -304,7 +304,7 @@ function OverviewTab({ stats, configs }: { stats: any; configs: ModelConfig[] })
                       <span
                         className={`px-2 py-1 rounded-full text-xs ${
                           config.isActive
-                            ? "bg-emerald-500/10 text-emerald-400"
+                            ? "bg-indigo-500/10 text-indigo-400"
                             : "bg-red-500/10 text-red-400"
                         }`}
                       >
@@ -496,14 +496,14 @@ function ConfigTab({
               whileTap={{ scale: 0.98 }}
               className={`p-4 text-left rounded-2xl transition-all border backdrop-blur-md ${
                 isActive
-                  ? "bg-gradient-to-b from-violet-600/30 to-fuchsia-600/30 border-violet-500/40 shadow-lg shadow-violet-500/10"
+                  ? "bg-gradient-to-b from-indigo-600/30 to-indigo-600/30 border-indigo-500/40 shadow-lg shadow-indigo-500/10"
                   : "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05] hover:border-white/[0.12]"
               }`}
             >
               <div className="flex justify-between items-start mb-2">
                 <span className="text-2xl">{stage.icon}</span>
                 {configCount > 0 && (
-                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[10px] font-bold">
+                  <span className="px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 text-[10px] font-bold">
                     {configCount} Active
                   </span>
                 )}
@@ -542,7 +542,7 @@ function ConfigTab({
                   onClick={() => setActiveFeatureId(feature.id)}
                   className={`w-full p-4 rounded-xl text-left border transition-all ${
                     isActive
-                      ? "bg-violet-600/15 border-violet-500/30"
+                      ? "bg-indigo-600/15 border-indigo-500/30"
                       : "bg-white/[0.02] border-white/[0.04] hover:bg-white/[0.04] hover:border-white/[0.08]"
                   }`}
                 >
@@ -550,7 +550,7 @@ function ConfigTab({
                     <h4 className="font-semibold text-sm text-white">{feature.name}</h4>
                     <span
                       className={`w-2 h-2 rounded-full ${
-                        currentConfig?.isActive ? "bg-emerald-400" : "bg-white/20"
+                        currentConfig?.isActive ? "bg-indigo-400" : "bg-white/20"
                       }`}
                     />
                   </div>
@@ -560,7 +560,7 @@ function ConfigTab({
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] text-white/30 uppercase tracking-wider">Primary:</span>
-                        <span className="px-1.5 py-0.5 rounded bg-violet-500/10 text-violet-300 text-[10px] font-mono">
+                        <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300 text-[10px] font-mono">
                           {currentConfig.primaryModel}
                         </span>
                       </div>
@@ -592,7 +592,7 @@ function ConfigTab({
                     {activeStage?.features.find((f) => f.id === activeFeatureId)?.name}
                   </h4>
                   <p className="text-xs text-white/40 mt-0.5">
-                    Configuring Stage: <span className="font-mono text-cyan-300">{activeStageId}</span> | Feature: <span className="font-mono text-cyan-300">{activeFeatureId}</span>
+                    Configuring Stage: <span className="font-mono text-indigo-300">{activeStageId}</span> | Feature: <span className="font-mono text-indigo-300">{activeFeatureId}</span>
                   </p>
                 </div>
                 
@@ -622,7 +622,7 @@ function ConfigTab({
                         onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-8 h-4 bg-white/10 rounded-full peer peer-checked:bg-emerald-600 transition-all after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4" />
+                      <div className="w-8 h-4 bg-white/10 rounded-full peer peer-checked:bg-indigo-600 transition-all after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:after:translate-x-4" />
                     </label>
                   </div>
                 </div>
@@ -658,7 +658,7 @@ function ConfigTab({
               <div className="mt-6 flex items-center justify-between border-t border-white/5 pt-4">
                 <div>
                   {message && (
-                    <p className={`text-xs ${message.startsWith("✅") ? "text-emerald-400" : "text-red-400"}`}>
+                    <p className={`text-xs ${message.startsWith("✅") ? "text-indigo-400" : "text-red-400"}`}>
                       {message}
                     </p>
                   )}
@@ -666,7 +666,7 @@ function ConfigTab({
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-medium text-xs hover:shadow-lg disabled:opacity-50 transition-all"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-600 text-white font-medium text-xs hover:shadow-lg disabled:opacity-50 transition-all"
                 >
                   {saving ? "Saving..." : "Save Route Configuration"}
                 </button>
@@ -745,7 +745,7 @@ function PlaygroundTab({ models }: { models: AIModel[] }) {
                   onClick={() => setSelectedModel(model.id)}
                   className={`w-full text-left px-3 py-2 rounded-lg text-xs font-mono transition-all ${
                     selectedModel === model.id
-                      ? "bg-violet-600/20 text-violet-300 border border-violet-500/30"
+                      ? "bg-indigo-600/20 text-indigo-300 border border-indigo-500/30"
                       : "text-white/50 hover:bg-white/5 hover:text-white/80"
                   }`}
                 >
@@ -777,7 +777,7 @@ function PlaygroundTab({ models }: { models: AIModel[] }) {
                   <div
                     className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm ${
                       msg.role === "user"
-                        ? "bg-violet-600/30 border border-violet-500/20 text-white"
+                        ? "bg-indigo-600/30 border border-indigo-500/20 text-white"
                         : "bg-white/5 border border-white/[0.06] text-white/80"
                     }`}
                   >
@@ -794,9 +794,9 @@ function PlaygroundTab({ models }: { models: AIModel[] }) {
                 <div className="flex justify-start">
                   <div className="px-4 py-3 rounded-2xl bg-white/5 border border-white/[0.06]">
                     <div className="flex gap-1.5">
-                      <div className="w-2 h-2 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <div className="w-2 h-2 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <div className="w-2 h-2 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                      <div className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <div className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <div className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: "300ms" }} />
                     </div>
                   </div>
                 </div>
@@ -811,12 +811,12 @@ function PlaygroundTab({ models }: { models: AIModel[] }) {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendMessage()}
                 placeholder="Type a test message..."
-                className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/[0.08] text-white text-sm placeholder-white/20 focus:outline-none focus:border-violet-500/40 focus:bg-white/[0.07] transition-all"
+                className="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/[0.08] text-white text-sm placeholder-white/20 focus:outline-none focus:border-indigo-500/40 focus:bg-white/[0.07] transition-all"
               />
               <button
                 onClick={sendMessage}
                 disabled={loading || !input.trim()}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white text-sm font-medium disabled:opacity-40 hover:shadow-lg hover:shadow-violet-500/20 transition-all"
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-600 text-white text-sm font-medium disabled:opacity-40 hover:shadow-lg hover:shadow-indigo-500/20 transition-all"
               >
                 Send
               </button>
@@ -892,7 +892,7 @@ function LogsTab() {
                       <td className="py-2.5 px-3 text-xs">{log.stage}</td>
                       <td className="py-2.5 px-3 text-xs">{log.feature}</td>
                       <td className="py-2.5 px-3">
-                        <span className="px-2 py-0.5 rounded bg-violet-500/10 text-violet-300 text-xs font-mono">
+                        <span className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 text-xs font-mono">
                           {log.modelUsed}
                         </span>
                       </td>
@@ -900,7 +900,7 @@ function LogsTab() {
                         <span
                           className={`text-xs ${
                             log.responseTime < 2000
-                              ? "text-emerald-400"
+                              ? "text-indigo-400"
                               : log.responseTime < 5000
                               ? "text-amber-400"
                               : "text-red-400"
@@ -911,7 +911,7 @@ function LogsTab() {
                       </td>
                       <td className="py-2.5 px-3">
                         {log.success ? (
-                          <span className="text-emerald-400 text-xs">✓ Success</span>
+                          <span className="text-indigo-400 text-xs">✓ Success</span>
                         ) : (
                           <span className="text-red-400 text-xs" title={log.errorMessage || ""}>
                             ✗ Failed
@@ -982,7 +982,7 @@ function HealthTab({
         <button
           onClick={runHealthCheck}
           disabled={checking}
-          className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 text-white text-sm font-medium disabled:opacity-50 hover:shadow-lg transition-all"
+          className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-600 text-white text-sm font-medium disabled:opacity-50 hover:shadow-lg transition-all"
         >
           {checking ? "Checking..." : "🔍 Run Health Check"}
         </button>
@@ -1004,20 +1004,20 @@ function HealthTab({
               animate={{ opacity: 1, scale: 1 }}
               className={`p-4 rounded-xl border transition-all ${
                 status.alive
-                  ? "bg-emerald-500/5 border-emerald-500/20"
+                  ? "bg-indigo-500/5 border-indigo-500/20"
                   : "bg-red-500/5 border-red-500/20"
               }`}
             >
               <div className="flex items-center gap-3 mb-2">
                 <div
                   className={`w-3 h-3 rounded-full ${
-                    status.alive ? "bg-emerald-400 shadow-lg shadow-emerald-400/30" : "bg-red-400 shadow-lg shadow-red-400/30"
+                    status.alive ? "bg-indigo-400 shadow-lg shadow-indigo-400/30" : "bg-red-400 shadow-lg shadow-red-400/30"
                   }`}
                 />
                 <span className="text-sm font-mono text-white/80">{modelId}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className={`text-xs ${status.alive ? "text-emerald-400" : "text-red-400"}`}>
+                <span className={`text-xs ${status.alive ? "text-indigo-400" : "text-red-400"}`}>
                   {status.alive ? "Online" : "Offline"}
                 </span>
                 <span className="text-xs text-white/30">{status.latency}ms</span>
@@ -1121,7 +1121,7 @@ function SettingsTab() {
               type="text"
               value={settings.g4fBaseUrl}
               onChange={(e) => setSettings({ ...settings, g4fBaseUrl: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/[0.08] text-white text-sm focus:outline-none focus:border-violet-500/40 transition-all"
+              className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/[0.08] text-white text-sm focus:outline-none focus:border-indigo-500/40 transition-all"
             />
           </div>
           <div className="flex items-center gap-3">
@@ -1132,7 +1132,7 @@ function SettingsTab() {
                 onChange={(e) => setSettings({ ...settings, autoUpdateEnabled: e.target.checked })}
                 className="sr-only peer"
               />
-              <div className="w-10 h-5 bg-white/10 rounded-full peer peer-checked:bg-violet-600 transition-all after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5" />
+              <div className="w-10 h-5 bg-white/10 rounded-full peer peer-checked:bg-indigo-600 transition-all after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5" />
             </label>
             <span className="text-sm text-white/60">Auto-update AI package</span>
           </div>
@@ -1150,7 +1150,7 @@ function SettingsTab() {
                 onChange={(e) => setSettings({ ...settings, proxyEnabled: e.target.checked })}
                 className="sr-only peer"
               />
-              <div className="w-10 h-5 bg-white/10 rounded-full peer peer-checked:bg-emerald-600 transition-all after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5" />
+              <div className="w-10 h-5 bg-white/10 rounded-full peer peer-checked:bg-indigo-600 transition-all after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5" />
             </label>
             <span className="text-sm text-white/60">Enable proxy IP rotation</span>
           </div>
@@ -1158,7 +1158,7 @@ function SettingsTab() {
           {proxyStatus && (
             <div className="flex gap-4 text-xs text-white/40">
               <span>Total Proxies: {proxyStatus.total}</span>
-              <span className="text-emerald-400">Alive: {proxyStatus.alive}</span>
+              <span className="text-indigo-400">Alive: {proxyStatus.alive}</span>
               <span className="text-red-400">Dead: {proxyStatus.dead}</span>
             </div>
           )}
@@ -1172,7 +1172,7 @@ function SettingsTab() {
               onChange={(e) => setSettings({ ...settings, customProxies: e.target.value })}
               placeholder='["http://proxy1:8080", "http://proxy2:8080"]'
               rows={3}
-              className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/[0.08] text-white text-sm font-mono focus:outline-none focus:border-violet-500/40 transition-all resize-none"
+              className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/[0.08] text-white text-sm font-mono focus:outline-none focus:border-indigo-500/40 transition-all resize-none"
             />
           </div>
         </div>
@@ -1183,7 +1183,7 @@ function SettingsTab() {
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <p className="text-sm text-white/60">
-              Current Version: <span className="font-mono text-cyan-300">{updateInfo?.currentVersion || "unknown"}</span>
+              Current Version: <span className="font-mono text-indigo-300">{updateInfo?.currentVersion || "unknown"}</span>
             </p>
             {updateInfo?.hasUpdate && (
               <p className="text-sm text-amber-400">
@@ -1198,7 +1198,7 @@ function SettingsTab() {
           </div>
           <button
             onClick={handleUpdate}
-            className="px-4 py-2 rounded-xl bg-cyan-600/20 border border-cyan-500/20 text-cyan-300 text-sm hover:bg-cyan-600/30 transition-all"
+            className="px-4 py-2 rounded-xl bg-indigo-600/20 border border-indigo-500/20 text-indigo-300 text-sm hover:bg-indigo-600/30 transition-all"
           >
             Check & Update
           </button>
@@ -1207,14 +1207,14 @@ function SettingsTab() {
 
       {/* Save Button */}
       {message && (
-        <p className={`text-sm ${message.startsWith("✅") ? "text-emerald-400" : "text-red-400"}`}>
+        <p className={`text-sm ${message.startsWith("✅") ? "text-indigo-400" : "text-red-400"}`}>
           {message}
         </p>
       )}
       <button
         onClick={handleSave}
         disabled={saving}
-        className="px-6 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-medium disabled:opacity-50 hover:shadow-lg hover:shadow-violet-500/20 transition-all"
+        className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-600 text-white font-medium disabled:opacity-50 hover:shadow-lg hover:shadow-indigo-500/20 transition-all"
       >
         {saving ? "Saving..." : "Save All Settings"}
       </button>
@@ -1268,7 +1268,7 @@ function SelectField({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/[0.08] text-white text-sm focus:outline-none focus:border-violet-500/40 transition-all appearance-none cursor-pointer"
+        className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/[0.08] text-white text-sm focus:outline-none focus:border-indigo-500/40 transition-all appearance-none cursor-pointer"
       >
         {options.map((opt) => (
           <option key={opt} value={opt} className="bg-gray-900 text-white">
@@ -1301,7 +1301,7 @@ function ModelSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/[0.08] text-white text-xs font-mono focus:outline-none focus:border-violet-500/40 transition-all appearance-none cursor-pointer"
+        className="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/[0.08] text-white text-xs font-mono focus:outline-none focus:border-indigo-500/40 transition-all appearance-none cursor-pointer"
         required={required}
       >
         <option value="" className="bg-gray-900">

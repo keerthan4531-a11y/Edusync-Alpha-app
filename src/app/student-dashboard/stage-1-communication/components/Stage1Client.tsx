@@ -10,26 +10,22 @@ import { VocabularyModule } from "./VocabularyModule";
 import { AIChatModule } from "./AIChatModule";
 import { useRouter } from "next/navigation";
 import { 
-  BookOpen, 
-  Headphones, 
-  PenTool, 
-  Mic, 
-  BookOpenCheck, 
-  MessageSquareCode,
   ChevronLeft
 } from "lucide-react";
+
+import Image from "next/image";
 
 interface Stage1ClientProps {
   initialContent: Record<ActivityType, Stage1ContentDTO[]>;
 }
 
 const MAIN_FEATURES = [
-  { id: "LISTENING" as const, label: "Listening", icon: Headphones, color: "text-blue-400", bgColor: "bg-blue-400/10", borderColor: "border-blue-400/20" },
-  { id: "READING" as const, label: "Reading", icon: BookOpen, color: "text-indigo-400", bgColor: "bg-indigo-400/10", borderColor: "border-indigo-400/20" },
-  { id: "WRITING" as const, label: "Writing", icon: PenTool, color: "text-emerald-400", bgColor: "bg-emerald-400/10", borderColor: "border-emerald-400/20" },
-  { id: "SPEAKING" as const, label: "Speaking", icon: Mic, color: "text-orange-400", bgColor: "bg-orange-400/10", borderColor: "border-orange-400/20" },
-  { id: "VOCABULARY" as const, label: "Vocabulary", icon: BookOpenCheck, color: "text-rose-400", bgColor: "bg-rose-400/10", borderColor: "border-rose-400/20" },
-  { id: "AICHAT" as const, label: "AI Convo", icon: MessageSquareCode, color: "text-purple-400", bgColor: "bg-purple-400/10", borderColor: "border-purple-400/20" },
+  { id: "LISTENING" as const, label: "Listening", image: "/images/communication/listening.png" },
+  { id: "READING" as const, label: "Reading", image: "/images/communication/reading.png" },
+  { id: "WRITING" as const, label: "Writing", image: "/images/communication/writing.png" },
+  { id: "SPEAKING" as const, label: "Speaking", image: "/images/communication/speaking.png" },
+  { id: "VOCABULARY" as const, label: "Vocabulary", image: "/images/communication/vocabulary.png" },
+  { id: "AICHAT" as const, label: "AI Convo", image: "/images/communication/aiconvo.png" },
 ];
 
 export function Stage1Client({ initialContent }: Stage1ClientProps) {
@@ -40,6 +36,10 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
   // Safe retrieval for reading/listening/writing/speaking list items
   const activeContentList = activeTab ? (initialContent[activeTab as keyof typeof initialContent] || []) : [];
   const currentChallenge = activeContentList.length > 0 ? activeContentList[0] : null;
+
+  const handleFeatureClick = (featureId: ActivityType) => {
+    setActiveTab(featureId);
+  };
 
   if (!activeTab) {
     return (
@@ -54,24 +54,29 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
           </button>
         </div>
         <div>
-          <h1 className="text-[28px] md:text-[34px] leading-tight font-semibold text-foreground tracking-tight mb-2">Stage 1: Communication</h1>
-          <p className="text-zinc-500 dark:text-gray-400 text-[15px] md:text-[17px]">
-            Master English through interactive reading, listening, writing, and speaking exercises powered by Inixa AI.
-          </p>
+          <h1 className="text-[28px] md:text-[34px] leading-tight font-semibold text-foreground tracking-tight mb-2">Communication</h1>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
           {MAIN_FEATURES.map((feature) => {
-          const Icon = feature.icon;
           return (
             <button
               key={feature.id}
-              onClick={() => setActiveTab(feature.id)}
-              className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+              onClick={() => handleFeatureClick(feature.id)}
+              className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl shadow-indigo-500/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
             >
-              <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${feature.bgColor} ${feature.borderColor} border transition-transform duration-300 group-hover:scale-110`}>
-                <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-indigo-500/10 dark:bg-indigo-950/30 border-2 border-indigo-400/20 transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400/50 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+                <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
+                  <Image 
+                    src={feature.image} 
+                    alt={feature.label}
+                    fill
+                    className="object-contain mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
+                    sizes="(max-width: 768px) 64px, 80px"
+                    priority
+                  />
+                </div>
               </div>
-              <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
+              <span className="text-[15px] font-semibold text-zinc-700 dark:text-gray-200 group-hover:text-foreground transition-colors">
                 {feature.label}
               </span>
             </button>
@@ -82,13 +87,18 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
     );
   }
 
+  // AI Chat gets its own full-screen layout, no extra wrappers
+  if (activeTab === "AICHAT") {
+    return <AIChatModule onSubFeatureOpen={setIsSubFeatureOpen} onBack={() => setActiveTab(null)} />;
+  }
+
   return (
     <div className="space-y-6">
       {/* Navigation Header */}
       {!isSubFeatureOpen && (
         <div className="flex items-center justify-between p-2">
           <button 
-            onClick={() => setActiveTab(null)}
+            onClick={() => { setActiveTab(null); }}
             className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
             aria-label="Go back"
           >
@@ -103,6 +113,19 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
           <ReadingModule 
             content={currentChallenge} 
             onNext={() => setActiveTab("LISTENING")} 
+            onSubFeatureOpen={setIsSubFeatureOpen}
+            onComplete={async (score, timeSec) => {
+              await fetch("/api/student/award-points", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ difficulty: "MEDIUM", moduleType: "READING" }),
+              });
+              await fetch("/api/student/daily-challenges", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ difficulty: "MEDIUM", score, timeSec }),
+              });
+            }}
           />
         )}
         
@@ -112,6 +135,18 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
             challenges={activeContentList}
             onNext={() => setActiveTab("WRITING")} 
             onSubFeatureOpen={setIsSubFeatureOpen}
+            onComplete={async (score, timeSec) => {
+              await fetch("/api/student/award-points", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ difficulty: "MEDIUM", moduleType: "LISTENING" }),
+              });
+              await fetch("/api/student/daily-challenges", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ difficulty: "MEDIUM", score, timeSec }),
+              });
+            }}
           />
         )}
         
@@ -121,6 +156,18 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
             challenges={activeContentList}
             onNext={() => setActiveTab("SPEAKING")} 
             onSubFeatureOpen={setIsSubFeatureOpen}
+            onComplete={async (score, timeSec) => {
+              await fetch("/api/student/award-points", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ difficulty: "MEDIUM", moduleType: "WRITING" }),
+              });
+              await fetch("/api/student/daily-challenges", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ difficulty: "MEDIUM", score, timeSec }),
+              });
+            }}
           />
         )}
 
@@ -132,15 +179,37 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
               setActiveTab("VOCABULARY");
             }} 
             onSubFeatureOpen={setIsSubFeatureOpen}
+            onComplete={async (score, timeSec) => {
+              await fetch("/api/student/award-points", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ difficulty: "MEDIUM", moduleType: "SPEAKING" }),
+              });
+              await fetch("/api/student/daily-challenges", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ difficulty: "MEDIUM", score, timeSec }),
+              });
+            }}
           />
         )}
 
         {activeTab === "VOCABULARY" && (
-          <VocabularyModule onSubFeatureOpen={setIsSubFeatureOpen} />
-        )}
-
-        {activeTab === "AICHAT" && (
-          <AIChatModule onSubFeatureOpen={setIsSubFeatureOpen} />
+          <VocabularyModule 
+            onSubFeatureOpen={setIsSubFeatureOpen}
+            onComplete={async (score, timeSec) => {
+              await fetch("/api/student/award-points", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ difficulty: "MEDIUM", moduleType: "VOCABULARY" }),
+              });
+              await fetch("/api/student/daily-challenges", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ difficulty: "MEDIUM", score, timeSec }),
+              });
+            }}
+          />
         )}
       </div>
     </div>

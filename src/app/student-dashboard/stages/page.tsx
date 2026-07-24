@@ -27,7 +27,7 @@ const stageMetadata: Record<number, {
     borderColor: "border-stage1/20",
     href: "/student-dashboard/stage-1-communication",
     description: "Master professional communication and soft skills",
-    accent: "#8b5cf6",
+    accent: "#6366f1",
   },
   2: {
     icon: Code,
@@ -36,7 +36,7 @@ const stageMetadata: Record<number, {
     borderColor: "border-stage2/20",
     href: "/student-dashboard/stage-2-coding",
     description: "Learn foundational programming and data structures",
-    accent: "#3b82f6",
+    accent: "#6366f1",
   },
   3: {
     icon: Briefcase,
@@ -152,12 +152,12 @@ export default async function StagesPage() {
                     </h2>
                     <div className="flex items-center gap-2">
                       {isCompleted && (
-                        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-500 text-xs font-semibold border border-emerald-500/20 shadow-sm">
+                        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-500 text-xs font-semibold border border-indigo-500/20 shadow-sm">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Completed
                         </span>
                       )}
                       {isActive && (
-                        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold border border-blue-500/20 shadow-sm animate-pulse">
+                        <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-semibold border border-indigo-500/20 shadow-sm animate-pulse">
                           Active
                         </span>
                       )}

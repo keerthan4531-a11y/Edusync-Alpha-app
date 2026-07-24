@@ -630,7 +630,7 @@ export default function LanguageCoursesPage() {
         <div className={cn(
           "p-4 rounded-2xl border text-sm flex items-center gap-3 shrink-0 mx-4 md:mx-0 shadow-lg",
           statusMessage.type === "success" 
-            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+            ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" 
             : "bg-red-500/10 border-red-500/20 text-red-400"
         )}>
           {statusMessage.type === "success" ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
@@ -668,7 +668,7 @@ export default function LanguageCoursesPage() {
             </LiquidGlassCard>
 
             <LiquidGlassCard className="p-5 flex items-center gap-4 border-indigo-500/20" accentColor="#38bdf8">
-              <BookOpenCheck className="w-8 h-8 text-sky-400 shrink-0" />
+              <BookOpenCheck className="w-8 h-8 text-indigo-400 shrink-0" />
               <div>
                 <span className="text-xs text-gray-400 block font-semibold uppercase tracking-wider">C++ Progress</span>
                 <span className="text-xl font-black text-white">
@@ -678,7 +678,7 @@ export default function LanguageCoursesPage() {
             </LiquidGlassCard>
 
             <LiquidGlassCard className="p-5 flex items-center gap-4 border-indigo-500/20" accentColor="#a78bfa">
-              <Flame className="w-8 h-8 text-purple-400 shrink-0" />
+              <Flame className="w-8 h-8 text-indigo-400 shrink-0" />
               <div>
                 <span className="text-xs text-gray-400 block font-semibold uppercase tracking-wider">Python Progress</span>
                 <span className="text-xl font-black text-white">
@@ -726,7 +726,7 @@ export default function LanguageCoursesPage() {
                           {course.difficulty.toUpperCase()}
                         </span>
                         {isCompleted && (
-                          <span className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+                          <span className="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
                             Completed
                           </span>
                         )}
@@ -743,7 +743,7 @@ export default function LanguageCoursesPage() {
 
                       {/* Prerequisites warnings */}
                       {isLocked && (
-                        <div className="bg-rose-500/10 border border-rose-500/25 p-3 rounded-xl text-xs text-rose-300 flex items-start gap-2">
+                        <div className="bg-indigo-500/10 border border-indigo-500/25 p-3 rounded-xl text-xs text-indigo-300 flex items-start gap-2">
                           <Lock className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                           <span>Requires completion of {course.prerequisites.map(p => p.toUpperCase()).join(" & ")} first.</span>
                         </div>
@@ -758,7 +758,7 @@ export default function LanguageCoursesPage() {
                               <span className="text-indigo-400">{percent}%</span>
                             </div>
                             <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/5">
-                              <div className="bg-gradient-to-r from-indigo-500 to-sky-400 h-full rounded-full transition-all" style={{ width: `${percent}%` }} />
+                              <div className="bg-gradient-to-r from-indigo-500 to-indigo-400 h-full rounded-full transition-all" style={{ width: `${percent}%` }} />
                             </div>
                           </div>
 
@@ -845,7 +845,7 @@ export default function LanguageCoursesPage() {
                           isActive 
                             ? "bg-indigo-500/10 border-indigo-500/25 text-white" 
                             : isCompleted
-                            ? "bg-emerald-500/5 border-transparent text-emerald-400 hover:bg-emerald-500/10"
+                            ? "bg-indigo-500/5 border-transparent text-indigo-400 hover:bg-indigo-500/10"
                             : "bg-transparent border-transparent text-gray-400 hover:bg-white/5 hover:text-white"
                         )}
                       >
@@ -983,14 +983,14 @@ export default function LanguageCoursesPage() {
                     )}
 
                     {runOutput && (
-                      <div className="text-emerald-400">
+                      <div className="text-indigo-400">
                         <div className="font-bold text-[10px] text-gray-500 uppercase tracking-wider mb-1">Stdout:</div>
                         <pre className="whitespace-pre-wrap font-mono bg-black/30 p-2.5 rounded-lg border border-white/5">{runOutput}</pre>
                       </div>
                     )}
 
                     {runError && (
-                      <div className="text-rose-400">
+                      <div className="text-indigo-400">
                         <div className="font-bold text-[10px] text-gray-500 uppercase tracking-wider mb-1">Execution Error:</div>
                         <pre className="whitespace-pre-wrap font-mono bg-black/30 p-2.5 rounded-lg border border-white/5">{runError}</pre>
                       </div>

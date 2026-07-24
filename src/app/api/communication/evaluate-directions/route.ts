@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { awardXp } from "@/lib/gamification";
+import { esChat } from "@/lib/es-engine";
 
 export async function POST(req: Request) {
   try {
@@ -29,9 +30,13 @@ export async function POST(req: Request) {
 
     let isCorrect = false;
     let correctPath: any[] = [];
+    let startName = "Start";
+    let endName = "Destination";
     try {
       const parsed = JSON.parse(content.questions || "{}");
       correctPath = parsed.correctPath || [];
+      startName = parsed.start?.name || "Start";
+      endName = parsed.end?.name || "Destination";
     } catch (e) {
       console.error("Failed to parse direction challenge correctPath", e);
     }
@@ -47,6 +52,42 @@ export async function POST(req: Request) {
     const score = isCorrect ? 100 : 0;
     const xpAwarded = isCorrect ? 25 : 5;
 
+    // AI feedback generation using es-engine fallback chain
+    let feedback = isCorrect 
+      ? "Perfect direction tracing! You navigated correctly." 
+      : "The traced path did not match the instructions. Keep trying!";
+    let tamilFeedback = isCorrect 
+      ? "அருமையான வரைபட வழிகாட்டுதல்! நீங்கள் சரியாகப் பயணித்தீர்கள்." 
+      : "வரைந்த வழி அறிவுறுத்தல்களுடன் பொருந்தவில்லை. மீண்டும் முயற்சிக்கவும்!";
+
+    try {
+      const systemPrompt = "You are a professional English tutor.";
+      const prompt = `Student traced a path on a map from '${startName}' to '${endName}'.
+      Path correctness: ${isCorrect ? "Correct" : "Incorrect"}, Score: ${score}%.
+      Give feedback in 1-2 sentences and a Tamil translation.
+      Return ONLY a valid JSON object:
+      {
+        "feedback": "English feedback here",
+        "tamil_feedback": "Tamil feedback here"
+      }`;
+
+      const aiResponse = await esChat([
+        { role: "system", content: systemPrompt },
+        { role: "user", content: prompt }
+      ]);
+
+      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsedAi = JSON.parse(jsonMatch[0]);
+        if (parsedAi.feedback && parsedAi.tamil_feedback) {
+          feedback = parsedAi.feedback;
+          tamilFeedback = parsedAi.tamil_feedback;
+        }
+      }
+    } catch (err) {
+      console.warn("[ES-ENGINE] evaluate-directions AI failed, using fallback:", err);
+    }
+
     // Record Stage1Activity log
     await db.stage1Activity.create({
       data: {
@@ -57,12 +98,8 @@ export async function POST(req: Request) {
         xpAwarded,
         feedback: JSON.stringify({
           isCorrect,
-          text: isCorrect 
-            ? "Perfect direction tracing! You navigated correctly." 
-            : "The traced path did not match the instructions. Keep trying!",
-          tamilText: isCorrect 
-            ? "அருமையான வரைபட வழிகாட்டுதல்! நீங்கள் சரியாகப் பயணித்தீர்கள்." 
-            : "வரைந்த வழி அறிவுறுத்தல்களுடன் பொருந்தவில்லை. மீண்டும் முயற்சிக்கவும்!"
+          text: feedback,
+          tamilText: tamilFeedback
         })
       }
     });
@@ -75,9 +112,8 @@ export async function POST(req: Request) {
       success: true,
       correct: isCorrect,
       xpAwarded,
-      feedback: isCorrect 
-        ? "Excellent navigation skills! Path verified." 
-        : "Path mismatch. Read the directions again and retry."
+      feedback,
+      tamilFeedback
     });
   } catch (error: any) {
     console.error("Failed to evaluate grid directions:", error);

@@ -234,7 +234,7 @@ export default function MailPage() {
       )}>
         <button 
           onClick={() => setIsComposeOpen(true)}
-          className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+          className="w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
         >
           <Plus className="w-4 h-4" />
           <span>New Message</span>
@@ -468,7 +468,7 @@ export default function MailPage() {
                 <div className={cn(
                   "p-3 rounded-xl border text-sm flex items-center gap-3",
                   composeStatus.type === "success" 
-                    ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+                    ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" 
                     : "bg-red-500/10 border-red-500/20 text-red-400"
                 )}>
                   {composeStatus.type === "success" ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
@@ -532,7 +532,7 @@ export default function MailPage() {
 
               <button 
                 type="submit"
-                className="mt-2 w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 active:scale-98 transition-all"
+                className="mt-2 w-full bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 active:scale-98 transition-all"
               >
                 <SendHorizontal className="w-4 h-4" />
                 <span>Send Message</span>

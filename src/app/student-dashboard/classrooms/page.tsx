@@ -4,13 +4,18 @@ import { useState, useEffect } from "react"
 import { 
   School, User, Calendar, Clock, ArrowLeft, BookOpen, 
   Send, CheckCircle2, AlertCircle, Sparkles, Code, Users, 
-  Play, Check, RefreshCw, X, ChevronRight, MessageSquare
+  Play, Check, RefreshCw, X, ChevronRight, MessageSquare, ChevronLeft,
+  FileText, Plus
 } from "lucide-react"
+import { useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card"
 import { GlassCard } from "@/components/ui/glass-card"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { GlobalSpinner } from "@/components/ui/GlobalSpinner"
 import Editor from "@monaco-editor/react"
+import { JoinClassroomModal } from "./JoinClassroomModal"
 
 interface Faculty {
   name: string
@@ -58,11 +63,15 @@ interface Assignment {
   due_date: string
   xp_reward: number
   coin_reward: number
+  max_points?: number
+  createdAt?: string
   submission: AssignmentSubmission | null
 }
 
 export default function StudentClassroomsPage() {
   // Navigation & view states
+  const { data: session } = useSession()
+  const currentUserEmail = session?.user?.email
   const [classrooms, setClassrooms] = useState<Classroom[]>([])
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([])
   const [selectedClassroom, setSelectedClassroom] = useState<Classroom | null>(null)
@@ -91,6 +100,17 @@ export default function StudentClassroomsPage() {
   
   // Global action statuses
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error" | null, message: string }>({ type: null, message: "" })
+
+  // Toggle global back button
+  useEffect(() => {
+    const globalBackBtn = document.getElementById('global-back-btn')
+    if (globalBackBtn) {
+      globalBackBtn.style.display = selectedClassroom ? 'none' : 'block'
+    }
+    return () => {
+      if (globalBackBtn) globalBackBtn.style.display = 'block'
+    }
+  }, [selectedClassroom])
 
   const fetchClassroomsData = async (silent = false) => {
     if (!silent) setLoading(true)
@@ -181,88 +201,24 @@ export default function StudentClassroomsPage() {
 
   const handleOpenAssignment = (assignment: Assignment) => {
     setSelectedAssignment(assignment)
-    setCode(assignment.submission?.code || getDefaultCodeTemplate(language))
+    setCode(assignment.submission?.code || "")
     setRunOutput("")
     setRunError("")
     setAiHint("")
   }
 
-  const getDefaultCodeTemplate = (lang: string) => {
-    if (lang === "python") {
-      return "# Write your solution here\n\ndef main():\n    print(\"Hello World\")\n\nif __name__ == \"__main__\":\n    main()"
-    } else if (lang === "c") {
-      return "#include <stdio.h>\n\nint main() {\n    // Write your solution here\n    printf(\"Hello World\\n\");\n    return 0;\n}"
-    } else if (lang === "cpp") {
-      return "#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your solution here\n    cout << \"Hello World\" << endl;\n    return 0;\n}"
-    }
-    return ""
-  }
-
-  // Handle changing language template
-  const handleLanguageChange = (newLang: string) => {
-    setLanguage(newLang)
-    // Only set default code if no user code or unmodified template is found
-    if (!code || code.trim() === "" || code.startsWith("# Write") || code.startsWith("#include")) {
-      setCode(getDefaultCodeTemplate(newLang))
-    }
-  }
-
-  const handleRunCode = async () => {
-    if (!code.trim()) {
-      setRunError("Please write some code first.")
-      return
-    }
-
-    setRunningCode(true)
-    setRunOutput("")
-    setRunError("")
-    setAiHint("")
-
-    try {
-      const res = await fetch("/api/student/language-courses/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          language,
-          code,
-          module_id: "classroom_assignment"
-        })
-      })
-
-      const data = await res.json()
-      if (res.ok) {
-        if (data.success || !data.error) {
-          setRunOutput(data.output || "Program executed successfully with no stdout output.")
-        } else {
-          setRunError(data.error)
-          if (data.ai_hint) {
-            setAiHint(data.ai_hint)
-          }
-        }
-      } else {
-        setRunError(data.error || "Failed to execute code.")
-      }
-    } catch (err) {
-      console.error("Code run error", err)
-      setRunError("Failed to communicate with execution server.")
-    } finally {
-      setRunningCode(false)
-    }
-  }
-
+  // Submit Assignment
   const handleSubmitAssignment = async () => {
     if (!selectedAssignment) return
-    if (!code.trim()) {
-      setStatusMessage({ type: "error", message: "Cannot submit empty solution." })
-      return
-    }
-
+    
     setSubmittingAssignment(true)
     try {
       const res = await fetch(`/api/student/assignments/${selectedAssignment.id}/submit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code })
+        body: JSON.stringify({
+          code
+        })
       })
 
       const data = await res.json()
@@ -336,7 +292,7 @@ export default function StudentClassroomsPage() {
         <div className={cn(
           "p-4 rounded-2xl border text-sm flex items-center gap-3 shrink-0 mx-4 md:mx-0 shadow-lg",
           statusMessage.type === "success" 
-            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+            ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" 
             : "bg-red-500/10 border-red-500/20 text-red-400"
         )}>
           {statusMessage.type === "success" ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
@@ -349,17 +305,16 @@ export default function StudentClassroomsPage() {
         // LIST VIEW
         <div className="flex-1 flex flex-col gap-6 overflow-y-auto px-4 md:px-0">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-4">
               <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-md">My Classrooms</h1>
-              <p className="text-gray-400 mt-1">Connect with your teachers and work on your classwork.</p>
             </div>
-            <button 
-              onClick={() => fetchClassroomsData(true)}
-              disabled={refreshing}
-              className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 active:scale-95 transition-all text-gray-300 hover:text-white"
-            >
-              <RefreshCw className={cn("w-4 h-4", refreshing && "animate-spin")} />
-            </button>
+            <JoinClassroomModal 
+              onJoined={(msg) => {
+                setStatusMessage({ type: "success", message: msg })
+                fetchClassroomsData(true)
+                setTimeout(() => setStatusMessage({ type: null, message: "" }), 3000)
+              }} 
+            />
           </div>
 
           {/* Pending Invitations Section */}
@@ -389,7 +344,7 @@ export default function StudentClassroomsPage() {
                     <div className="flex gap-2 mt-auto">
                       <Button 
                         onClick={() => handleRespondInvitation(invite.request_id, "accept")}
-                        className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-xl py-2 flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/20"
+                        className="flex-1 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold rounded-xl py-2 flex items-center justify-center gap-1.5 shadow-md shadow-indigo-500/20"
                       >
                         <Check className="w-4 h-4" />
                         <span>Accept</span>
@@ -417,10 +372,9 @@ export default function StudentClassroomsPage() {
             </h2>
 
             {loading ? (
-              <div className="h-48 flex flex-col items-center justify-center gap-3 text-gray-400">
-                <RefreshCw className="w-8 h-8 animate-spin text-indigo-400" />
-                <span>Loading classrooms...</span>
-              </div>
+              <div className="flex h-[400px] items-center justify-center">
+              <GlobalSpinner />
+            </div>
             ) : classrooms.length === 0 ? (
               <GlassCard className="p-8 text-center flex flex-col items-center justify-center gap-3 border border-white/5 bg-white/5 rounded-3xl">
                 <School className="w-12 h-12 text-gray-600" />
@@ -533,10 +487,9 @@ export default function StudentClassroomsPage() {
           {/* Tabs Body Container */}
           <div className="flex-1 overflow-y-auto">
             {detailsLoading ? (
-              <div className="h-64 flex flex-col items-center justify-center gap-3 text-gray-400">
-                <RefreshCw className="w-8 h-8 animate-spin text-indigo-400" />
-                <span>Loading stream...</span>
-              </div>
+              <div className="flex h-[200px] items-center justify-center bg-white/70 dark:bg-white/5 backdrop-blur-3xl rounded-[32px] border border-black/10 dark:border-white/10 shadow-2xl">
+              <GlobalSpinner />
+            </div>
             ) : activeTab === "stream" ? (
               // STREAM / ANNOUNCEMENTS TAB
               <div className="space-y-4 max-w-3xl">
@@ -562,240 +515,239 @@ export default function StudentClassroomsPage() {
                 )}
               </div>
             ) : activeTab === "classwork" ? (
-              // CLASSWORK / ASSIGNMENTS TAB
-              <div className="grid md:grid-cols-5 gap-6 h-full items-start overflow-hidden">
+              <div className="flex flex-col h-full overflow-hidden">
                 {/* Assignments List */}
-                <div className={cn(
-                  "space-y-4 md:col-span-2 overflow-y-auto h-full pr-2",
-                  selectedAssignment ? "hidden md:block" : "block"
-                )}>
-                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Assignments</h3>
-                  
-                  {assignments.length === 0 ? (
-                    <GlassCard className="p-8 text-center flex flex-col items-center justify-center gap-3 bg-white/5 border-white/5 rounded-3xl">
-                      <Code className="w-12 h-12 text-gray-600" />
-                      <span className="text-gray-400 font-medium">No assignments posted.</span>
-                    </GlassCard>
-                  ) : (
-                    assignments.map(assign => {
-                      const isSubmitted = assign.submission !== null
-                      const isGraded = assign.submission?.status === "GRADED"
-                      return (
-                        <div 
-                          key={assign.id}
-                          onClick={() => handleOpenAssignment(assign)}
-                          className={cn(
-                            "cursor-pointer p-5 rounded-2xl border transition-all duration-200 flex flex-col gap-2.5",
-                            selectedAssignment?.id === assign.id 
-                              ? "bg-indigo-500/10 border-indigo-500/30" 
-                              : "bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10"
-                          )}
-                        >
-                          <div className="flex justify-between items-start gap-2">
-                            <h4 className="font-bold text-white text-[15px] leading-snug">{assign.title}</h4>
-                            <span className={cn(
-                              "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md",
-                              isGraded 
-                                ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                                : isSubmitted
-                                ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                                : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
-                            )}>
-                              {isGraded ? "Graded" : isSubmitted ? "Submitted" : "Pending"}
-                            </span>
-                          </div>
+                {!selectedAssignment && (
+                  <div className="space-y-4 overflow-y-auto h-full pr-2">
+                    <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Assignments</h3>
+                    
+                    {assignments.length === 0 ? (
+                      <GlassCard className="p-8 text-center flex flex-col items-center justify-center gap-3 bg-white/5 border-white/5 rounded-3xl">
+                        <Code className="w-12 h-12 text-gray-600" />
+                        <span className="text-gray-400 font-medium">No assignments posted.</span>
+                      </GlassCard>
+                    ) : (
+                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {assignments.map(assign => {
+                          const isSubmitted = assign.submission !== null
+                          const isGraded = assign.submission?.status === "GRADED"
+                          return (
+                            <div 
+                              key={assign.id}
+                              onClick={() => handleOpenAssignment(assign)}
+                              className="cursor-pointer p-5 rounded-2xl border transition-all duration-200 flex flex-col gap-2.5 bg-white/5 border-white/5 hover:border-white/10 hover:bg-white/10 shadow-lg group hover:-translate-y-1"
+                            >
+                              <div className="flex justify-between items-start gap-2">
+                                <div className="w-10 h-10 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0 group-hover:bg-indigo-500/20 transition-colors">
+                                  <BookOpen className="w-5 h-5 text-indigo-400" />
+                                </div>
+                                <span className={cn(
+                                  "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md",
+                                  isGraded 
+                                    ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
+                                    : isSubmitted
+                                    ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
+                                    : "bg-amber-500/20 text-amber-400 border border-amber-500/30"
+                                )}>
+                                  {isGraded ? "Graded" : isSubmitted ? "Submitted" : "Pending"}
+                                </span>
+                              </div>
+                              <h4 className="font-bold text-white text-[17px] leading-snug mt-1">{assign.title}</h4>
 
-                          <div className="flex items-center justify-between text-xs text-gray-400 mt-2 font-medium">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-                              <span>Due: {new Date(assign.due_date).toLocaleDateString()}</span>
-                            </span>
-                            <span className="text-indigo-300">+{assign.xp_reward} XP</span>
-                          </div>
-                        </div>
-                      )
-                    })
-                  )}
-                </div>
+                              <div className="flex items-center justify-between text-xs text-gray-400 mt-2 font-medium border-t border-white/5 pt-3">
+                                <span className="flex items-center gap-1.5">
+                                  <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                                  <span>Due: {new Date(assign.due_date).toLocaleDateString()}</span>
+                                </span>
+                                <span className="text-indigo-300 font-bold">+{assign.xp_reward} XP</span>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Assignment Editor / Solution Panel */}
-                <div className="md:col-span-3 h-full overflow-hidden flex flex-col">
-                  {selectedAssignment ? (
-                    <div className="flex flex-col h-full bg-[#0b0f19] border border-white/10 rounded-3xl overflow-hidden shadow-2xl">
+                {selectedAssignment && (
+                  <div className="w-full flex flex-col gap-6">
+                    <div className="flex flex-col bg-[#0b0f19] border border-white/10 rounded-3xl shadow-2xl">
                       {/* Editor Header */}
                       <div className="p-4 bg-white/5 border-b border-white/10 flex items-center justify-between shrink-0">
-                        <button 
-                          onClick={() => setSelectedAssignment(null)}
-                          className="flex items-center gap-2 text-indigo-400 font-semibold text-xs md:hidden hover:text-indigo-300"
-                        >
-                          <ArrowLeft className="w-4 h-4" />
-                          <span>Back to list</span>
-                        </button>
-
-                        <div className="hidden md:block">
-                          <h4 className="font-bold text-white text-sm truncate max-w-xs">{selectedAssignment.title}</h4>
-                        </div>
-
-                        {/* Language selection dropdown */}
-                        <div className="flex items-center gap-2">
-                          <label className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Lang:</label>
-                          <select 
-                            value={language}
-                            onChange={(e) => handleLanguageChange(e.target.value)}
-                            disabled={selectedAssignment.submission?.status === "GRADED"}
-                            className="bg-black/30 border border-white/10 text-white rounded-lg px-2.5 py-1 text-xs font-semibold focus:outline-none focus:border-indigo-500"
+                        <div className="flex items-center gap-4">
+                          <button 
+                            onClick={() => setSelectedAssignment(null)}
+                            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 text-gray-300 hover:text-white transition-colors"
                           >
-                            <option value="python">Python</option>
-                            <option value="c">C</option>
-                            <option value="cpp">C++</option>
-                          </select>
+                            <ArrowLeft className="w-4 h-4" />
+                            <span className="text-sm font-semibold">Back to Assignments</span>
+                          </button>
                         </div>
                       </div>
 
-                      {/* Content Workspace Splitter */}
-                      <div className="flex-1 flex flex-col md:grid md:grid-rows-2 overflow-hidden">
-                        {/* Upper row: Details & Code Editor side by side */}
-                        <div className="grid md:grid-cols-2 border-b border-white/5 overflow-hidden flex-1">
-                          {/* Assignment specs & instructions */}
-                          <div className="p-5 overflow-y-auto space-y-4 border-r border-white/5 bg-black/20">
-                            <div>
-                              <h3 className="font-bold text-white text-base tracking-tight">{selectedAssignment.title}</h3>
-                              <p className="text-xs text-gray-400 mt-1">Due {new Date(selectedAssignment.due_date).toLocaleString()}</p>
-                            </div>
-                            
-                            <p className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed border-t border-white/5 pt-3">
-                              {selectedAssignment.description}
+                      {/* Workspace - Google Classroom Style */}
+                      <div className="flex flex-col lg:flex-row bg-[#070b12] gap-6 p-6 md:p-8">
+                        {/* Assignment Details (Left) */}
+                        <div className="flex-1 space-y-6">
+                          <div>
+                            <h1 className="text-white text-3xl font-bold tracking-tight mb-1">{selectedAssignment.title}</h1>
+                            <p className="text-sm text-gray-400 mt-1">
+                              {selectedClassroom.faculty_name} • {selectedAssignment.createdAt ? new Date(selectedAssignment.createdAt).toLocaleDateString("en-US", { day: 'numeric', month: 'short' }) : "Recently"}
                             </p>
-
-                            <div className="flex gap-4 pt-3 border-t border-white/5 font-semibold text-xs">
-                              <div className="text-amber-400 flex items-center gap-1 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20">
-                                <span>🪙 {selectedAssignment.coin_reward} Coins</span>
-                              </div>
-                              <div className="text-indigo-400 flex items-center gap-1 bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20">
-                                <span>⚡ {selectedAssignment.xp_reward} XP</span>
-                              </div>
+                            <div className="flex items-center gap-2 text-sm text-gray-300 font-semibold mt-4">
+                              <span>{selectedAssignment.max_points || 100} points</span>
+                              <span className="text-gray-500">|</span>
+                              <span>Due {selectedAssignment.due_date ? new Date(selectedAssignment.due_date).toLocaleString("en-US", { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : "N/A"}</span>
                             </div>
-
-                            {/* Graded Details */}
-                            {selectedAssignment.submission?.status === "GRADED" && (
-                              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 mt-4 space-y-2">
-                                <div className="flex items-center justify-between text-emerald-400">
-                                  <span className="font-bold text-xs uppercase tracking-wider">Graded Results</span>
-                                  <span className="text-lg font-extrabold">{selectedAssignment.submission.grade}/100</span>
-                                </div>
-                                {selectedAssignment.submission.feedback && (
-                                  <p className="text-gray-300 text-xs italic leading-relaxed">
-                                    "{selectedAssignment.submission.feedback}"
-                                  </p>
-                                )}
-                              </div>
-                            )}
                           </div>
 
-                          {/* Monaco Code Editor */}
-                          <div className="relative h-64 md:h-full min-h-[200px]">
-                            <Editor
-                              height="100%"
-                              language={language}
-                              theme="vs-dark"
-                              value={code}
-                              onChange={(val) => setCode(val || "")}
-                              options={{
-                                minimap: { enabled: false },
-                                fontSize: 13,
-                                lineHeight: 20,
-                                padding: { top: 10 },
-                                scrollBeyondLastLine: false,
-                                readOnly: selectedAssignment.submission?.status === "GRADED"
-                              }}
-                            />
+                          {/* Class comments placeholder */}
+                          <div className="border-t border-white/10 my-4" />
+                          <button className="flex items-center gap-2 text-indigo-400 hover:text-indigo-300 transition-colors text-sm font-semibold">
+                            <MessageSquare className="w-4 h-4" />
+                            <span>1 class comment</span>
+                          </button>
+                          <div className="border-t border-white/10 my-4" />
+                          
+                          <div className="text-gray-200 text-sm whitespace-pre-wrap leading-relaxed">
+                            {selectedAssignment.description}
+                          </div>
+
+                          <div className="flex gap-4 pt-4 font-semibold text-sm">
+                            <div className="text-indigo-400 flex items-center gap-2 bg-indigo-500/10 px-3 py-1.5 rounded-xl border border-indigo-500/20">
+                              <span>⚡ {selectedAssignment.xp_reward} XP</span>
+                            </div>
                           </div>
                         </div>
 
-                        {/* Lower row: Console Execution Panel */}
-                        <div className="flex flex-col bg-[#070b12] overflow-hidden min-h-[160px]">
-                          <div className="px-4 py-2 border-b border-white/5 bg-black/40 flex items-center justify-between shrink-0">
-                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Console Output</span>
-                            <div className="flex gap-2">
-                              <button 
-                                onClick={handleRunCode}
-                                disabled={runningCode}
-                                className="flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
-                              >
-                                {runningCode ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 text-indigo-400" />}
-                                <span>Run Code</span>
-                              </button>
-                              
+                        {/* Your Work & Private Comments Panel (Right) */}
+                        <div className="w-full lg:w-96 flex flex-col gap-6">
+                          {/* Your Work Card */}
+                          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col gap-4 shadow-xl">
+                            <div className="flex items-center justify-between">
+                              <h4 className="text-white font-semibold text-lg tracking-tight">Your work</h4>
+                              <span className={cn(
+                                "text-xs font-bold uppercase tracking-wider",
+                                selectedAssignment.submission?.status === "GRADED" ? "text-indigo-400" :
+                                selectedAssignment.submission ? "text-indigo-400" : "text-amber-400"
+                              )}>
+                                {selectedAssignment.submission?.status === "GRADED" ? "Marked" : selectedAssignment.submission ? "Handed in" : "Assigned"}
+                              </span>
+                            </div>
+
+                            {/* Submission Area */}
+                            <div className="flex flex-col gap-3">
                               {selectedAssignment.submission ? (
-                                selectedAssignment.submission.status !== "GRADED" && (
+                                /* Submitted File Card (Exactly like Google Classroom) */
+                                <div className="bg-black/30 border border-white/10 rounded-xl p-3 flex items-center justify-between group hover:bg-black/45 transition-colors">
+                                  <div className="flex items-center gap-3 overflow-hidden">
+                                    <div className="w-10 h-10 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+                                      <FileText className="w-5 h-5" />
+                                    </div>
+                                    <div className="overflow-hidden">
+                                      <div className="text-white text-xs font-medium truncate">{selectedAssignment.title}_submission.txt</div>
+                                      <div className="text-gray-500 text-[10px] uppercase font-bold tracking-wider mt-0.5">Text Response</div>
+                                    </div>
+                                  </div>
+                                  {selectedAssignment.submission.status !== "GRADED" && (
+                                    <button 
+                                      onClick={handleUnsubmitAssignment}
+                                      disabled={submittingAssignment}
+                                      className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                                      title="Remove submission"
+                                    >
+                                      <X className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
+                              ) : (
+                                /* Text Editor when Not Submitted */
+                                <textarea
+                                  value={code}
+                                  onChange={(e) => setCode(e.target.value)}
+                                  placeholder="Type your answer or paste a link to your work here..."
+                                  disabled={submittingAssignment}
+                                  className="w-full h-32 bg-black/30 border border-white/10 rounded-xl p-3 text-white text-sm focus:outline-none focus:border-indigo-500 resize-none disabled:opacity-70 disabled:cursor-not-allowed"
+                                />
+                              )}
+                            </div>
+
+                            {/* Action Buttons */}
+                            {selectedAssignment.submission ? (
+                              selectedAssignment.submission.status !== "GRADED" ? (
+                                <button 
+                                  onClick={handleUnsubmitAssignment}
+                                  disabled={submittingAssignment}
+                                  className="w-full py-2 bg-transparent border border-white/20 hover:border-white/30 text-white font-semibold rounded-xl transition-all disabled:opacity-50 text-sm shadow-sm"
+                                >
+                                  Unsubmit
+                                </button>
+                              ) : (
+                                <div className="flex flex-col gap-3">
+                                  <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3 text-center">
+                                    <span className="text-indigo-400 font-bold text-lg">{selectedAssignment.submission.grade}/100</span>
+                                    {selectedAssignment.submission.feedback && (
+                                      <p className="text-gray-300 text-xs mt-2 italic">
+                                        "{selectedAssignment.submission.feedback}"
+                                      </p>
+                                    )}
+                                  </div>
+                                  {/* Resubmit button if graded */}
                                   <button 
                                     onClick={handleUnsubmitAssignment}
                                     disabled={submittingAssignment}
-                                    className="flex items-center gap-1.5 px-3 py-1 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 text-xs font-semibold rounded-lg transition-all"
+                                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all text-sm shadow-md shadow-indigo-500/10"
                                   >
-                                    <span>Unsubmit</span>
+                                    Resubmit
                                   </button>
-                                )
-                              ) : (
+                                </div>
+                              )
+                            ) : (
+                              <div className="flex flex-col gap-2">
+                                {/* Google Classroom Style '+ Add or create' Button */}
+                                <button 
+                                  disabled
+                                  className="w-full py-2 bg-transparent border border-white/10 hover:bg-white/5 text-indigo-400 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-sm cursor-not-allowed opacity-50"
+                                >
+                                  <Plus className="w-4 h-4" />
+                                  <span>Add or create</span>
+                                </button>
+                                
                                 <button 
                                   onClick={handleSubmitAssignment}
-                                  disabled={submittingAssignment}
-                                  className="flex items-center gap-1.5 px-3 py-1 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold rounded-lg transition-all shadow-md shadow-indigo-500/10"
+                                  disabled={submittingAssignment || !code.trim()}
+                                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
                                 >
-                                  {submittingAssignment && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
-                                  <span>Submit</span>
+                                  {submittingAssignment && <RefreshCw className="w-4 h-4 animate-spin" />}
+                                  Turn in
                                 </button>
-                              )}
-                            </div>
+                              </div>
+                            )}
                           </div>
 
-                          <div className="flex-1 p-4 overflow-y-auto font-mono text-xs leading-relaxed text-gray-300">
-                            {runningCode && (
-                              <div className="flex items-center gap-2 text-indigo-400">
-                                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                                <span>Compiling and running code in Judge0 sandbox...</span>
-                              </div>
-                            )}
-
-                            {!runningCode && !runOutput && !runError && (
-                              <span className="text-gray-500">Run code or submit to see results.</span>
-                            )}
-
-                            {runOutput && (
-                              <div className="text-emerald-400">
-                                <div className="font-bold text-[10px] text-gray-500 uppercase tracking-wider mb-1">Standard Output:</div>
-                                <pre className="whitespace-pre-wrap font-mono">{runOutput}</pre>
-                              </div>
-                            )}
-
-                            {runError && (
-                              <div className="text-rose-400">
-                                <div className="font-bold text-[10px] text-gray-500 uppercase tracking-wider mb-1">Execution Error:</div>
-                                <pre className="whitespace-pre-wrap font-mono">{runError}</pre>
-                              </div>
-                            )}
-
-                            {aiHint && (
-                              <div className="mt-4 p-3.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl space-y-1">
-                                <div className="text-indigo-300 font-bold flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
-                                  <Sparkles className="w-4 h-4 text-indigo-400" />
-                                  <span>AI Coding Tutor (Tanglish Suggestions)</span>
-                                </div>
-                                <p className="text-gray-300 text-xs italic leading-relaxed font-sans">{aiHint}</p>
-                              </div>
-                            )}
+                          {/* Private Comments Card */}
+                          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col gap-3 shadow-xl">
+                            <div className="flex items-center gap-2 text-white font-semibold text-sm">
+                              <User className="w-4 h-4 text-indigo-400" />
+                              <span>Private comments</span>
+                            </div>
+                            <div className="relative mt-2">
+                              <input 
+                                type="text"
+                                placeholder={`Add comment to ${selectedClassroom.faculty_name || "instructor"}...`}
+                                className="w-full bg-black/30 border border-white/10 rounded-xl py-2 pl-3 pr-10 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500"
+                              />
+                              <button className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors">
+                                <Send className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-400 border border-dashed border-white/10 rounded-3xl p-6 bg-black/10">
-                      <Code className="w-12 h-12 text-gray-700 mb-2" />
-                      <span className="font-medium text-sm">Select an assignment to start coding.</span>
-                      <span className="text-xs text-gray-500 mt-1 max-w-xs text-center">Your work will be securely saved and graded by faculty.</span>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             ) : (
               // PEOPLE / INSTRUCTORS TAB
@@ -807,7 +759,9 @@ export default function StudentClassroomsPage() {
                     {selectedClassroom.faculty_name.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h4 className="font-bold text-white text-base leading-snug">{selectedClassroom.faculty_name}</h4>
+                    <h4 className="font-bold text-white text-base leading-snug">
+                      {selectedClassroom.faculty_name} {currentUserEmail === selectedClassroom.faculty_email && "(You)"}
+                    </h4>
                     <span className="text-xs text-gray-400 font-mono mt-0.5 block">{selectedClassroom.faculty_email}</span>
                   </div>
                 </LiquidGlassCard>

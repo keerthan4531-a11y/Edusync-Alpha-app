@@ -29,15 +29,11 @@ export function useSpeaking(content: Stage1ContentDTO | null) {
       };
 
       recognition.onresult = (event: any) => {
-        let finalTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalTranscript += event.results[i][0].transcript;
-          }
+        let currentTranscript = '';
+        for (let i = 0; i < event.results.length; ++i) {
+          currentTranscript += event.results[i][0].transcript;
         }
-        if (finalTranscript) {
-          setTranscribedText(prev => prev + ' ' + finalTranscript);
-        }
+        setTranscribedText(currentTranscript);
       };
 
       recognition.onerror = (event: any) => {
@@ -59,13 +55,15 @@ export function useSpeaking(content: Stage1ContentDTO | null) {
 
   const stopRecording = () => {
     if (recognitionRef.current) {
+      recognitionRef.current.onresult = null; // Prevent late results from overwriting state after reset
       recognitionRef.current.stop();
       setIsRecording(false);
     }
   };
 
-  const submitSpeaking = async () => {
-    if (!content) return;
+  const submitSpeaking = async (dynamicContent?: Stage1ContentDTO) => {
+    const activeContent = dynamicContent || content;
+    if (!activeContent) return;
     
     if (transcribedText.trim().length < 2) {
       setError("Transcription is empty. Please try speaking again or use the text fallback.");
@@ -78,7 +76,7 @@ export function useSpeaking(content: Stage1ContentDTO | null) {
 
     try {
       const payload = {
-        contentId: content.id,
+        contentId: activeContent.id,
         transcribedText: transcribedText.trim()
       };
 

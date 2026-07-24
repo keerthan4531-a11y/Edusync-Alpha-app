@@ -668,7 +668,7 @@ export default function Stage3ProjectsPage() {
             <FolderGit2 className="h-3 w-3" />
             Stage 3: Real-world Projects
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-stage3 to-emerald-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-stage3 to-indigo-400 bg-clip-text text-transparent">
             CodeKalam - Collaborative Hub
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -764,7 +764,7 @@ export default function Stage3ProjectsPage() {
                               <History className="h-3 w-3" />
                               Repo
                             </span>
-                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 font-bold border border-emerald-400/20">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-400/20 text-indigo-300 font-bold border border-indigo-400/20">
                               {proj.status}
                             </span>
                           </div>
@@ -875,7 +875,7 @@ export default function Stage3ProjectsPage() {
                             Save
                           </Button>
 
-                          <Button size="sm" variant="outline" className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 h-8" onClick={handleRunRepoCode} disabled={repoExecuting || !repoActiveFileId}>
+                          <Button size="sm" variant="outline" className="bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 h-8" onClick={handleRunRepoCode} disabled={repoExecuting || !repoActiveFileId}>
                             {repoExecuting ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Play className="h-3.5 w-3.5 mr-1" />}
                             Run
                           </Button>
@@ -956,7 +956,7 @@ export default function Stage3ProjectsPage() {
                           <span className="font-semibold uppercase text-[10px] tracking-wider text-stage3">Terminal Compiler Output</span>
                           <button className="text-[10px] hover:text-foreground" onClick={() => setRepoConsoleOutput("")}>Clear</button>
                         </div>
-                        <pre className="whitespace-pre-wrap leading-relaxed text-emerald-400/90">{repoConsoleOutput || "Console ready. Write code and click 'Run' to execute."}</pre>
+                        <pre className="whitespace-pre-wrap leading-relaxed text-indigo-400/90">{repoConsoleOutput || "Console ready. Write code and click 'Run' to execute."}</pre>
                       </div>
                     </div>
                   </div>
@@ -1297,7 +1297,7 @@ export default function Stage3ProjectsPage() {
                       </h3>
                     </div>
                     {chatSelectedProjectId && (
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-400/20 text-emerald-300 font-bold border border-emerald-400/20 animate-pulse">
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-400/20 text-indigo-300 font-bold border border-indigo-400/20 animate-pulse">
                         Live Sync
                       </span>
                     )}

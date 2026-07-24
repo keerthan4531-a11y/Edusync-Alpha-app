@@ -109,7 +109,7 @@ export function AdvancedFlashcards({ words, onClose, onUpdateWord, speakWord }: 
         {/* Header */}
         <div className="flex justify-between items-center text-foreground bg-white/80 dark:bg-black/80 p-4 rounded-2xl border border-black/10 dark:border-white/10 shadow-lg">
           <h2 className="text-[17px] font-semibold flex items-center gap-2">
-            <Layers className="w-5 h-5 text-blue-600 dark:text-blue-400" /> Advanced Flashcards
+            <Layers className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> Advanced Flashcards
           </h2>
           <div className="flex items-center gap-3">
             <select
@@ -170,7 +170,7 @@ export function AdvancedFlashcards({ words, onClose, onUpdateWord, speakWord }: 
                   </div>
                   <button 
                     onClick={(e) => { e.stopPropagation(); speakWord(currentWord.word); }}
-                    className="p-3 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 transition-colors"
+                    className="p-3 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 transition-colors"
                   >
                     <Volume2 className="w-5 h-5" />
                   </button>
@@ -178,7 +178,7 @@ export function AdvancedFlashcards({ words, onClose, onUpdateWord, speakWord }: 
 
                 {/* Back */}
                 <div 
-                  className="absolute inset-0 bg-gradient-to-br from-blue-50/90 to-indigo-50/90 dark:from-[#1e1b4b] dark:to-[#312e81] border border-blue-200 dark:border-blue-800/50 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between text-left shadow-2xl overflow-y-auto"
+                  className="absolute inset-0 bg-gradient-to-br from-indigo-50/90 to-indigo-50/90 dark:from-[#1e1b4b] dark:to-[#312e81] border border-indigo-200 dark:border-indigo-800/50 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between text-left shadow-2xl overflow-y-auto"
                   style={{ 
                     backfaceVisibility: "hidden", 
                     transform: "rotateY(180deg)" 
@@ -186,27 +186,27 @@ export function AdvancedFlashcards({ words, onClose, onUpdateWord, speakWord }: 
                 >
                   <div className="space-y-4">
                     <div>
-                      <span className="text-[11px] text-blue-700 dark:text-blue-300 font-bold block mb-1 uppercase tracking-wider">Meaning</span>
+                      <span className="text-[11px] text-indigo-700 dark:text-indigo-300 font-bold block mb-1 uppercase tracking-wider">Meaning</span>
                       <p className="text-foreground text-[17px] leading-relaxed font-medium">
                         {currentWord.meaning}
                       </p>
                     </div>
                     {currentWord.tamil && (
                       <div>
-                        <span className="text-[11px] text-blue-700 dark:text-blue-300 font-bold block mb-1 uppercase tracking-wider">Tamil Translation</span>
+                        <span className="text-[11px] text-indigo-700 dark:text-indigo-300 font-bold block mb-1 uppercase tracking-wider">Tamil Translation</span>
                         <p className="text-zinc-700 dark:text-gray-300 text-[15px] italic">{currentWord.tamil}</p>
                       </div>
                     )}
                     {currentWord.example && (
                       <div className="pt-3 border-t border-black/10 dark:border-white/10">
-                        <span className="text-[11px] text-blue-700 dark:text-blue-300 font-bold block mb-1 uppercase tracking-wider">Example</span>
+                        <span className="text-[11px] text-indigo-700 dark:text-indigo-300 font-bold block mb-1 uppercase tracking-wider">Example</span>
                         <p className="text-zinc-600 dark:text-gray-400 text-[14px] italic">
                           "{currentWord.example}"
                         </p>
                       </div>
                     )}
                   </div>
-                  <div className="text-center text-[11px] text-blue-600/50 dark:text-blue-300/50 font-semibold pt-3 select-none">
+                  <div className="text-center text-[11px] text-indigo-600/50 dark:text-indigo-300/50 font-semibold pt-3 select-none">
                     Did you know it?
                   </div>
                 </div>

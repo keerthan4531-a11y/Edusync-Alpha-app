@@ -45,6 +45,8 @@ model User {
   receivedMails         Mail[]                 @relation("ReceivedMails")
   courseProgresses      LanguageCourseProgress[]
   assignmentSubmissions AssignmentSubmission[]
+  studentProfile        StudentProfile?
+
   
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -56,6 +58,64 @@ model Department {
   hodId   String? @unique
   hod     User?   @relation("DepartmentHOD", fields: [hodId], references: [id])
   users   User[]  @relation("DepartmentUsers")
+  classes Class[] @relation("DepartmentClasses")
+}
+
+model Class {
+  id              String   @id @default(uuid())
+  name            String
+  room            String?
+  departmentId    String?
+  department      Department? @relation("DepartmentClasses", fields: [departmentId], references: [id])
+  students        StudentProfile[]
+}
+
+model StudentProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Core Profile Attributes
+  studentId       String?  @unique
+  rollNumber      String?  @unique
+  admissionNo     String?  @unique
+  emisNo          String?  @unique
+  firstName       String?
+  lastName        String?
+  phone           String?
+  gender          String?
+  batch           String?
+  semester        Int?
+  year            Int?
+  admissionDate   DateTime?
+  admissionType   String?
+  feeStatus       String?
+  status          String?  @default("ACTIVE")
+  
+  classId         String?
+  class           Class?   @relation(fields: [classId], references: [id])
+  
+  // Personal Bio Attributes
+  alternatePhone  String?
+  dateOfBirth     DateTime?
+  bloodGroup      String?
+  nationality     String?
+  religion        String?
+  category        String?
+  motherTongue    String?
+  aadharNo        String?
+  residenceType   String?
+  
+  // Stored as JSON strings
+  address         String?  
+  parentInfo      String?  
+  references      String?  
+  previousEdu     String?  
+  scholarships    String?  
+  documents       String?  
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Stage {
@@ -235,6 +295,27 @@ model DailyChallenge {
   type       String   // e.g., "QUIZ", "CODING", "LISTENING"
 }
 
+model DailyChallengeSet {
+  id           String    @id @default(cuid())
+  userId       String
+  date         String    // "2026-07-20" date string for easy lookup
+  stage        Int       @default(1)
+  easyDone     Boolean   @default(false)
+  mediumDone   Boolean   @default(false)
+  hardDone     Boolean   @default(false)
+  easyScore    Int       @default(0)   // accuracy/score for easy challenge
+  mediumScore  Int       @default(0)
+  hardScore    Int       @default(0)
+  easyTime     Int       @default(0)   // seconds taken
+  mediumTime   Int       @default(0)
+  hardTime     Int       @default(0)
+  xpAwarded    Int       @default(0)  // 0 until all 3 complete
+  completedAt  DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@unique([userId, date])
+}
+
 // ==========================================
 // Phase E: Stage 4 Career Prep Models
 // ==========================================
@@ -326,6 +407,8 @@ model Assignment {
   title        String
   description  String
   dueDate      DateTime
+  topic        String    @default("")
+  maxPoints    Int       @default(100)
   xpReward     Int       @default(75)
   coinReward   Int       @default(50)
   createdAt    DateTime  @default(now())

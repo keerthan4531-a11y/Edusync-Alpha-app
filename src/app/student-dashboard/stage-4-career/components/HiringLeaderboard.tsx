@@ -80,9 +80,9 @@ export function HiringLeaderboard() {
                     <td className="py-4 px-6 text-center">
                       <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${
                         student.status === "Placed"
-                          ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                          ? "bg-indigo-500/10 text-indigo-500 border-indigo-500/20"
                           : student.status === "Interviewing"
-                          ? "bg-blue-500/10 text-blue-400 border-blue-500/20"
+                          ? "bg-indigo-500/10 text-indigo-400 border-indigo-500/20"
                           : "bg-zinc-500/10 text-zinc-500 dark:text-gray-400 border-zinc-500/20"
                       }`}>
                         {student.status}

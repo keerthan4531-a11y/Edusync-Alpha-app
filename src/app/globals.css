@@ -135,3 +135,15 @@
     @apply font-sans;
   }
 }
+
+body.ai-chat-open {
+  overflow: hidden !important;
+}
+
+body.ai-chat-open #app-main {
+  overflow: hidden !important;
+}
+
+body.ai-chat-open #app-sidebar {
+  display: none !important;
+}

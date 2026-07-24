@@ -1,9 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Stage1ContentDTO } from "@/types/communication";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
+import { ChallengeSkeleton } from "./ChallengeSkeleton";
+import { TypewriterEffect } from "@/components/ui/typewriter-effect";
+import { DifficultyPicker, Difficulty } from "./DifficultyPicker";
+import Image from "next/image";
 import { useMCQ } from "../hooks/useMCQ";
+import { Stage1ContentDTO } from "@/types/communication";
 import { 
   Volume2, 
   VolumeX, 
@@ -18,7 +22,9 @@ import {
   Play,
   Check,
   PenTool,
-  ChevronLeft
+  ChevronLeft,
+  Mic,
+  ArrowUp, ArrowDown, ArrowLeft, MapPin, Flag, Navigation
 } from "lucide-react";
 
 interface ListeningModuleProps {
@@ -26,25 +32,34 @@ interface ListeningModuleProps {
   challenges?: Stage1ContentDTO[];
   onNext: () => void;
   onSubFeatureOpen?: (isOpen: boolean) => void;
+  difficulty?: string;
+  onComplete?: (score: number, timeSec: number) => void;
 }
 
-export function ListeningModule({ content, challenges = [], onNext, onSubFeatureOpen }: ListeningModuleProps) {
+export function ListeningModule({ content, challenges = [], onNext, onSubFeatureOpen, onComplete }: ListeningModuleProps) {
   const [activeFeature, setActiveFeature] = useState<"mcq" | "fill" | "directions" | "tone" | null>(null);
+  const [pendingFeature, setPendingFeature] = useState<"mcq" | "fill" | "directions" | "tone" | null>(null);
+  const [difficulty, setDifficulty] = useState<Difficulty | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [hasPlayedMcqAudio, setHasPlayedMcqAudio] = useState(false);
+  const [showMcqQuestions, setShowMcqQuestions] = useState(false);
 
   useEffect(() => {
     if (onSubFeatureOpen) {
-      onSubFeatureOpen(activeFeature !== null);
+      onSubFeatureOpen(activeFeature !== null || pendingFeature !== null);
     }
-  }, [activeFeature, onSubFeatureOpen]);
+  }, [activeFeature, pendingFeature, onSubFeatureOpen]);
 
   // Find corresponding seeded challenges
-  const mcqChallenge = challenges.find(c => {
+  const fallbackChallenge = challenges.find(c => {
     try {
       const q = typeof c.questions === "string" ? JSON.parse(c.questions) : c.questions;
       return Array.isArray(q) && q.length > 0 && !q[0].isDirection && !q[0].isToneAnalysis;
     } catch { return false; }
   }) || content;
+
+  const [dynamicMcqChallenge, setDynamicMcqChallenge] = useState<any>(null);
+  const [isLoadingMcq, setIsLoadingMcq] = useState(false);
 
   const directionsChallenge = challenges.find(c => {
     try {
@@ -67,12 +82,40 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
     submitAnswers: submitMCQAnswers,
     isSubmitting: isMCQSubmitting,
     result: mcqResult,
-    error: mcqError
-  } = useMCQ(mcqChallenge);
+    error: mcqError,
+    reset: resetMCQ
+  } = useMCQ(dynamicMcqChallenge);
+
+  const loadDynamicMcq = async () => {
+    setIsLoadingMcq(true);
+    setDynamicMcqChallenge(null);
+    setHasPlayedMcqAudio(false);
+    setShowMcqQuestions(false);
+    resetMCQ();
+    try {
+      const res = await fetch("/api/communication/generate-listening-mcq", {
+        method: "POST"
+      });
+      const data = await res.json();
+      if (res.ok && data && data.questions) {
+        setDynamicMcqChallenge(data);
+      } else {
+        setDynamicMcqChallenge(fallbackChallenge);
+      }
+    } catch (e) {
+      console.error("Failed to load dynamic MCQ:", e);
+      setDynamicMcqChallenge(fallbackChallenge);
+    } finally {
+      setIsLoadingMcq(false);
+    }
+  };
 
   // Audio speech synthesis helper
-  const speakText = (text: string) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  const speakText = (text: string, onEnd?: () => void) => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
+      if (onEnd) onEnd();
+      return;
+    }
     
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
@@ -80,7 +123,14 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
     utterance.rate = 0.9;
     
     utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => setIsPlaying(false);
+    utterance.onend = () => {
+      setIsPlaying(false);
+      if (onEnd) onEnd();
+    };
+    utterance.onerror = () => {
+      setIsPlaying(false);
+      if (onEnd) onEnd();
+    };
     
     window.speechSynthesis.speak(utterance);
   };
@@ -93,240 +143,115 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
   };
 
   // ----------------------------------------------------
-  // GRID DIRECTIONS PANEL LOGIC
+  // LISTEN & GO GAME LOGIC
   // ----------------------------------------------------
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [tracedPath, setTracedPath] = useState<{ row: number; col: number }[]>([]);
-  const [directionsStatus, setDirectionsStatus] = useState<string | null>(null);
-  const [directionsResult, setDirectionsResult] = useState<any>(null);
-  const [isSubmittingDirections, setIsSubmittingDirections] = useState(false);
+  const [isListenGoLoading, setIsListenGoLoading] = useState(false);
+  const [dynamicListenGoData, setDynamicListenGoData] = useState<any>(null);
+  const [playerPos, setPlayerPos] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
+  const [pathTrail, setPathTrail] = useState<{ x: number, y: number }[]>([]);
+  const [isListenGoSubmitted, setIsListenGoSubmitted] = useState(false);
+  const [listenGoResult, setListenGoResult] = useState<any>(null);
+  const [hasPlayedGoAudio, setHasPlayedGoAudio] = useState(false);
+  const [showGoQuestions, setShowGoQuestions] = useState(false);
 
-  const parsedDirections = directionsChallenge 
-    ? (typeof directionsChallenge.questions === "string" ? JSON.parse(directionsChallenge.questions) : directionsChallenge.questions)
-    : null;
-
-  const gridSize = parsedDirections?.gridSize || 5;
-  const landmarks = parsedDirections?.landmarks || [];
-  const correctPath = parsedDirections?.correctPath || [];
-
-  // Canvas drawing effect
-  useEffect(() => {
-    if (activeFeature !== "directions" || !canvasRef.current) return;
+  const loadListenGo = async () => {
+    setIsListenGoLoading(true);
+    setDynamicListenGoData(null);
+    setListenGoResult(null);
+    setIsListenGoSubmitted(false);
+    setPathTrail([]);
+    setHasPlayedGoAudio(false);
+    setShowGoQuestions(false);
     
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Reset and clear canvas
-    const width = canvas.width;
-    const height = canvas.height;
-    ctx.clearRect(0, 0, width, height);
-
-    const padding = 40;
-    const cellSize = (width - padding * 2) / (gridSize - 1);
-
-    // 1. Draw Grid lines
-    ctx.strokeStyle = "rgba(139, 92, 246, 0.08)";
-    ctx.lineWidth = 1;
-    for (let i = 0; i < gridSize; i++) {
-      // Horizontal
-      ctx.beginPath();
-      ctx.moveTo(padding, padding + i * cellSize);
-      ctx.lineTo(width - padding, padding + i * cellSize);
-      ctx.stroke();
-
-      // Vertical
-      ctx.beginPath();
-      ctx.moveTo(padding + i * cellSize, padding);
-      ctx.lineTo(padding + i * cellSize, height - padding);
-      ctx.stroke();
-    }
-
-    // 2. Draw Grid intersections
-    for (let r = 0; r < gridSize; r++) {
-      for (let c = 0; c < gridSize; c++) {
-        const x = padding + c * cellSize;
-        const y = padding + r * cellSize;
-        
-        ctx.beginPath();
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(196, 181, 253, 0.4)";
-        ctx.fill();
-      }
-    }
-
-    // 3. Draw Landmarks text labels
-    landmarks.forEach((lm: any) => {
-      const x = padding + lm.col * cellSize;
-      const y = padding + lm.row * cellSize;
-      
-      ctx.fillStyle = "rgba(167, 139, 250, 0.7)";
-      ctx.font = "bold 10px Poppins, sans-serif";
-      ctx.textAlign = "center";
-      ctx.fillText(lm.name, x, y - 8);
-    });
-
-    // 4. Draw Traced Path
-    if (tracedPath.length > 0) {
-      ctx.strokeStyle = "#a78bfa";
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      tracedPath.forEach((pt, idx) => {
-        const x = padding + pt.col * cellSize;
-        const y = padding + pt.row * cellSize;
-        if (idx === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-
-      // Draw dots on traced path nodes
-      tracedPath.forEach((pt) => {
-        const x = padding + pt.col * cellSize;
-        const y = padding + pt.row * cellSize;
-        ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = "#8b5cf6";
-        ctx.fill();
-      });
-    }
-
-    // 5. Draw Start (green glow) & End (red glow) nodes
-    if (parsedDirections) {
-      const startX = padding + parsedDirections.start.col * cellSize;
-      const startY = padding + parsedDirections.start.row * cellSize;
-      ctx.beginPath();
-      ctx.arc(startX, startY, 8, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(16, 185, 129, 0.2)";
-      ctx.strokeStyle = "#10b981";
-      ctx.lineWidth = 2;
-      ctx.fill();
-      ctx.stroke();
-
-      const endX = padding + parsedDirections.end.col * cellSize;
-      const endY = padding + parsedDirections.end.row * cellSize;
-      ctx.beginPath();
-      ctx.arc(endX, endY, 8, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(239, 68, 68, 0.2)";
-      ctx.strokeStyle = "#ef4444";
-      ctx.lineWidth = 2;
-      ctx.fill();
-      ctx.stroke();
-    }
-  }, [activeFeature, tracedPath, gridSize, landmarks, parsedDirections]);
-
-  // Click handler on Canvas
-  const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (directionsResult !== null) return; // quiz completed
-
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const rect = canvas.getBoundingClientRect();
-    // Scale client click positions to canvas coordinates to support high-DPI and responsiveness
-    const xClick = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const yClick = (e.clientY - rect.top) * (canvas.height / rect.height);
-
-    const padding = 40;
-    const cellSize = (canvas.width - padding * 2) / (gridSize - 1);
-
-    // Find closest intersection node
-    let closestRow = -1;
-    let closestCol = -1;
-    let minDistance = 25; // threshold in pixels
-
-    for (let r = 0; r < gridSize; r++) {
-      for (let c = 0; c < gridSize; c++) {
-        const xNode = padding + c * cellSize;
-        const yNode = padding + r * cellSize;
-        
-        const dist = Math.sqrt((xClick - xNode) ** 2 + (yClick - yNode) ** 2);
-        if (dist < minDistance) {
-          minDistance = dist;
-          closestRow = r;
-          closestCol = c;
-        }
-      }
-    }
-
-    if (closestRow !== -1 && closestCol !== -1) {
-      // Validate step connection: Must connect to previous point (cardinal step only: N, S, E, W)
-      if (tracedPath.length > 0) {
-        const lastPt = tracedPath[tracedPath.length - 1];
-        
-        // Check if double clicking the last point to undo
-        if (lastPt.row === closestRow && lastPt.col === closestCol) {
-          return;
-        }
-
-        const rowDiff = Math.abs(lastPt.row - closestRow);
-        const colDiff = Math.abs(lastPt.col - closestCol);
-        
-        // Ensure distance is exactly 1 block in grid coordinate space
-        const isValidStep = (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
-        
-        if (!isValidStep) {
-          setDirectionsStatus("Please select adjacent junctions only (1 grid step north/south/east/west).");
-          return;
-        }
-      } else {
-        // First point MUST be the start node
-        if (closestRow !== parsedDirections.start.row || closestCol !== parsedDirections.start.col) {
-          setDirectionsStatus("You must start tracing from the green starting node.");
-          return;
-        }
-      }
-
-      setTracedPath((prev) => [...prev, { row: closestRow, col: closestCol }]);
-      setDirectionsStatus(null);
-    }
-  };
-
-  const undoDirectionStep = () => {
-    setTracedPath((prev) => prev.slice(0, -1));
-    setDirectionsStatus(null);
-  };
-
-  const resetDirections = () => {
-    setTracedPath([]);
-    setDirectionsStatus(null);
-    setDirectionsResult(null);
-  };
-
-  const submitDirections = async () => {
-    if (tracedPath.length === 0 || !directionsChallenge) return;
-    
-    // Check if path reaches destination node
-    const lastNode = tracedPath[tracedPath.length - 1];
-    if (lastNode.row !== parsedDirections.end.row || lastNode.col !== parsedDirections.end.col) {
-      setDirectionsStatus("You must complete the path all the way to the red destination node before submitting.");
-      return;
-    }
-
-    setIsSubmittingDirections(true);
-    setDirectionsStatus(null);
-
     try {
-      const res = await fetch("/api/communication/evaluate-directions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contentId: directionsChallenge.id,
-          path: tracedPath
-        })
-      });
+      const res = await fetch("/api/communication/generate-listen-go", { method: "POST" });
       const data = await res.json();
-      if (res.ok) {
-        setDirectionsResult(data);
-      } else {
-        setDirectionsStatus(data.error || "Failed to evaluate directions.");
+      if (res.ok && data.success) {
+        setDynamicListenGoData(data);
+        setPlayerPos(data.startPos);
+        setPathTrail([data.startPos]);
       }
     } catch (e) {
       console.error(e);
-      setDirectionsStatus("Connection error. Please try again.");
     } finally {
-      setIsSubmittingDirections(false);
+      setIsListenGoLoading(false);
     }
   };
+
+  const movePlayer = (dx: number, dy: number) => {
+    if (!dynamicListenGoData || isListenGoSubmitted) return;
+    
+    const { gridSize } = dynamicListenGoData;
+    const nextX = playerPos.x + dx;
+    const nextY = playerPos.y + dy;
+
+    if (nextX >= 0 && nextX < gridSize && nextY >= 0 && nextY < gridSize) {
+      const newPos = { x: nextX, y: nextY };
+      setPlayerPos(newPos);
+      setPathTrail(prev => [...prev, newPos]);
+    }
+  };
+
+  // Keyboard controls
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (activeFeature !== "directions" || !dynamicListenGoData || isListenGoSubmitted) return;
+      
+      switch(e.key) {
+        case "ArrowUp": movePlayer(0, -1); break;
+        case "ArrowDown": movePlayer(0, 1); break;
+        case "ArrowLeft": movePlayer(-1, 0); break;
+        case "ArrowRight": movePlayer(1, 0); break;
+      }
+    };
+    
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeFeature, dynamicListenGoData, isListenGoSubmitted, playerPos]);
+
+  const verifyListenGo = async () => {
+    if (!dynamicListenGoData) return;
+    
+    setIsListenGoSubmitted(true);
+    
+    const { endPos } = dynamicListenGoData;
+    const isCorrect = playerPos.x === endPos.x && playerPos.y === endPos.y;
+    
+    // Simple local evaluation for this game
+    if (isCorrect) {
+      setListenGoResult({
+        success: true,
+        feedback: "Awesome! You arrived at the exact correct destination.",
+        tamilFeedback: "அருமை! நீங்கள் சரியான இடத்தை அடைந்துவிட்டீர்கள்.",
+        xpAwarded: 15,
+        score: 100
+      });
+    } else {
+      setListenGoResult({
+        success: false,
+        feedback: "Oops! That's not the right destination. Let's try another route.",
+        tamilFeedback: "ஐயோ! இது சரியான இடமல்ல. மீண்டும் முயற்சி செய்யலாம்.",
+        xpAwarded: 5,
+        score: 0
+      });
+    }
+  };
+
+  const undoListenGo = () => {
+    if (pathTrail.length > 1) {
+      const newTrail = [...pathTrail];
+      newTrail.pop();
+      setPathTrail(newTrail);
+      setPlayerPos(newTrail[newTrail.length - 1]);
+    }
+  };
+
+  // Ensure game is loaded when opened
+  useEffect(() => {
+    if (activeFeature === "directions" && !dynamicListenGoData && !isListenGoLoading) {
+      loadListenGo();
+    }
+  }, [activeFeature]);
 
   // ----------------------------------------------------
   // VOICE TONE ANALYSIS LOGIC
@@ -334,115 +259,228 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
   const [toneSelectedIdx, setToneSelectedIdx] = useState<number | null>(null);
   const [isToneSubmitted, setIsToneSubmitted] = useState(false);
   const [toneResult, setToneResult] = useState<any>(null);
+  const [isEvaluatingTone, setIsEvaluatingTone] = useState(false);
 
   const parsedTone = toneChallenge
     ? (typeof toneChallenge.questions === "string" ? JSON.parse(toneChallenge.questions) : toneChallenge.questions)
     : null;
 
-  const submitToneChoice = () => {
-    if (toneSelectedIdx === null || !toneChallenge) return;
+  const submitToneChoice = async () => {
+    if (toneSelectedIdx === null || !toneChallenge || !parsedTone) return;
 
-    const correct = toneSelectedIdx === parsedTone.correctIndex;
-    setIsToneSubmitted(true);
-    setToneResult({
-      correct,
-      score: correct ? 100 : 0,
-      xpAwarded: correct ? 20 : 5,
-      feedback: correct 
-        ? "Superb! You correctly identified the speaker's emotional tone as Excited." 
-        : `The emotional tone was "Excited". The speaker was thrilled about the research project.`
-    });
+    setIsEvaluatingTone(true);
+    try {
+      const selectedTone = parsedTone.options[toneSelectedIdx];
+      const correctTone = parsedTone.options[parsedTone.correctIndex];
+
+      const res = await fetch("/api/communication/evaluate-tone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contentId: toneChallenge.id,
+          selectedTone,
+          correctTone
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsToneSubmitted(true);
+        setToneResult({
+          correct: data.correct,
+          score: data.score,
+          xpAwarded: data.xpAwarded,
+          feedback: data.feedback,
+          tamilFeedback: data.tamilFeedback
+        });
+      }
+    } catch (e) {
+      console.error("Failed to evaluate tone selection:", e);
+    } finally {
+      setIsEvaluatingTone(false);
+    }
   };
 
   // ----------------------------------------------------
   // GAP FILL / FILL THE BEATS LOGIC
   // ----------------------------------------------------
-  const [gapAnswers, setGapAnswers] = useState<Record<string, string>>({});
+  const [gapAnswers, setGapAnswers] = useState<Record<number, string>>({});
   const [isGapSubmitted, setIsGapSubmitted] = useState(false);
   const [gapResult, setGapResult] = useState<any>(null);
+  const [isEvaluatingGap, setIsEvaluatingGap] = useState(false);
+  const [dynamicGapChallenge, setDynamicGapChallenge] = useState<any>(null);
+  const [isLoadingGap, setIsLoadingGap] = useState(false);
+  const [hasPlayedGapAudio, setHasPlayedGapAudio] = useState(false);
+  const [showGapQuestions, setShowGapQuestions] = useState(false);
 
-  // We can use the Routine challenge content but hide the MCQ and render text fill
-  const handleGapAnswerChange = (qId: number, val: string) => {
-    setGapAnswers(prev => ({ ...prev, [qId]: val }));
+  const loadDynamicGap = async () => {
+    setIsLoadingGap(true);
+    setDynamicGapChallenge(null);
+    setGapAnswers({});
+    setIsGapSubmitted(false);
+    setGapResult(null);
+    setHasPlayedGapAudio(false);
+    setShowGapQuestions(false);
+    try {
+      const res = await fetch("/api/communication/generate-gap-fill", {
+        method: "POST"
+      });
+      const data = await res.json();
+      if (res.ok && data && data.displaySegments) {
+        setDynamicGapChallenge(data);
+      }
+    } catch (e) {
+      console.error("Failed to load dynamic gap fill:", e);
+    } finally {
+      setIsLoadingGap(false);
+    }
   };
 
-  const submitGapAnswers = () => {
-    let score = 0;
-    // Routine quiz has 2 questions.
-    // Q1: "What time does the speaker wake up?" -> correct is "7 AM"
-    // Q2: "What does the speaker have for breakfast?" -> correct is "cereal and coffee"
-    const isQ1Correct = (gapAnswers[1] || "").toLowerCase().includes("7") || (gapAnswers[1] || "").toLowerCase().includes("seven");
-    const isQ2Correct = (gapAnswers[2] || "").toLowerCase().includes("cereal") || (gapAnswers[2] || "").toLowerCase().includes("coffee");
-    
-    if (isQ1Correct) score += 50;
-    if (isQ2Correct) score += 50;
-
-    setIsGapSubmitted(true);
-    setGapResult({
-      score,
-      xpAwarded: score === 100 ? 25 : score === 50 ? 15 : 5,
-      q1Correct: isQ1Correct,
-      q2Correct: isQ2Correct,
-      feedback: score === 100
-        ? "Perfect! You accurately filled all details from the audio clip."
-        : "Some details were missed. Try playing the audio once more and check the script details."
-    });
+  const handleGapAnswerChange = (qIndex: number, val: string) => {
+    setGapAnswers(prev => ({ ...prev, [qIndex]: val }));
   };
+
+  const submitGapAnswers = async () => {
+    if (!fallbackChallenge || !dynamicGapChallenge) return;
+    setIsEvaluatingGap(true);
+
+    try {
+      const correctAnswers = dynamicGapChallenge.correctAnswers || [];
+      const userAnswers = correctAnswers.map((_: any, idx: number) => gapAnswers[idx] || "");
+
+      const res = await fetch("/api/communication/evaluate-gap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contentId: fallbackChallenge.id,
+          userAnswers,
+          correctAnswers
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIsGapSubmitted(true);
+        const newResult: any = {
+          score: data.score,
+          xpAwarded: data.xpAwarded,
+          feedback: data.feedback,
+          tamilFeedback: data.tamilFeedback,
+          correctStatus: []
+        };
+        for (let i = 0; i < correctAnswers.length; i++) {
+          const ans = (gapAnswers[i] || "").toLowerCase().trim();
+          const corr = (correctAnswers[i] || "").toLowerCase().trim();
+          newResult.correctStatus.push(ans === corr || corr.includes(ans) || ans.includes(corr));
+        }
+        setGapResult(newResult);
+      }
+    } catch (e) {
+      console.error("Failed to evaluate gap fill:", e);
+    } finally {
+      setIsEvaluatingGap(false);
+    }
+  };
+
+  // Difficulty Picker
+  if (pendingFeature) {
+    const titles: Record<string, string> = {
+      "mcq": "Listen and Answer",
+      "fill": "Fill in the Blanks",
+      "directions": "Follow Directions",
+      "tone": "Emotion & Tone"
+    };
+    return (
+      <DifficultyPicker 
+        title={titles[pendingFeature] || "Select Difficulty"}
+        onSelect={(diff) => {
+          setDifficulty(diff);
+          setActiveFeature(pendingFeature);
+          setPendingFeature(null);
+          // Trigger loads if needed
+          if (pendingFeature === "mcq") {
+            loadDynamicMcq();
+          } else if (pendingFeature === "fill") {
+            loadDynamicGap();
+          }
+        }}
+        onBack={() => setPendingFeature(null)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
-      {/* FEATURE SELECTOR GRID */}
-      {!activeFeature ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6 pt-2">
+      {/* Main Feature Menu: 1. Listen & Go, 2. Words fill in, 3. Listen & Answer */}
+      {!activeFeature && !pendingFeature && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+          {/* Module 1: Listen & Go */}
           <button
-            onClick={() => { setActiveFeature("mcq"); stopAudio(); }}
-            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+            onClick={() => { setPendingFeature("directions"); stopAudio(); }}
+            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl shadow-indigo-500/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
           >
-            <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-purple-400/10 border-purple-400/20 border transition-transform duration-300 group-hover:scale-110">
-              <HelpCircle className="w-10 h-10 text-purple-400" strokeWidth={1.5} />
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-indigo-500/10 dark:bg-indigo-950/30 border-2 border-indigo-400/20 transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400/50 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+              <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
+                <Image 
+                  src="/images/communication/listening.png" 
+                  alt="Listen & Go"
+                  fill
+                  className="object-contain mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
+                  sizes="(max-width: 768px) 64px, 80px"
+                  priority
+                />
+              </div>
             </div>
             <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
-              Passage MCQ
+              Listen & Go
             </span>
           </button>
           
+          {/* Module 2: Words fill in */}
           <button
-            onClick={() => { setActiveFeature("fill"); stopAudio(); }}
-            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+            onClick={() => { setPendingFeature("fill"); stopAudio(); }}
+            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl shadow-indigo-500/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
           >
-            <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-emerald-400/10 border-emerald-400/20 border transition-transform duration-300 group-hover:scale-110">
-              <PenTool className="w-10 h-10 text-emerald-400" strokeWidth={1.5} />
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-indigo-500/10 dark:bg-indigo-950/30 border-2 border-indigo-400/20 transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400/50 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+              <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
+                <Image 
+                  src="/images/communication/listening.png" 
+                  alt="Words fill in"
+                  fill
+                  className="object-contain mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
+                  sizes="(max-width: 768px) 64px, 80px"
+                  priority
+                />
+              </div>
             </div>
             <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
-              Fill the Beats
+              Words fill in
             </span>
           </button>
-          
+
+          {/* Module 3: Listen & Answer */}
           <button
-            onClick={() => { setActiveFeature("directions"); stopAudio(); }}
-            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+            onClick={() => { setPendingFeature("mcq"); stopAudio(); }}
+            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl shadow-indigo-500/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
           >
-            <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-blue-400/10 border-blue-400/20 border transition-transform duration-300 group-hover:scale-110">
-              <Compass className="w-10 h-10 text-blue-400" strokeWidth={1.5} />
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-indigo-500/10 dark:bg-indigo-950/30 border-2 border-indigo-400/20 transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400/50 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+              <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
+                <Image 
+                  src="/images/communication/listening.png" 
+                  alt="Listen & Answer"
+                  fill
+                  className="object-contain mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
+                  sizes="(max-width: 768px) 64px, 80px"
+                  priority
+                />
+              </div>
             </div>
             <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
-              Direction Follower
-            </span>
-          </button>
-          
-          <button
-            onClick={() => { setActiveFeature("tone"); stopAudio(); }}
-            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
-          >
-            <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-orange-400/10 border-orange-400/20 border transition-transform duration-300 group-hover:scale-110">
-              <Smile className="w-10 h-10 text-orange-400" strokeWidth={1.5} />
-            </div>
-            <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
-              Tone Analyzer
+              Listen & Answer
             </span>
           </button>
         </div>
-      ) : (
+      )}
+
+      {activeFeature && (
         <div>
           <div className="mb-6 flex items-center">
             <button
@@ -454,337 +492,477 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
             </button>
           </div>
 
-          {/* RENDER FEATURE 1: PASSAGE MCQ */}
+          {/* RENDER FEATURE: PASSAGE MCQ (Listen & Answer) */}
           {activeFeature === "mcq" && (
-        <div className="space-y-6">
-          <LiquidGlassCard className="p-8 flex flex-col items-center justify-center border-purple-500/20" accentColor="#8b5cf6">
-            <h2 className="text-[22px] font-bold text-foreground mb-6">
-              {mcqChallenge?.title || "Daily Routine Listening Practice"}
-            </h2>
-            
-            <button
-              onClick={() => speakText(mcqChallenge?.content || "")}
-              disabled={isPlaying}
-              className={`h-24 w-24 rounded-full flex items-center justify-center transition-all duration-500 ${
-                isPlaying 
-                  ? "bg-purple-600 shadow-[inset_0_0_20px_rgba(255,255,255,0.4),0_0_40px_rgba(139,92,246,0.6)] scale-110" 
-                  : "bg-purple-500/20 hover:bg-purple-500/30 hover:scale-105 border border-purple-500/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
-              }`}
-            >
-              {isPlaying ? (
-                <div className="flex gap-1 items-center">
-                  <div className="w-2 h-8 bg-white rounded-full animate-pulse" />
-                  <div className="w-2 h-12 bg-white rounded-full animate-pulse delay-75" />
-                  <div className="w-2 h-8 bg-white rounded-full animate-pulse delay-150" />
+            <div className="space-y-6">
+              {isLoadingMcq ? (
+                <ChallengeSkeleton variant="listening-mcq" />
+              ) : dynamicMcqChallenge ? (
+                <div className="space-y-6 animate-in fade-in">
+                  {/* Step 1: Play Audio Card - Only visible before user clicks Take Test */}
+                  {!showMcqQuestions ? (
+                    <LiquidGlassCard className="p-8 md:p-12 flex flex-col items-center justify-center text-center border-indigo-500/20 max-w-xl mx-auto w-full" accentColor="#6366f1">
+                      <h2 className="text-[24px] font-bold text-foreground mb-8 text-center w-full">
+                        {dynamicMcqChallenge.title || "Listen & Answer"}
+                      </h2>
+                      
+                      <div className="flex flex-col items-center justify-center w-full my-2">
+                        <button
+                          onClick={() => {
+                            speakText(dynamicMcqChallenge.content || "", () => setHasPlayedMcqAudio(true));
+                          }}
+                          disabled={isPlaying || hasPlayedMcqAudio}
+                          className={`h-24 w-24 md:h-28 md:w-28 rounded-full flex items-center justify-center transition-all duration-500 mx-auto ${
+                            isPlaying 
+                              ? "bg-indigo-600 shadow-[inset_0_0_20px_rgba(255,255,255,0.4),0_0_40px_rgba(139,92,246,0.6)] scale-110" 
+                              : hasPlayedMcqAudio
+                                ? "bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 cursor-not-allowed opacity-60"
+                                : "bg-indigo-500/20 hover:bg-indigo-500/30 hover:scale-105 border border-indigo-500/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
+                          }`}
+                          aria-label="Play Audio"
+                        >
+                          {isPlaying ? (
+                            <div className="flex gap-1.5 items-center justify-center">
+                              <div className="w-2 h-8 bg-white rounded-full animate-pulse" />
+                              <div className="w-2 h-12 bg-white rounded-full animate-pulse delay-75" />
+                              <div className="w-2 h-8 bg-white rounded-full animate-pulse delay-150" />
+                            </div>
+                          ) : (
+                            <Play className={`h-12 w-12 ml-1 ${hasPlayedMcqAudio ? "text-zinc-400 dark:text-zinc-500" : "text-indigo-400"}`} />
+                          )}
+                        </button>
+                        <p className="mt-5 text-zinc-500 dark:text-gray-400 font-medium text-[15px] text-center w-full">
+                          {isPlaying 
+                            ? "Playing audio passage..." 
+                            : hasPlayedMcqAudio 
+                              ? "Audio finished! You can only play it once. Click Take Test below." 
+                              : "Click to play audio"}
+                        </p>
+                      </div>
+
+                      {/* Take Test Button - Appears once audio has played */}
+                      {hasPlayedMcqAudio && (
+                        <button
+                          onClick={() => {
+                            stopAudio();
+                            setShowMcqQuestions(true);
+                          }}
+                          className="mt-8 px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[16px] shadow-[0_4px_20px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_24px_rgba(99,102,241,0.6)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 animate-in fade-in zoom-in-95 mx-auto"
+                        >
+                          <span>Take Test</span>
+                          <ArrowRight className="w-5 h-5" />
+                        </button>
+                      )}
+                    </LiquidGlassCard>
+                  ) : (
+                    /* Step 2: 3 Questions Box - Shown when Take Test is clicked */
+                    <div className="space-y-6 animate-in fade-in">
+                      <div className="space-y-6">
+                        <h3 className="text-[19px] font-bold text-foreground">Answer the Questions</h3>
+                        {Array.isArray(dynamicMcqChallenge.questions) && dynamicMcqChallenge.questions.map((q: any, qIndex: number) => {
+                          const isSubmitted = mcqResult !== null;
+                          
+                          return (
+                            <LiquidGlassCard key={q.id || qIndex} className="p-5 border-black/10 dark:border-white/10 animate-in fade-in" accentColor="#6366f1">
+                              <div className="text-foreground mb-4 font-medium text-[17px]">
+                                Q{qIndex + 1}: {q.question}
+                              </div>
+                              <div className="space-y-3">
+                                {q.options?.map((opt: string, idx: number) => {
+                                  const isOptionSelected = mcqAnswers[q.id] === idx;
+                                  const isCorrect = isSubmitted && idx === q.correctIndex;
+                                  const isWrong = isSubmitted && isOptionSelected && idx !== q.correctIndex;
+
+                                  let btnStyle = "border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-zinc-600 dark:text-gray-300";
+                                  if (isOptionSelected && !isSubmitted) {
+                                    btnStyle = "border-indigo-500 bg-indigo-500/10 text-indigo-600 dark:text-white font-semibold";
+                                  } else if (isCorrect) {
+                                    btnStyle = "border-green-500 bg-green-500/10 text-green-600 dark:text-green-300 font-semibold";
+                                  } else if (isWrong) {
+                                    btnStyle = "border-red-500 bg-red-500/10 text-red-600 dark:text-red-300";
+                                  }
+
+                                  return (
+                                    <button
+                                      key={idx}
+                                      disabled={isSubmitted}
+                                      onClick={() => handleMCQOptionSelect(q.id, idx)}
+                                      className={`w-full text-left p-3.5 rounded-xl border transition-all duration-300 ${btnStyle} text-[15px]`}
+                                    >
+                                      {opt}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </LiquidGlassCard>
+                          );
+                        })}
+                      </div>
+
+                      {mcqError && <div className="text-red-400 text-sm">{mcqError}</div>}
+
+                      {mcqResult ? (
+                        <LiquidGlassCard className="p-6 border-indigo-500 bg-indigo-500/5 animate-in slide-in-from-bottom" accentColor="#6366f1">
+                          <h3 className="text-[22px] font-bold text-foreground mb-2">Results</h3>
+                          <p className="text-zinc-600 dark:text-gray-300 mb-2 text-[17px]">{mcqResult.feedback}</p>
+                          {mcqResult.tamilFeedback && (
+                            <p className="text-indigo-600 dark:text-indigo-300 text-[15px] italic mb-4">{mcqResult.tamilFeedback}</p>
+                          )}
+                          <div className="flex items-center gap-4 flex-wrap">
+                            <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/50 font-bold">
+                              Score: {mcqResult.score}%
+                            </span>
+                            <span className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 font-bold">
+                              +{mcqResult.xpAwarded} XP
+                            </span>
+                            <div className="flex-1" />
+                            <button
+                              onClick={loadDynamicMcq}
+                              className="px-6 py-2.5 rounded-xl bg-[#6366f1] hover:bg-[#5254cc] text-white font-medium shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all"
+                            >
+                              Next Passage
+                            </button>
+                          </div>
+                        </LiquidGlassCard>
+                      ) : (
+                        <button
+                          onClick={submitMCQAnswers}
+                          disabled={isMCQSubmitting}
+                          className="w-full mt-6 py-4 rounded-2xl bg-[#6366f1] text-white font-semibold text-[17px] shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:bg-[#5254cc] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {isMCQSubmitting ? "Evaluating..." : "Submit Answers"}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
-                <Play className="h-10 w-10 text-purple-400 ml-1" />
+                <div className="text-red-400 text-center py-10">Failed to load dynamic lesson. Please go back and try again.</div>
               )}
-            </button>
-            <p className="mt-4 text-zinc-500 dark:text-gray-400 font-medium">
-              {isPlaying ? "Playing audio..." : "Click to play the audio passage"}
-            </p>
-          </LiquidGlassCard>
+            </div>
+          )}
 
-          {/* Render MCQ Questions */}
-          <div className="space-y-6">
-            <h3 className="text-[17px] font-semibold text-foreground">Listen & Answer</h3>
-            {Array.isArray(mcqChallenge?.questions) && mcqChallenge.questions.map((q) => {
-              const isSelected = mcqAnswers[q.id] !== undefined;
-              const isSubmitted = mcqResult !== null;
-              
-              return (
-                <LiquidGlassCard key={q.id} className="p-5 border-black/10 dark:border-white/10 animate-in fade-in" accentColor="#8b5cf6">
-                  <p className="text-foreground mb-4 font-medium text-[17px]">{q.question}</p>
-                  <div className="space-y-3">
-                    {q.options?.map((opt: string, idx: number) => {
-                      const isOptionSelected = mcqAnswers[q.id] === idx;
-                      const isCorrect = isSubmitted && idx === q.correctIndex;
-                      const isWrong = isSubmitted && isOptionSelected && idx !== q.correctIndex;
 
-                      let btnStyle = "border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-zinc-600 dark:text-gray-300";
-                      if (isOptionSelected && !isSubmitted) {
-                        btnStyle = "border-purple-500 bg-purple-500/10 text-purple-600 dark:text-white";
-                      } else if (isCorrect) {
-                        btnStyle = "border-green-500 bg-green-500/10 text-green-600 dark:text-green-300";
-                      } else if (isWrong) {
-                        btnStyle = "border-red-500 bg-red-500/10 text-red-600 dark:text-red-300";
-                      }
-
-                      return (
-                        <button
-                          key={idx}
-                          disabled={isSubmitted}
-                          onClick={() => handleMCQOptionSelect(q.id, idx)}
-                          className={`w-full text-left p-3 rounded-xl border transition-all duration-300 ${btnStyle} text-[15px]`}
-                        >
-                          {opt}
-                        </button>
-                      );
-                    })}
+      {/* RENDER FEATURE 2: WORDS FILL IN / GAP FILL */}
+      {activeFeature === "fill" && (
+        <div className="space-y-6">
+          {isLoadingGap ? (
+            <ChallengeSkeleton variant="listening-fill" />
+          ) : dynamicGapChallenge ? (
+            <div className="space-y-6 animate-in fade-in">
+              {!showGapQuestions ? (
+                <LiquidGlassCard className="p-8 md:p-12 flex flex-col items-center justify-center text-center border-indigo-500/20 max-w-xl mx-auto w-full" accentColor="#6366f1">
+                  <h2 className="text-[24px] font-bold text-foreground mb-8 text-center w-full">
+                    Words fill in
+                  </h2>
+                  
+                  <div className="flex flex-col items-center justify-center w-full my-2">
+                    <button
+                      onClick={() => {
+                        speakText(dynamicGapChallenge.fullText || "", () => setHasPlayedGapAudio(true));
+                      }}
+                      disabled={isPlaying || hasPlayedGapAudio}
+                      className={`h-24 w-24 md:h-28 md:w-28 rounded-full flex items-center justify-center transition-all duration-500 mx-auto ${
+                        isPlaying 
+                          ? "bg-indigo-600 shadow-[inset_0_0_20px_rgba(255,255,255,0.4),0_0_40px_rgba(139,92,246,0.6)] scale-110" 
+                          : hasPlayedGapAudio
+                            ? "bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 cursor-not-allowed opacity-60"
+                            : "bg-indigo-500/20 hover:bg-indigo-500/30 hover:scale-105 border border-indigo-500/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
+                      }`}
+                      aria-label="Play Audio"
+                    >
+                      {isPlaying ? (
+                        <div className="flex gap-1.5 items-center justify-center">
+                          <div className="w-2 h-8 bg-white rounded-full animate-pulse" />
+                          <div className="w-2 h-12 bg-white rounded-full animate-pulse delay-75" />
+                          <div className="w-2 h-8 bg-white rounded-full animate-pulse delay-150" />
+                        </div>
+                      ) : (
+                        <Play className={`h-12 w-12 ml-1 ${hasPlayedGapAudio ? "text-zinc-400 dark:text-zinc-500" : "text-indigo-400"}`} />
+                      )}
+                    </button>
+                    <p className="mt-5 text-zinc-500 dark:text-gray-400 font-medium text-[15px] text-center w-full">
+                      {isPlaying 
+                        ? "Playing audio passage..." 
+                        : hasPlayedGapAudio 
+                          ? "Audio finished! You can only play it once. Click Take Test below." 
+                          : "Click to play audio"}
+                    </p>
                   </div>
+
+                  {/* Take Test Button - Appears once audio has played */}
+                  {hasPlayedGapAudio && (
+                    <button
+                      onClick={() => {
+                        stopAudio();
+                        setShowGapQuestions(true);
+                      }}
+                      className="mt-8 px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[16px] shadow-[0_4px_20px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_24px_rgba(99,102,241,0.6)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 animate-in fade-in zoom-in-95 mx-auto"
+                    >
+                      <span>Take Test</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </button>
+                  )}
                 </LiquidGlassCard>
-              );
-            })}
-          </div>
+              ) : (
+                <div className="space-y-4 animate-in fade-in">
+                  <LiquidGlassCard className="p-6 border-black/10 dark:border-white/10" accentColor="#6366f1">
+                    <div className="space-y-6">
+                      <div className="text-[17px] text-foreground leading-relaxed text-center">
+                        {dynamicGapChallenge.displaySegments.map((seg: any, idx: number) => {
+                          if (seg.type === "text") {
+                            return <span key={idx}>{seg.value}</span>;
+                          } else {
+                            // Segments have sequential gap IDs
+                            const gapIndex = dynamicGapChallenge.displaySegments.filter((s:any) => s.type === "gap").findIndex((s:any) => s === seg);
+                            return (
+                              <input 
+                                key={idx}
+                                type="text" 
+                                value={gapAnswers[gapIndex] || ""} 
+                                onChange={(e) => handleGapAnswerChange(gapIndex, e.target.value)} 
+                                disabled={isGapSubmitted} 
+                                className="w-24 bg-black/5 dark:bg-white/5 border-b-2 border-indigo-500 focus:outline-none text-center mx-2 py-1 font-semibold text-indigo-600 dark:text-indigo-300" 
+                              />
+                            );
+                          }
+                        })}
+                      </div>
+                      {isGapSubmitted && (
+                        <div className="mt-4 flex flex-col gap-2 items-center text-sm font-medium">
+                          {dynamicGapChallenge.correctAnswers.map((corr: string, idx: number) => (
+                            <div key={idx} className="flex items-center gap-1.5">
+                               <span>Blank {idx + 1} ("{corr}"):</span>
+                               {gapResult.correctStatus[idx] ? <span className="text-green-400 flex items-center gap-1"><CheckCircle2 className="w-4 h-4"/> Correct</span> : <span className="text-red-400 flex items-center gap-1"><XCircle className="w-4 h-4"/> Incorrect</span>}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </LiquidGlassCard>
 
-          {mcqError && <div className="text-red-400 text-sm">{mcqError}</div>}
-
-          {mcqResult ? (
-            <LiquidGlassCard className="p-6 border-purple-500 bg-purple-500/5 animate-in slide-in-from-bottom" accentColor="#8b5cf6">
-              <h3 className="text-[22px] font-bold text-foreground mb-2">Results</h3>
-              <p className="text-zinc-600 dark:text-gray-300 mb-2 text-[17px]">{mcqResult.feedback}</p>
-              {mcqResult.tamilFeedback && (
-                <p className="text-purple-600 dark:text-purple-300 text-[15px] italic mb-4">{mcqResult.tamilFeedback}</p>
+                  {isGapSubmitted ? (
+                    <LiquidGlassCard className="p-6 border-green-500/30 bg-green-500/5" accentColor="#22c55e">
+                      <h3 className="text-[17px] font-bold text-foreground mb-2">Quiz Summary</h3>
+                      <p className="text-zinc-500 dark:text-gray-300 text-[15px] mb-2">{gapResult.feedback}</p>
+                      {gapResult.tamilFeedback && (
+                        <p className="text-indigo-600 dark:text-indigo-300 text-[14px] italic mb-4">{gapResult.tamilFeedback}</p>
+                      )}
+                      <div className="flex gap-4 items-center">
+                        <span className="px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-300 rounded-full text-[13px] font-bold">
+                          Score: {gapResult.score}%
+                        </span>
+                        <span className="px-3 py-1 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 rounded-full text-xs font-bold">
+                          +{gapResult.xpAwarded} XP
+                        </span>
+                        <div className="flex-1" />
+                        <button
+                          onClick={loadDynamicGap}
+                          className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-semibold transition-colors"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </LiquidGlassCard>
+                  ) : (
+                    <button
+                      onClick={submitGapAnswers}
+                      disabled={dynamicGapChallenge.correctAnswers.some((_:any, idx:number) => !gapAnswers[idx]) || isEvaluatingGap}
+                      className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold rounded-xl transition-all"
+                    >
+                      {isEvaluatingGap ? "Evaluating..." : "Submit"}
+                    </button>
+                  )}
+                </div>
               )}
-              <div className="flex items-center gap-4">
-                <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/50">
-                  Score: {mcqResult.score}%
-                </span>
-                <span className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 border border-yellow-500/50">
-                  +{mcqResult.xpAwarded} XP
-                </span>
-                <div className="flex-1" />
-                <button
-                  onClick={onNext}
-                  className="px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-medium transition-all"
-                >
-                  Continue to Writing
-                </button>
-              </div>
-            </LiquidGlassCard>
+            </div>
           ) : (
-            <button
-              onClick={submitMCQAnswers}
-              disabled={isMCQSubmitting}
-              className="w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold text-[17px] rounded-xl transition-all shadow-md"
-            >
-              {isMCQSubmitting ? "Evaluating..." : "Submit MCQ Answers"}
-            </button>
+            <div className="text-red-400 text-center py-10">Failed to load dynamic lesson. Please try again.</div>
           )}
         </div>
       )}
 
-      {/* RENDER FEATURE 2: FILL THE BEATS / GAP FILL */}
-      {activeFeature === "fill" && (
+      {/* RENDER FEATURE 3: LISTEN & GO GAME */}
+      {activeFeature === "directions" && (
         <div className="space-y-6">
-          <LiquidGlassCard className="p-6 text-center" accentColor="#8b5cf6">
-            <h2 className="text-[22px] font-bold text-foreground mb-4">Transcription practice</h2>
-            <p className="text-zinc-500 dark:text-gray-400 text-[15px] mb-6">
-              Listen to the daily routine statement and transcribe details to fill the gaps.
-            </p>
-
-            <button
-              onClick={() => speakText("I usually wake up at 7 AM. For breakfast, I like to eat cereal and drink a cup of coffee.")}
-              disabled={isPlaying}
-              className={`h-20 w-20 rounded-full flex items-center justify-center mx-auto transition-all ${
-                isPlaying ? "bg-purple-600 animate-pulse" : "bg-purple-500/20 hover:bg-purple-500/30"
-              }`}
-            >
-              <Play className="w-8 h-8 text-purple-400" />
-            </button>
-          </LiquidGlassCard>
-
-          <div className="space-y-4">
-            <LiquidGlassCard className="p-6 border-black/10 dark:border-white/10" accentColor="#8b5cf6">
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-[15px] font-semibold text-zinc-600 dark:text-gray-300 mb-2">
-                    1. What time does the speaker wake up? (e.g. 7 AM)
-                  </label>
-                  <input
-                    type="text"
-                    disabled={isGapSubmitted}
-                    placeholder="Enter time details..."
-                    value={gapAnswers[1] || ""}
-                    onChange={(e) => handleGapAnswerChange(1, e.target.value)}
-                    className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500"
-                  />
-                  {isGapSubmitted && (
-                    <div className="mt-2 text-xs flex items-center gap-1.5 font-medium">
-                      {gapResult.q1Correct ? (
-                        <span className="text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Correct</span>
+          {isListenGoLoading ? (
+            <ChallengeSkeleton variant="listening-go" />
+          ) : dynamicListenGoData ? (
+            <div className="space-y-6 animate-in fade-in">
+              {!showGoQuestions ? (
+                <LiquidGlassCard className="p-8 md:p-12 flex flex-col items-center justify-center text-center border-indigo-500/20 max-w-xl mx-auto w-full" accentColor="#6366f1">
+                  <h2 className="text-[24px] font-bold text-foreground mb-8 text-center w-full flex items-center justify-center gap-2">
+                    <Navigation className="w-6 h-6 text-indigo-400" /> Listen & Go
+                  </h2>
+                  
+                  <div className="flex flex-col items-center justify-center w-full my-2">
+                    <button
+                      onClick={() => {
+                        speakText(dynamicListenGoData.audioText || "", () => setHasPlayedGoAudio(true));
+                      }}
+                      disabled={isPlaying || hasPlayedGoAudio}
+                      className={`h-24 w-24 md:h-28 md:w-28 rounded-full flex items-center justify-center transition-all duration-500 mx-auto ${
+                        isPlaying 
+                          ? "bg-indigo-600 shadow-[inset_0_0_20px_rgba(255,255,255,0.4),0_0_40px_rgba(139,92,246,0.6)] scale-110" 
+                          : hasPlayedGoAudio
+                            ? "bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 cursor-not-allowed opacity-60"
+                            : "bg-indigo-500/20 hover:bg-indigo-500/30 hover:scale-105 border border-indigo-500/50 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
+                      }`}
+                      aria-label="Play Navigation Audio"
+                    >
+                      {isPlaying ? (
+                        <div className="flex gap-1.5 items-center justify-center">
+                          <div className="w-2 h-8 bg-white rounded-full animate-pulse" />
+                          <div className="w-2 h-12 bg-white rounded-full animate-pulse delay-75" />
+                          <div className="w-2 h-8 bg-white rounded-full animate-pulse delay-150" />
+                        </div>
                       ) : (
-                        <span className="text-red-400 flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Incorrect (Expected: 7 AM)</span>
+                        <Play className={`h-12 w-12 ml-1 ${hasPlayedGoAudio ? "text-zinc-400 dark:text-zinc-500" : "text-indigo-400"}`} />
                       )}
-                    </div>
+                    </button>
+                    <p className="mt-5 text-zinc-500 dark:text-gray-400 font-medium text-[15px] text-center w-full">
+                      {isPlaying 
+                        ? "Playing navigation directions..." 
+                        : hasPlayedGoAudio 
+                          ? "Audio finished! You can only play it once. Click Take Test below." 
+                          : "Click to play navigation directions"}
+                    </p>
+                  </div>
+
+                  {/* Take Test Button - Appears once audio has played */}
+                  {hasPlayedGoAudio && (
+                    <button
+                      onClick={() => {
+                        stopAudio();
+                        setShowGoQuestions(true);
+                      }}
+                      className="mt-8 px-8 py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[16px] shadow-[0_4px_20px_rgba(99,102,241,0.4)] hover:shadow-[0_6px_24px_rgba(99,102,241,0.6)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-2 animate-in fade-in zoom-in-95 mx-auto"
+                    >
+                      <span>Take Test</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </button>
                   )}
-                </div>
+                </LiquidGlassCard>
+              ) : (
+                <LiquidGlassCard className="p-6 md:p-8 animate-in fade-in" accentColor="#6366f1">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-[17px] font-bold text-foreground flex items-center gap-2">
+                      <Navigation className="w-5 h-5 text-indigo-400" /> Listen & Go
+                    </h3>
+                  </div>
 
-                <div>
-                  <label className="block text-[15px] font-semibold text-zinc-600 dark:text-gray-300 mb-2">
-                    2. What does the speaker eat and drink for breakfast? (e.g. cereal and coffee)
-                  </label>
-                  <input
-                    type="text"
-                    disabled={isGapSubmitted}
-                    placeholder="Enter breakfast items..."
-                    value={gapAnswers[2] || ""}
-                    onChange={(e) => handleGapAnswerChange(2, e.target.value)}
-                    className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-2.5 text-foreground focus:outline-none focus:border-purple-500"
-                  />
-                  {isGapSubmitted && (
-                    <div className="mt-2 text-xs flex items-center gap-1.5 font-medium">
-                      {gapResult.q2Correct ? (
-                        <span className="text-green-400 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" /> Correct</span>
-                      ) : (
-                        <span className="text-red-400 flex items-center gap-1"><XCircle className="w-3.5 h-3.5" /> Incorrect (Expected: cereal and coffee)</span>
-                      )}
+                  <p className="text-[15px] text-zinc-500 dark:text-gray-400 mb-6 leading-relaxed">
+                    Navigate your way on the grid map to the correct destination!
+                  </p>
+
+                  <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16 justify-center">
+                    {/* 5x5 Game Grid */}
+                    <div 
+                      className="grid gap-2 p-3 bg-black/5 dark:bg-white/5 rounded-3xl border border-black/10 dark:border-white/10 shadow-inner"
+                      style={{ gridTemplateColumns: `repeat(${dynamicListenGoData.gridSize}, minmax(0, 1fr))` }}
+                    >
+                      {Array.from({ length: dynamicListenGoData.gridSize * dynamicListenGoData.gridSize }).map((_, index) => {
+                        const x = index % dynamicListenGoData.gridSize;
+                        const y = Math.floor(index / dynamicListenGoData.gridSize);
+                        
+                        const isPlayerHere = playerPos.x === x && playerPos.y === y;
+                        const isStart = dynamicListenGoData.startPos.x === x && dynamicListenGoData.startPos.y === y;
+                        const isVisited = pathTrail.some(pt => pt.x === x && pt.y === y);
+
+                        // If submitted, show the endPos with a flag
+                        const isEndPos = isListenGoSubmitted && dynamicListenGoData.endPos.x === x && dynamicListenGoData.endPos.y === y;
+                        
+                        return (
+                          <div 
+                            key={index}
+                            className={`w-12 h-12 md:w-14 md:h-14 rounded-2xl flex items-center justify-center transition-all duration-300 relative ${
+                              isPlayerHere 
+                                ? "bg-indigo-500 text-white shadow-[0_0_15px_rgba(139,92,246,0.6)] scale-110 z-10" 
+                                : isVisited 
+                                  ? "bg-indigo-500/20 border-indigo-500/30 border" 
+                                  : "bg-white/50 dark:bg-white/5 border border-black/5 dark:border-white/5"
+                            }`}
+                          >
+                            {isPlayerHere && <Navigation className="w-6 h-6 animate-pulse" />}
+                            {!isPlayerHere && isStart && <MapPin className="w-5 h-5 text-green-500 opacity-50" />}
+                            {isEndPos && <Flag className="w-6 h-6 text-yellow-500 absolute -top-2 -right-2 animate-bounce" />}
+                          </div>
+                        );
+                      })}
                     </div>
-                  )}
-                </div>
-              </div>
-            </LiquidGlassCard>
 
-            {isGapSubmitted ? (
-              <LiquidGlassCard className="p-6 border-green-500/30 bg-green-500/5" accentColor="#22c55e">
-                <h3 className="text-[17px] font-bold text-foreground mb-2">Quiz Summary</h3>
-                <p className="text-zinc-500 dark:text-gray-300 text-[15px] mb-4">{gapResult.feedback}</p>
-                <div className="flex gap-4 items-center">
-                  <span className="px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-300 rounded-full text-[13px] font-bold">
-                    Score: {gapResult.score}%
-                  </span>
-                  <span className="px-3 py-1 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 rounded-full text-xs font-bold">
-                    +{gapResult.xpAwarded} XP
-                  </span>
-                  <div className="flex-1" />
-                  <button
-                    onClick={() => { setIsGapSubmitted(false); setGapAnswers({}); }}
-                    className="px-4 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl text-xs font-semibold"
-                  >
-                    Reset Challenge
-                  </button>
-                </div>
-              </LiquidGlassCard>
-            ) : (
-              <button
-                onClick={submitGapAnswers}
-                disabled={!gapAnswers[1] || !gapAnswers[2]}
-                className="w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold rounded-xl transition-all"
-              >
-                Submit Gap Answers
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+                    {/* D-Pad Controls */}
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="text-sm font-semibold text-zinc-500 dark:text-gray-400 mb-2">Navigation</div>
+                      <button onClick={() => movePlayer(0, -1)} disabled={isListenGoSubmitted} className="w-14 h-14 bg-black/5 dark:bg-white/5 hover:bg-indigo-500/20 border border-black/10 dark:border-white/10 rounded-2xl flex items-center justify-center transition-all active:scale-95 disabled:opacity-50">
+                        <ArrowUp className="w-6 h-6 text-foreground" />
+                      </button>
+                      <div className="flex gap-2">
+                        <button onClick={() => movePlayer(-1, 0)} disabled={isListenGoSubmitted} className="w-14 h-14 bg-black/5 dark:bg-white/5 hover:bg-indigo-500/20 border border-black/10 dark:border-white/10 rounded-2xl flex items-center justify-center transition-all active:scale-95 disabled:opacity-50">
+                          <ArrowLeft className="w-6 h-6 text-foreground" />
+                        </button>
+                        <button onClick={undoListenGo} disabled={pathTrail.length <= 1 || isListenGoSubmitted} className="w-14 h-14 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-500 rounded-2xl flex items-center justify-center transition-all active:scale-95 disabled:opacity-30">
+                          <Undo2 className="w-5 h-5" />
+                        </button>
+                        <button onClick={() => movePlayer(1, 0)} disabled={isListenGoSubmitted} className="w-14 h-14 bg-black/5 dark:bg-white/5 hover:bg-indigo-500/20 border border-black/10 dark:border-white/10 rounded-2xl flex items-center justify-center transition-all active:scale-95 disabled:opacity-50">
+                          <ArrowRight className="w-6 h-6 text-foreground" />
+                        </button>
+                      </div>
+                      <button onClick={() => movePlayer(0, 1)} disabled={isListenGoSubmitted} className="w-14 h-14 bg-black/5 dark:bg-white/5 hover:bg-indigo-500/20 border border-black/10 dark:border-white/10 rounded-2xl flex items-center justify-center transition-all active:scale-95 disabled:opacity-50">
+                        <ArrowDown className="w-6 h-6 text-foreground" />
+                      </button>
+                    </div>
+                  </div>
 
-      {/* RENDER FEATURE 3: GRID DIRECTIONS FOLLOWER */}
-      {activeFeature === "directions" && directionsChallenge && (
-        <div className="space-y-6">
-          <LiquidGlassCard className="p-6 md:p-8" accentColor="#8b5cf6">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-[17px] font-bold text-foreground flex items-center gap-2">
-                <Compass className="w-5 h-5 text-purple-400" /> Direction Follower Map
-              </h3>
-              <span className="px-3 py-1 bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 rounded-full text-[13px] font-semibold">
-                Grid Size: {gridSize}x{gridSize}
-              </span>
-            </div>
-
-            <p className="text-[15px] text-zinc-500 dark:text-gray-400 mb-6 leading-relaxed">
-              Listen to the directions, then click the grid junctions sequentially to trace the pathway.
-            </p>
-
-            <div className="flex justify-center gap-2 mb-6">
-              <button
-                onClick={() => speakText(directionsChallenge.content)}
-                disabled={isPlaying}
-                className="flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold rounded-xl shadow-lg transition-colors"
-              >
-                <Volume2 className="w-4 h-4" /> Play Audio Guide
-              </button>
-              {isPlaying && (
-                <button
-                  onClick={stopAudio}
-                  className="flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-xl shadow-lg transition-colors"
-                >
-                  <VolumeX className="w-4 h-4" /> Stop Playback
-                </button>
+                  {/* Status and Action Buttons */}
+                  <div className="mt-10">
+                    {listenGoResult ? (
+                      <LiquidGlassCard className={`p-5 ${listenGoResult.success ? 'border-green-500 bg-green-500/5' : 'border-red-500 bg-red-500/5'} animate-in slide-in-from-bottom`} accentColor={listenGoResult.success ? "#22c55e" : "#ef4444"}>
+                        <h3 className="text-[18px] font-bold text-foreground mb-2">{listenGoResult.success ? "Mission Accomplished!" : "Wrong Destination"}</h3>
+                        <p className="text-zinc-600 dark:text-gray-300 mb-2 text-[15px]">{listenGoResult.feedback}</p>
+                        {listenGoResult.tamilFeedback && (
+                          <p className="text-indigo-600 dark:text-indigo-300 text-[14px] italic mb-4">{listenGoResult.tamilFeedback}</p>
+                        )}
+                        <div className="flex items-center gap-4 flex-wrap">
+                          {listenGoResult.success && (
+                            <span className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 border border-yellow-500/50 font-bold text-sm">
+                              +{listenGoResult.xpAwarded} XP
+                            </span>
+                          )}
+                          <div className="flex-1" />
+                          <button
+                            onClick={loadListenGo}
+                              className="px-6 py-2.5 rounded-xl bg-[#6366f1] hover:bg-[#5254cc] text-white font-medium shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all"
+                          >
+                            {listenGoResult.success ? "Next Mission" : "Try Again"}
+                          </button>
+                        </div>
+                      </LiquidGlassCard>
+                    ) : (
+                      <button
+                        onClick={verifyListenGo}
+                        disabled={isListenGoSubmitted}
+                        className="w-full mt-6 py-4 rounded-2xl bg-[#6366f1] text-white font-semibold text-[17px] shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:bg-[#5254cc] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        Verify Location
+                      </button>
+                    )}
+                  </div>
+                </LiquidGlassCard>
               )}
-              <button
-                onClick={undoDirectionStep}
-                disabled={tracedPath.length === 0}
-                className="flex items-center gap-1.5 px-3 py-2 border border-white/10 hover:bg-white/5 disabled:opacity-40 text-white text-xs font-semibold rounded-xl transition-colors"
-              >
-                <Undo2 className="w-3.5 h-3.5" /> Undo
-              </button>
-              <button
-                onClick={resetDirections}
-                disabled={tracedPath.length === 0}
-                className="flex items-center gap-1.5 px-3 py-2 border border-white/10 hover:bg-white/5 disabled:opacity-40 text-white text-xs font-semibold rounded-xl transition-colors"
-              >
-                <RotateCcw className="w-3.5 h-3.5" /> Reset
-              </button>
             </div>
-
-            {/* Tracing Grid Canvas */}
-            <div className="flex flex-col items-center">
-              <div 
-                id="directionMapContainer" 
-                className="relative bg-black/40 border border-purple-500/30 rounded-3xl overflow-hidden shadow-inner w-full max-w-[320px] sm:max-w-[360px] aspect-square"
-              >
-                <canvas
-                  ref={canvasRef}
-                  width={360}
-                  height={360}
-                  onClick={handleCanvasClick}
-                  className="absolute inset-0 w-full h-full cursor-crosshair z-10"
-                />
-              </div>
-
-              <div className="mt-4 flex gap-4 text-xs text-gray-400 select-none">
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-green-500 inline-block animate-pulse" /> Start: (1, 1)
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full bg-red-500 inline-block animate-pulse" /> Destination: (3, 2)
-                </span>
-                <span className="font-semibold text-purple-300">
-                  Points Traced: {tracedPath.length}
-                </span>
-              </div>
-            </div>
-
-            {directionsStatus && (
-              <div className="mt-6 p-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs rounded-xl text-center">
-                {directionsStatus}
-              </div>
-            )}
-
-            {directionsResult ? (
-              <div className="mt-6 p-4 bg-green-500/10 border border-green-500/25 rounded-2xl animate-in fade-in duration-300">
-                <h4 className="font-bold text-sm text-green-400 flex items-center gap-2 mb-2">
-                  <Check className="w-4 h-4" /> Path Verified!
-                </h4>
-                <p className="text-xs text-gray-300 leading-relaxed mb-3">
-                  {directionsResult.feedback}
-                </p>
-                <span className="inline-block px-3 py-1 bg-yellow-500/15 text-yellow-500 rounded-full text-xs font-bold">
-                  +{directionsResult.xpAwarded} XP Awarded
-                </span>
-              </div>
-            ) : (
-              tracedPath.length > 0 && (
-                <button
-                  onClick={submitDirections}
-                  disabled={isSubmittingDirections}
-                  className="w-full mt-6 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-semibold text-sm rounded-xl transition-all shadow-md"
-                >
-                  {isSubmittingDirections ? "Verifying Path..." : "Verify Route Path"}
-                </button>
-              )
-            )}
-          </LiquidGlassCard>
+          ) : (
+            <div className="text-red-400 text-center py-10">Failed to load mission. Please go back and try again.</div>
+          )}
         </div>
       )}
 
       {/* RENDER FEATURE 4: VOICE TONE ANALYSIS */}
       {activeFeature === "tone" && toneChallenge && (
         <div className="space-y-6 max-w-lg mx-auto">
-          <LiquidGlassCard className="p-6 md:p-8" accentColor="#8b5cf6">
+          <LiquidGlassCard className="p-6 md:p-8" accentColor="#6366f1">
             <h3 className="text-[17px] font-bold text-foreground mb-4 flex items-center gap-2">
-              <Smile className="w-5 h-5 text-purple-400" /> Speech Tone analysis
+              <Smile className="w-5 h-5 text-indigo-400" /> Speech Tone analysis
             </h3>
 
             <p className="text-zinc-500 dark:text-gray-400 text-[15px] mb-6">
@@ -795,10 +973,10 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
               onClick={() => speakText(toneChallenge.content)}
               disabled={isPlaying}
               className={`h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-6 transition-all ${
-                isPlaying ? "bg-purple-600 animate-pulse" : "bg-purple-500/20 hover:bg-purple-500/30"
+                isPlaying ? "bg-indigo-600 animate-pulse" : "bg-indigo-500/20 hover:bg-indigo-500/30"
               }`}
             >
-              <Play className="w-8 h-8 text-purple-400" />
+              <Play className="w-8 h-8 text-indigo-400" />
             </button>
 
             <div className="grid grid-cols-1 gap-3">
@@ -814,7 +992,7 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
                     btnStyle = "border-black/5 dark:border-white/5 text-zinc-400 dark:text-gray-500 pointer-events-none opacity-45";
                   }
                 } else if (toneSelectedIdx === idx) {
-                  btnStyle = "bg-purple-600/10 border-purple-500 text-purple-600 dark:text-purple-300";
+                  btnStyle = "bg-indigo-600/10 border-indigo-500 text-indigo-600 dark:text-indigo-300";
                 }
 
                 return (
@@ -830,22 +1008,25 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
               })}
             </div>
 
-            {!isToneSubmitted ? (
+             {!isToneSubmitted ? (
               <button
                 onClick={submitToneChoice}
-                disabled={toneSelectedIdx === null}
-                className="w-full mt-6 py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-semibold text-sm rounded-xl transition-all"
+                disabled={toneSelectedIdx === null || isEvaluatingTone}
+                className="w-full mt-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold text-sm rounded-xl transition-all"
               >
-                Submit Selection
+                {isEvaluatingTone ? "Evaluating..." : "Submit Selection"}
               </button>
             ) : (
               <div className="mt-6 p-4 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl space-y-3">
                 <p className="text-[13px] text-zinc-600 dark:text-gray-300 leading-relaxed font-light">{toneResult.feedback}</p>
+                {toneResult.tamilFeedback && (
+                  <p className="text-[13px] text-indigo-600 dark:text-indigo-300 leading-relaxed font-light italic">{toneResult.tamilFeedback}</p>
+                )}
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-semibold text-purple-300">XP Awarded: +{toneResult.xpAwarded}</span>
+                  <span className="font-semibold text-indigo-300">XP Awarded: +{toneResult.xpAwarded}</span>
                   <button 
                     onClick={() => { setIsToneSubmitted(false); setToneSelectedIdx(null); setToneResult(null); }}
-                    className="text-purple-400 hover:underline"
+                    className="text-indigo-400 hover:underline"
                   >
                     Try Again
                   </button>

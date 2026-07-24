@@ -75,12 +75,12 @@ export function LinkedInChecklist() {
               key={item.id} 
               onClick={() => handleToggle(item.id)}
               className={`p-4 flex items-start gap-4 border cursor-pointer hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 ${
-                isChecked ? "border-emerald-500/20 bg-emerald-500/[0.03]" : ""
+                isChecked ? "border-indigo-500/20 bg-indigo-500/[0.03]" : ""
               }`}
             >
               <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                 isChecked 
-                  ? "bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-500/20" 
+                  ? "bg-indigo-500 border-indigo-500 text-white shadow-md shadow-indigo-500/20" 
                   : "border-zinc-400 dark:border-gray-600 hover:border-foreground"
               } shrink-0 mt-0.5`}>
                 {isChecked && <Check className="w-3.5 h-3.5" strokeWidth={3} />}

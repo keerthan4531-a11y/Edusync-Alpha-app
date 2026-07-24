@@ -66,29 +66,17 @@ export async function createChatCompletion(
   const foundModel = AI_MODELS.find(m => m.id === modelStr);
   const resolvedModel = foundModel ? foundModel.modelStr : modelStr;
   
-  const isG4F = resolvedModel.startsWith('g4f/') || resolvedModel.startsWith('deepinfra/') || resolvedModel.startsWith('qwen_worker/');
-  
-  const port = process.env.PORT || '3000';
-  const url = isG4F 
-    ? `http://127.0.0.1:${port}/api/chat/g4f` 
-    : `http://127.0.0.1:${port}/api/chat/completions`;
-
-  const secureHeaders: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Origin': `http://127.0.0.1:${port}`,
-    'Referer': `http://127.0.0.1:${port}/`,
-  };
-
-  if (process.env.INIXA_PROXY_SECRET) {
-    secureHeaders['Authorization'] = `Bearer ${process.env.INIXA_PROXY_SECRET}`;
-  }
+  // Send ALL requests to the user's custom worker
+  const url = 'https://curly-hill-3303.aegonat29.workers.dev/v1/chat/completions';
 
   const fetchOptions: RequestInit = {
     method: 'POST',
-    headers: secureHeaders,
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
     body: JSON.stringify({
-      model: resolvedModel,
+      model: resolvedModel, // The worker will use or ignore this
       messages: request.messages,
       stream: false,
       temperature: request.temperature ?? 0.7,

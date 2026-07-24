@@ -32,10 +32,10 @@ export function Overview({ onTabChange, stats = {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Mock Interviews Card */}
-        <LiquidGlassCard className="p-6 flex flex-col justify-between" accentColor="#8b5cf6">
+        <LiquidGlassCard className="p-6 flex flex-col justify-between" accentColor="#6366f1">
           <div>
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-[20px] text-purple-400">
+              <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[20px] text-indigo-400">
                 <i className="fas fa-microphone-alt"></i>
               </div>
               <div>
@@ -45,18 +45,18 @@ export function Overview({ onTabChange, stats = {
             </div>
             <div className="flex gap-4 p-4 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/5 mb-6">
               <div className="flex-1 text-center border-r border-black/10 dark:border-white/10">
-                <div className="text-[28px] font-semibold text-purple-400">{stats.interviewsCount}</div>
+                <div className="text-[28px] font-semibold text-indigo-400">{stats.interviewsCount}</div>
                 <div className="text-[12px] text-zinc-500 dark:text-gray-500 font-medium">Interviews Done</div>
               </div>
               <div className="flex-1 text-center">
-                <div className="text-[28px] font-semibold text-purple-400">{stats.avgInterviewScore}%</div>
+                <div className="text-[28px] font-semibold text-indigo-400">{stats.avgInterviewScore}%</div>
                 <div className="text-[12px] text-zinc-500 dark:text-gray-500 font-medium">Avg Score</div>
               </div>
             </div>
           </div>
           <button
             onClick={() => onTabChange("mock-interview")}
-            className="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 rounded-xl transition-all shadow-[0_4px_12px_rgba(139,92,246,0.3)] hover:-translate-y-0.5 active:translate-y-0 text-sm flex items-center justify-center gap-2"
+            className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl transition-all shadow-[0_4px_12px_rgba(139,92,246,0.3)] hover:-translate-y-0.5 active:translate-y-0 text-sm flex items-center justify-center gap-2"
           >
             <i className="fas fa-play text-xs"></i> Start Interview
           </button>
@@ -66,7 +66,7 @@ export function Overview({ onTabChange, stats = {
         <LiquidGlassCard className="p-6 flex flex-col justify-between" accentColor="#10b981">
           <div>
             <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-[20px] text-emerald-400">
+              <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[20px] text-indigo-400">
                 <i className="fas fa-globe"></i>
               </div>
               <div>
@@ -76,18 +76,18 @@ export function Overview({ onTabChange, stats = {
             </div>
             <div className="flex gap-4 p-4 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/5 mb-6">
               <div className="flex-1 text-center border-r border-black/10 dark:border-white/10">
-                <div className="text-[28px] font-semibold text-emerald-400">{stats.projectCount}</div>
+                <div className="text-[28px] font-semibold text-indigo-400">{stats.projectCount}</div>
                 <div className="text-[12px] text-zinc-500 dark:text-gray-500 font-medium">Projects</div>
               </div>
               <div className="flex-1 text-center">
-                <div className="text-[28px] font-semibold text-emerald-400">{stats.portfolioViews}</div>
+                <div className="text-[28px] font-semibold text-indigo-400">{stats.portfolioViews}</div>
                 <div className="text-[12px] text-zinc-500 dark:text-gray-500 font-medium">Portfolio Views</div>
               </div>
             </div>
           </div>
           <button
             onClick={() => onTabChange("portfolio")}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-xl transition-all shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:-translate-y-0.5 active:translate-y-0 text-sm flex items-center justify-center gap-2"
+            className="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-3 rounded-xl transition-all shadow-[0_4px_12px_rgba(16,185,129,0.3)] hover:-translate-y-0.5 active:translate-y-0 text-sm flex items-center justify-center gap-2"
           >
             <i className="fas fa-eye text-xs"></i> View Portfolio
           </button>

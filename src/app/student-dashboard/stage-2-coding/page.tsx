@@ -38,8 +38,10 @@ import {
   Swords,
   LayoutDashboard,
   Save,
-  X
+  X,
+  ChevronLeft
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface Challenge {
   id: string;
@@ -245,8 +247,17 @@ const SHOP_ITEMS = [
   { id: "item_shield", name: "Streak Shield Guard", desc: "Protects your coding streak if you skip a day.", cost: 100, type: "item", icon: "🛡️" }
 ];
 
+type CodingTab = "code-coach" | "playground" | "arena" | "learning-paths" | "arcade" | "shop";
+
+const CODING_FEATURES = [
+  { id: "code-coach" as CodingTab, label: "Code Coach", icon: Target, color: "text-indigo-400", borderColor: "border-indigo-400/20" },
+  { id: "playground" as CodingTab, label: "Playground", icon: Code, color: "text-indigo-400", borderColor: "border-indigo-400/20" },
+  { id: "arena" as CodingTab, label: "Arena Modes", icon: Sword, color: "text-indigo-400", borderColor: "border-indigo-400/20" },
+];
+
 export default function CodingStagePage() {
-  const [activeTab, setActiveTab] = useState<"learning-paths" | "code-coach" | "playground" | "arena" | "arcade" | "shop">("learning-paths");
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<CodingTab | null>(null);
 
   // Global gamification states
   const [coins, setCoins] = useState(125);
@@ -430,48 +441,11 @@ export default function CodingStagePage() {
     };
     fetchProblems();
 
-    // WebSocket connection for real-time challenge updates (unconditional with fallback)
-    let ws: WebSocket | null = null;
-    try {
-      const token = typeof window !== 'undefined' ? localStorage.getItem("access_token") : null;
-      const wsUrl = token 
-        ? `ws://localhost:8000/ws/challenges?token=${token}` 
-        : `ws://localhost:8000/ws/challenges`;
-      ws = new WebSocket(wsUrl);
-      ws.onopen = () => {
-        console.log("✅ WebSocket Connected: Stage 2 subscriber active");
-        try {
-          ws?.send(JSON.stringify({
-            type: "subscribe_to_stage",
-            stage: "sophomore"
-          }));
-        } catch (e) {}
-      };
-      ws.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data);
-          if (message.type === "challenge_created") {
-            alert(`🎉 New challenge created: "${message.data.title}"! Refreshing practice lists.`);
-            fetchProblems();
-          } else if (message.type === "challenge_deleted") {
-            alert(`🗑️ Challenge deleted: "${message.data.title}"`);
-            fetchProblems();
-          }
-        } catch (e) {}
-      };
-      ws.onerror = () => {
-        console.log("WebSocket connection info: Server offline or local dev fallback.");
-      };
-    } catch (err) {
-      console.warn("WS error setup", err);
-    }
-
-    // High fidelity WebSocket challenge creation simulator fallback
+    // Challenge creation simulator fallback without browser popup alerts
     const simInterval = setInterval(() => {
       setChallenges(prev => {
         const hasValidParens = prev.some(c => c.id === "valid-parentheses");
         if (!hasValidParens) {
-          alert("🎉 HOD has uploaded a new coding challenge: 'Valid Parentheses'! Practice lists updated dynamically.");
           const newChallenge: Challenge = {
             id: "valid-parentheses",
             title: "Valid Parentheses",
@@ -500,7 +474,6 @@ export default function CodingStagePage() {
     }, 45000);
 
     return () => {
-      ws?.close();
       clearInterval(simInterval);
     };
   }, []);
@@ -781,9 +754,47 @@ export default function CodingStagePage() {
   if (activeTheme === "theme_matrix") {
     themeAccentClass = "border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.3)] text-green-400";
   } else if (activeTheme === "theme_cyberpunk") {
-    themeAccentClass = "border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.3)] text-pink-400";
+    themeAccentClass = "border-indigo-500 shadow-[0_0_15px_rgba(236,72,153,0.3)] text-indigo-400";
   } else if (activeTheme === "theme_dracula") {
-    themeAccentClass = "border-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.3)] text-purple-400";
+    themeAccentClass = "border-indigo-500 shadow-[0_0_15px_rgba(168,85,247,0.3)] text-indigo-400";
+  }
+
+  if (!activeTab) {
+    return (
+      <div className="space-y-8 p-2">
+        <div className="mb-4 shrink-0">
+          <button 
+            onClick={() => router.back()}
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-6 h-6 text-foreground" />
+          </button>
+        </div>
+        <div>
+          <h1 className="text-[28px] md:text-[34px] leading-tight font-semibold text-foreground tracking-tight mb-2">Coding</h1>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+          {CODING_FEATURES.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <button
+                key={feature.id}
+                onClick={() => setActiveTab(feature.id)}
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+              >
+                <div className={`w-20 h-20 rounded-full flex items-center justify-center bg-transparent border-2 ${feature.borderColor} transition-transform duration-300 group-hover:scale-110`}>
+                  <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
+                </div>
+                <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
+                  {feature.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -791,113 +802,18 @@ export default function CodingStagePage() {
       activeTheme === "theme_matrix" 
         ? "dark bg-[#020502] text-green-400 font-mono" 
         : activeTheme === "theme_cyberpunk"
-          ? "dark bg-[#0f051d] text-pink-400"
+          ? "dark bg-[#0f051d] text-indigo-400"
           : activeTheme === "theme_dracula"
             ? "dark bg-[#1e1f29] text-[#f8f8f2]"
             : ""
     }`}>
-      
-      {/* Top dashboard status metrics bar */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <LiquidGlassCard className={`p-4 flex items-center gap-3 border transition-all duration-300 ${activeTheme !== "default" ? themeAccentClass : "border-blue-500/20"}`} accentColor="#3b82f6">
-          <Award className="w-7 h-7 text-blue-400 shrink-0" />
-          <div>
-            <span className="text-[10px] text-gray-400 block font-semibold uppercase tracking-wider">Level Rank</span>
-            <span className="text-base font-extrabold text-white">{tier}</span>
-          </div>
-        </LiquidGlassCard>
-
-        <LiquidGlassCard className={`p-4 flex items-center gap-3 border transition-all duration-300 ${activeTheme !== "default" ? themeAccentClass : "border-yellow-500/20"}`} accentColor="#fbbf24">
-          <Coins className="w-7 h-7 text-yellow-500 shrink-0 animate-bounce" />
-          <div>
-            <span className="text-[10px] text-gray-400 block font-semibold uppercase tracking-wider">Wallet Balance</span>
-            <span className="text-base font-extrabold text-white">{coins} Coins</span>
-          </div>
-        </LiquidGlassCard>
-
-        <LiquidGlassCard 
-          className={`p-4 flex items-center gap-3 border cursor-pointer hover:scale-[1.03] transition-all duration-300 ${activeTheme !== "default" ? themeAccentClass : "border-purple-500/20"}`} 
-          accentColor="#a78bfa"
-          onClick={claimDailyChest}
-          title="Daily Streak: Click to claim weekly streak chest if 7+ days!"
-        >
-          <Flame className="w-7 h-7 text-purple-400 shrink-0 animate-pulse" />
-          <div>
-            <span className="text-[10px] text-gray-400 block font-semibold uppercase tracking-wider">Streak (Claim Chest!)</span>
-            <span className="text-base font-extrabold text-white">{streak} Days</span>
-          </div>
-        </LiquidGlassCard>
-
-        <LiquidGlassCard className={`p-4 flex items-center gap-3 border transition-all duration-300 ${activeTheme !== "default" ? themeAccentClass : "border-cyan-500/20"}`} accentColor="#22d3ee">
-          <Compass className="w-7 h-7 text-cyan-400 shrink-0" />
-          <div>
-            <span className="text-[10px] text-gray-400 block font-semibold uppercase tracking-wider">Solved Practice</span>
-            <span className="text-base font-extrabold text-white">{challengesCount} Solved</span>
-          </div>
-        </LiquidGlassCard>
-      </div>
-
-      {/* Module sub-tab selectors */}
-      <div className={`flex gap-1.5 p-1 bg-white/5 border rounded-2xl overflow-x-auto no-scrollbar flex-nowrap w-full sm:w-fit transition-all duration-300 ${activeTheme !== "default" ? themeAccentClass : "border-white/10"}`}>
+      <div className="mb-4 flex items-center">
         <button
-          onClick={() => setActiveTab("learning-paths")}
-          className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-            activeTab === "learning-paths"
-              ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
-              : "text-gray-400 hover:text-white"
-          }`}
+          onClick={() => setActiveTab(null)}
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
+          aria-label="Back to Coding Options"
         >
-          <BookOpen className="w-4 h-4" /> Learning Paths
-        </button>
-        <button
-          onClick={() => setActiveTab("code-coach")}
-          className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-            activeTab === "code-coach"
-              ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          <Target className="w-4 h-4" /> Code Coach
-        </button>
-        <button
-          onClick={() => setActiveTab("playground")}
-          className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-            activeTab === "playground"
-              ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          <Code className="w-4 h-4" /> Playground
-        </button>
-        <button
-          onClick={() => setActiveTab("arena")}
-          className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-            activeTab === "arena"
-              ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          <Sword className="w-4 h-4" /> Arena Modes
-        </button>
-        <button
-          onClick={() => setActiveTab("arcade")}
-          className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-            activeTab === "arcade"
-              ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          <Gamepad className="w-4 h-4" /> Daily Quests
-        </button>
-        <button
-          onClick={() => setActiveTab("shop")}
-          className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-            activeTab === "shop"
-              ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
-              : "text-gray-400 hover:text-white"
-          }`}
-        >
-          <UserCircle className="w-4 h-4" /> Shop & Ranks
+          <ChevronLeft className="w-6 h-6 text-foreground" />
         </button>
       </div>
 
@@ -905,7 +821,7 @@ export default function CodingStagePage() {
       {activeTab === "learning-paths" && (
         <div className="space-y-6 animate-in fade-in">
           {/* Daily Goal UI */}
-          <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 p-5 rounded-3xl border border-blue-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="bg-gradient-to-r from-indigo-600/20 to-indigo-600/20 p-5 rounded-3xl border border-indigo-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
               <h3 className="text-white font-bold text-base flex items-center gap-2">
                 <Target className="w-5 h-5 text-yellow-500 animate-pulse" /> Daily Goal: 5-10 Mins of Coding
@@ -914,21 +830,21 @@ export default function CodingStagePage() {
             </div>
             <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
               <div className="text-right">
-                <div className="text-lg font-black text-emerald-400">0 / 50 XP</div>
+                <div className="text-lg font-black text-indigo-400">0 / 50 XP</div>
                 <div className="text-[10px] text-gray-500">Earned Today</div>
               </div>
               <button 
                 onClick={() => openCourseModalMock("python")}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shrink-0"
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shrink-0"
               >
                 Start Quick Lesson
               </button>
             </div>
           </div>
 
-          <LiquidGlassCard className="p-6" accentColor="#3b82f6">
+          <LiquidGlassCard className="p-6" accentColor="#6366f1">
             <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-              <Compass className="w-5 h-5 text-blue-400" /> Career Learning Paths
+              <Compass className="w-5 h-5 text-indigo-400" /> Career Learning Paths
             </h2>
             <p className="text-xs text-gray-400 leading-relaxed mb-6">
               Master specific coding languages with bite-sized lessons, interactive slides, and sequential roadmaps.
@@ -936,8 +852,8 @@ export default function CodingStagePage() {
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {/* Python Card */}
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-5 hover:border-blue-500/40 transition-all flex flex-col gap-4">
-                <span className="text-[10px] font-bold text-blue-400 tracking-wider bg-blue-500/10 px-2 py-0.5 rounded w-fit">PYTHON DEVELOPER</span>
+              <div className="bg-white/5 border border-white/10 rounded-3xl p-5 hover:border-indigo-500/40 transition-all flex flex-col gap-4">
+                <span className="text-[10px] font-bold text-indigo-400 tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded w-fit">PYTHON DEVELOPER</span>
                 <div>
                   <h3 className="font-bold text-white text-base">Python Developer Path</h3>
                   <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">Syntax, arrays, decorators, and data analysis using NumPy and Pandas.</p>
@@ -949,19 +865,19 @@ export default function CodingStagePage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Status:</span>
-                    <span className="text-emerald-400 font-semibold">Active</span>
+                    <span className="text-indigo-400 font-semibold">Active</span>
                   </div>
                 </div>
                 <button
                   onClick={() => openCourseModalMock("python")}
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs text-center transition-all mt-2"
+                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs text-center transition-all mt-2"
                 >
                   Start Python Path <ChevronRight className="w-3.5 h-3.5 inline ml-0.5" />
                 </button>
               </div>
  
               {/* Web Dev Card */}
-              <div className={`bg-white/5 border border-white/10 rounded-3xl p-5 flex flex-col gap-4 relative transition-all duration-300 ${!unlockedPaths.includes("web") ? "opacity-60" : "hover:border-blue-500/40"}`}>
+              <div className={`bg-white/5 border border-white/10 rounded-3xl p-5 flex flex-col gap-4 relative transition-all duration-300 ${!unlockedPaths.includes("web") ? "opacity-60" : "hover:border-indigo-500/40"}`}>
                 {!unlockedPaths.includes("web") && (
                   <div className="absolute top-4 right-4 bg-red-500/10 text-red-400 p-1.5 rounded-lg border border-red-500/20">
                     <Lock className="w-3.5 h-3.5" />
@@ -981,7 +897,7 @@ export default function CodingStagePage() {
                   className={`w-full py-2 font-bold rounded-xl text-xs text-center mt-2 transition-all ${
                     !unlockedPaths.includes("web")
                       ? "bg-white/5 text-gray-500 border border-white/5 cursor-not-allowed"
-                      : "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-indigo-600 hover:bg-indigo-700 text-white"
                   }`}
                 >
                   {!unlockedPaths.includes("web") ? "Locked" : "Start Web Path"}
@@ -989,8 +905,8 @@ export default function CodingStagePage() {
               </div>
  
               {/* C Programming Card */}
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-5 hover:border-blue-500/40 transition-all flex flex-col gap-4">
-                <span className="text-[10px] font-bold text-blue-400 tracking-wider bg-blue-500/10 px-2 py-0.5 rounded w-fit">C MASTER</span>
+              <div className="bg-white/5 border border-white/10 rounded-3xl p-5 hover:border-indigo-500/40 transition-all flex flex-col gap-4">
+                <span className="text-[10px] font-bold text-indigo-400 tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded w-fit">C MASTER</span>
                 <div>
                   <h3 className="font-bold text-white text-base">C Programming Master</h3>
                   <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">Pointers, memory management structures, dynamic arrays, and file handling basics.</p>
@@ -1002,20 +918,20 @@ export default function CodingStagePage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Status:</span>
-                    <span className="text-emerald-400 font-semibold">Ready</span>
+                    <span className="text-indigo-400 font-semibold">Ready</span>
                   </div>
                 </div>
                 <button
                   onClick={() => openCourseModalMock("c")}
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs text-center transition-all mt-2"
+                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs text-center transition-all mt-2"
                 >
                   Start C Roadmap <ChevronRight className="w-3.5 h-3.5 inline ml-0.5" />
                 </button>
               </div>
 
               {/* C++ Programming Card */}
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-5 hover:border-blue-500/40 transition-all flex flex-col gap-4">
-                <span className="text-[10px] font-bold text-blue-400 tracking-wider bg-blue-500/10 px-2 py-0.5 rounded w-fit">C++ MASTER</span>
+              <div className="bg-white/5 border border-white/10 rounded-3xl p-5 hover:border-indigo-500/40 transition-all flex flex-col gap-4">
+                <span className="text-[10px] font-bold text-indigo-400 tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded w-fit">C++ MASTER</span>
                 <div>
                   <h3 className="font-bold text-white text-base">C++ Programming Path</h3>
                   <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">Classes, object oriented design patterns, and Class Inheritance Dragon boss battles.</p>
@@ -1027,12 +943,12 @@ export default function CodingStagePage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Status:</span>
-                    <span className="text-emerald-400 font-semibold">Ready</span>
+                    <span className="text-indigo-400 font-semibold">Ready</span>
                   </div>
                 </div>
                 <button
                   onClick={() => openCourseModalMock("cpp")}
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs text-center transition-all mt-2"
+                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs text-center transition-all mt-2"
                 >
                   Start C++ Path <ChevronRight className="w-3.5 h-3.5 inline ml-0.5" />
                 </button>
@@ -1046,16 +962,16 @@ export default function CodingStagePage() {
       {activeTab === "code-coach" && (
         <div className="space-y-6 animate-in fade-in">
           {!coachSelectedId ? (
-            <LiquidGlassCard className="p-6" accentColor="#3b82f6">
+            <LiquidGlassCard className="p-6" accentColor="#6366f1">
               <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Target className="w-5 h-5 text-blue-400" /> Standalone Practice Challenges
+                <Target className="w-5 h-5 text-indigo-400" /> Standalone Practice Challenges
               </h2>
               <div className="grid gap-4 sm:grid-cols-3">
                 {challenges.map(ch => (
                   <div
                     key={ch.id}
                     onClick={() => openChallengeWorkspace(ch)}
-                    className="p-5 bg-white/5 border border-white/10 rounded-2xl cursor-pointer hover:border-blue-500/40 hover:scale-[1.02] transition-all flex flex-col justify-between h-48"
+                    className="p-5 bg-white/5 border border-white/10 rounded-2xl cursor-pointer hover:border-indigo-500/40 hover:scale-[1.02] transition-all flex flex-col justify-between h-48"
                   >
                     <div className="flex justify-between items-start">
                       <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
@@ -1069,7 +985,7 @@ export default function CodingStagePage() {
                     </div>
                     <div className="flex items-center justify-between text-[10px] text-gray-400 pt-3 border-t border-white/5">
                       <span>XP: +{ch.rewardXP}</span>
-                      <span className="text-blue-400 font-bold flex items-center gap-0.5">Solve Now <ChevronRight className="w-3 h-3" /></span>
+                      <span className="text-indigo-400 font-bold flex items-center gap-0.5">Solve Now <ChevronRight className="w-3 h-3" /></span>
                     </div>
                   </div>
                 ))}
@@ -1086,7 +1002,7 @@ export default function CodingStagePage() {
                   >
                     Back to Challenges List
                   </button>
-                  <LiquidGlassCard className="p-5" accentColor="#3b82f6">
+                  <LiquidGlassCard className="p-5" accentColor="#6366f1">
                     <h3 className="font-bold text-lg text-white mb-2">{activeChallenge.title}</h3>
                     <span className="inline-block text-[10px] bg-green-500/15 text-green-400 font-bold px-3 py-0.5 rounded-full mb-4">
                       {activeChallenge.difficulty} Difficulty
@@ -1097,9 +1013,9 @@ export default function CodingStagePage() {
                       <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Example Test Cases:</span>
                       {activeChallenge.testCases.map((tc, idx) => (
                         <div key={idx} className="p-3 bg-black/40 border border-white/5 rounded-xl text-[10px] font-mono">
-                          <span className="text-blue-400 block mb-0.5">Input:</span>
+                          <span className="text-indigo-400 block mb-0.5">Input:</span>
                           <span className="text-gray-300 block mb-2">{tc.input}</span>
-                          <span className="text-emerald-400 block mb-0.5">Expected Output:</span>
+                          <span className="text-indigo-400 block mb-0.5">Expected Output:</span>
                           <span className="text-gray-300 block">{tc.output}</span>
                         </div>
                       ))}
@@ -1184,7 +1100,7 @@ export default function CodingStagePage() {
                   <button
                     onClick={runCoachChallenge}
                     disabled={coachRunning || !coachCode.trim()}
-                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl transition-all shadow flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-all shadow flex items-center justify-center gap-2"
                   >
                     {coachRunning ? (
                       <>
@@ -1206,9 +1122,9 @@ export default function CodingStagePage() {
         <div className="grid gap-6 md:grid-cols-3 animate-in fade-in">
           {/* Left panel options and custom input */}
           <div className="md:col-span-1 space-y-4">
-            <LiquidGlassCard className="p-5" accentColor="#3b82f6">
+            <LiquidGlassCard className="p-5" accentColor="#6366f1">
               <h3 className="font-bold text-white text-base mb-4 flex items-center gap-1.5">
-                <Cpu className="w-5 h-5 text-blue-400" /> Playground Config
+                <Cpu className="w-5 h-5 text-indigo-400" /> Playground Config
               </h3>
               
               <div className="space-y-4 text-xs">
@@ -1247,7 +1163,7 @@ export default function CodingStagePage() {
             {/* Performance Stats */}
             {pgRuntime !== null && (
               <LiquidGlassCard className="p-5" accentColor="#22d3ee">
-                <h4 className="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-3 flex items-center gap-1">
+                <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-3 flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" /> Performance profiling
                 </h4>
                 <div className="grid grid-cols-2 gap-2 text-center text-xs">
@@ -1300,7 +1216,7 @@ export default function CodingStagePage() {
               <button
                 onClick={runPlaygroundCode}
                 disabled={pgRunning || !pgCode.trim()}
-                className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-2xl transition-all shadow flex items-center justify-center gap-2 text-sm"
+                className="flex-1 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-2xl transition-all shadow flex items-center justify-center gap-2 text-sm"
               >
                 {pgRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
                 Run Code
@@ -1311,7 +1227,7 @@ export default function CodingStagePage() {
             {(pgOutput || pgError) && (
               <div className="p-4 bg-slate-900 border border-white/10 rounded-3xl space-y-2 font-mono text-xs">
                 <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Console Output:</span>
-                {pgOutput && <pre className="text-emerald-400 whitespace-pre-wrap">{pgOutput}</pre>}
+                {pgOutput && <pre className="text-indigo-400 whitespace-pre-wrap">{pgOutput}</pre>}
                 {pgError && <pre className="text-red-400 whitespace-pre-wrap">{pgError}</pre>}
               </div>
             )}
@@ -1323,9 +1239,9 @@ export default function CodingStagePage() {
       {activeTab === "arena" && (
         <div className="space-y-6 animate-in fade-in">
           {arenaMode === "lobby" && (
-            <LiquidGlassCard className="p-6 max-w-xl mx-auto" accentColor="#3b82f6">
+            <LiquidGlassCard className="p-6 max-w-xl mx-auto" accentColor="#6366f1">
               <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-                <Sword className="w-5 h-5 text-blue-400 animate-pulse" /> EduSync Coding Arena Modes
+                <Sword className="w-5 h-5 text-indigo-400 animate-pulse" /> EduSync Coding Arena Modes
               </h2>
               <p className="text-xs text-gray-400 mb-6">
                 Challenge dynamic gamified modes: live matchmaking battles, boss logic fights, and AI review critiques.
@@ -1377,12 +1293,12 @@ export default function CodingStagePage() {
                 {/* Interview Sim */}
                 <div className="p-4 bg-white/5 border border-white/10 rounded-2xl flex flex-col justify-between h-44">
                   <div>
-                    <h3 className="font-bold text-white text-sm flex items-center gap-1.5"><Mic className="w-4 h-4 text-cyan-400" /> Tech Interview Sim</h3>
+                    <h3 className="font-bold text-white text-sm flex items-center gap-1.5"><Mic className="w-4 h-4 text-indigo-400" /> Tech Interview Sim</h3>
                     <p className="text-[11px] text-gray-400 mt-2">Simulate a technical coding interview panel evaluation on reversing strings.</p>
                   </div>
                   <button
                     onClick={() => { setArenaMode("interview"); setInterviewReview(""); }}
-                    className="w-full py-2 bg-cyan-600/20 border border-cyan-500/30 hover:bg-cyan-600/30 text-cyan-300 font-bold rounded-xl text-xs"
+                    className="w-full py-2 bg-indigo-600/20 border border-indigo-500/30 hover:bg-indigo-600/30 text-indigo-300 font-bold rounded-xl text-xs"
                   >
                     Enter Panel 🎤
                   </button>
@@ -1391,12 +1307,12 @@ export default function CodingStagePage() {
                 {/* AI Reviewer */}
                 <div className="p-4 bg-white/5 border border-white/10 rounded-2xl flex flex-col justify-between h-44 sm:col-span-2">
                   <div>
-                    <h3 className="font-bold text-white text-sm flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-purple-400 animate-pulse" /> AI Code Reviewer</h3>
+                    <h3 className="font-bold text-white text-sm flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" /> AI Code Reviewer</h3>
                     <p className="text-[11px] text-gray-400 mt-2">Submit snippets for O(N) complexity reviews under unique personas (Linus Torvalds, Ada Lovelace).</p>
                   </div>
                   <button
                     onClick={() => { setArenaMode("review"); setReviewResult(""); }}
-                    className="w-full py-2 bg-purple-600/20 border border-purple-500/30 hover:bg-purple-600/30 text-purple-300 font-bold rounded-xl text-xs"
+                    className="w-full py-2 bg-indigo-600/20 border border-indigo-500/30 hover:bg-indigo-600/30 text-indigo-300 font-bold rounded-xl text-xs"
                   >
                     Ask Reviewer 🤖
                   </button>
@@ -1522,7 +1438,7 @@ export default function CodingStagePage() {
               </div>
 
               <div className="space-y-4">
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-xl">
+                <div className="p-4 bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold rounded-xl">
                   Task: Correct the mod operator logic below to check if a number is even.
                 </div>
 
@@ -1570,12 +1486,12 @@ export default function CodingStagePage() {
             <LiquidGlassCard className="p-6 max-w-xl mx-auto" accentColor="#22d3ee">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="font-bold text-white text-sm">Tech Interview Simulator</h3>
-                <button onClick={() => setArenaMode("lobby")} className="text-xs text-cyan-400 hover:underline">Exit Panel</button>
+                <button onClick={() => setArenaMode("lobby")} className="text-xs text-indigo-400 hover:underline">Exit Panel</button>
               </div>
 
               <div className="space-y-4">
                 <div className="p-4 bg-slate-900 border border-white/10 rounded-xl text-xs text-gray-300 leading-relaxed font-light">
-                  <span className="font-bold text-cyan-400 block mb-1">Google SDE Panel:</span>
+                  <span className="font-bold text-indigo-400 block mb-1">Google SDE Panel:</span>
                   "Write a short function to reverse a string in Python optimally."
                 </div>
 
@@ -1595,7 +1511,7 @@ export default function CodingStagePage() {
                 <button
                   onClick={runInterviewAnalyze}
                   disabled={isInterviewing}
-                  className="w-full py-2 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition-colors"
+                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition-colors"
                 >
                   {isInterviewing ? "Interviewers discussing..." : "Submit solution to interview panel"}
                 </button>
@@ -1605,10 +1521,10 @@ export default function CodingStagePage() {
 
           {/* AI REVIEWER VIEW */}
           {arenaMode === "review" && (
-            <LiquidGlassCard className="p-6 max-w-xl mx-auto" accentColor="#8b5cf6">
+            <LiquidGlassCard className="p-6 max-w-xl mx-auto" accentColor="#6366f1">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="font-bold text-white text-sm">AI Code Reviewer</h3>
-                <button onClick={() => setArenaMode("lobby")} className="text-xs text-purple-400 hover:underline">Exit Review</button>
+                <button onClick={() => setArenaMode("lobby")} className="text-xs text-indigo-400 hover:underline">Exit Review</button>
               </div>
 
               <div className="space-y-4">
@@ -1626,7 +1542,7 @@ export default function CodingStagePage() {
                     <button
                       onClick={() => setReviewPersona("ada")}
                       className={`p-2 rounded-xl border text-xs font-semibold ${
-                        reviewPersona === "ada" ? "bg-purple-500/10 border-purple-500 text-purple-400" : "bg-white/5 border-white/10 text-gray-400"
+                        reviewPersona === "ada" ? "bg-indigo-500/10 border-indigo-500 text-indigo-400" : "bg-white/5 border-white/10 text-gray-400"
                       }`}
                     >
                       🎓 Ada Lovelace
@@ -1658,7 +1574,7 @@ export default function CodingStagePage() {
                 <button
                   onClick={getReviewText}
                   disabled={isReviewing || !reviewSnippet.trim()}
-                  className="w-full py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs transition-colors"
+                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition-colors"
                 >
                   {isReviewing ? "Analyzing complexity..." : "Get Review Feedback"}
                 </button>
@@ -1673,9 +1589,9 @@ export default function CodingStagePage() {
         <div className="space-y-6 animate-in fade-in">
           <div className="grid gap-6 md:grid-cols-2">
             {/* Daily goals & quests */}
-            <LiquidGlassCard className="p-6" accentColor="#3b82f6">
+            <LiquidGlassCard className="p-6" accentColor="#6366f1">
               <h3 className="font-bold text-white text-base mb-4 flex items-center gap-1.5">
-                <Target className="w-5 h-5 text-blue-400 animate-pulse" /> Daily Quests
+                <Target className="w-5 h-5 text-indigo-400 animate-pulse" /> Daily Quests
               </h3>
               
               <div className="space-y-3 text-xs">
@@ -1684,7 +1600,7 @@ export default function CodingStagePage() {
                     <strong className="text-white block">Solve 1 Code Coach problem</strong>
                     <span className="text-[10px] text-yellow-500">Reward: 💰 +20 Coins</span>
                   </div>
-                  <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20 flex items-center gap-0.5"><Check className="w-3.5 h-3.5" /> Completed</span>
+                  <span className="text-indigo-400 font-bold bg-indigo-500/10 px-2.5 py-0.5 rounded border border-indigo-500/20 flex items-center gap-0.5"><Check className="w-3.5 h-3.5" /> Completed</span>
                 </div>
 
                 <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between">
@@ -1708,21 +1624,21 @@ export default function CodingStagePage() {
             {/* Achievements Cabinet */}
             <LiquidGlassCard className="p-6" accentColor="#bd93f9">
               <h3 className="font-bold text-white text-base mb-4 flex items-center gap-1.5">
-                <Award className="w-5 h-5 text-purple-400" /> Coding Achievements
+                <Award className="w-5 h-5 text-indigo-400" /> Coding Achievements
               </h3>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-xl text-center space-y-1.5">
+                <div className="p-3 bg-indigo-500/5 border border-indigo-500/20 rounded-xl text-center space-y-1.5">
                   <span className="text-2xl block">🔥</span>
                   <strong className="text-white block">Speed Demon</strong>
-                  <span className="text-[10px] text-purple-300">Run code in under 50ms.</span>
+                  <span className="text-[10px] text-indigo-300">Run code in under 50ms.</span>
                   <span className="block text-[9px] text-green-400 font-bold bg-green-500/10 py-0.5 rounded">Unlocked</span>
                 </div>
 
-                <div className="p-3 bg-purple-500/5 border border-purple-500/20 rounded-xl text-center space-y-1.5">
+                <div className="p-3 bg-indigo-500/5 border border-indigo-500/20 rounded-xl text-center space-y-1.5">
                   <span className="text-2xl block">👾</span>
                   <strong className="text-white block">Boss Slayer</strong>
-                  <span className="text-[10px] text-purple-300">Defeated Bug Monster.</span>
+                  <span className="text-[10px] text-indigo-300">Defeated Bug Monster.</span>
                   <span className="block text-[9px] text-green-400 font-bold bg-green-500/10 py-0.5 rounded">Unlocked</span>
                 </div>
 
@@ -1794,7 +1710,7 @@ export default function CodingStagePage() {
                             }}
                             className={`w-full py-1.5 rounded-xl text-xs font-bold transition-all ${
                               activeTheme === item.id 
-                                ? "bg-purple-600 text-white" 
+                                ? "bg-indigo-600 text-white" 
                                 : "bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300"
                             }`}
                           >
@@ -1899,20 +1815,20 @@ export default function CodingStagePage() {
                             isActive 
                               ? "bg-indigo-600/20 border-indigo-500 text-white font-bold" 
                               : isCompleted 
-                                ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-400" 
+                                ? "bg-indigo-500/5 border-indigo-500/20 text-indigo-400" 
                                 : "bg-black/20 border-white/5 text-gray-400 cursor-not-allowed opacity-60"
                           }`}
                         >
                           <span className="truncate">{idx + 1}. {mod.title}</span>
-                          {mod.isBoss && <span className="text-[9px] bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30 px-1.5 py-0.5 rounded">BOSS</span>}
+                          {mod.isBoss && <span className="text-[9px] bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30 px-1.5 py-0.5 rounded">BOSS</span>}
                         </div>
                       );
                     })}
                   </div>
 
                   {/* Module Details / Theory Card */}
-                  <div className={`p-4 bg-slate-900 border rounded-2xl space-y-3 relative ${MOCK_PATH_COURSES[activeCourseKey].modules[courseModuleIdx].isBoss ? "border-rose-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]" : "border-white/10"}`}>
-                    <h4 className={`text-sm font-bold flex items-center gap-1 ${MOCK_PATH_COURSES[activeCourseKey].modules[courseModuleIdx].isBoss ? "text-rose-400" : "text-white"}`}>
+                  <div className={`p-4 bg-slate-900 border rounded-2xl space-y-3 relative ${MOCK_PATH_COURSES[activeCourseKey].modules[courseModuleIdx].isBoss ? "border-indigo-500/30 shadow-[0_0_15px_rgba(239,68,68,0.1)]" : "border-white/10"}`}>
+                    <h4 className={`text-sm font-bold flex items-center gap-1 ${MOCK_PATH_COURSES[activeCourseKey].modules[courseModuleIdx].isBoss ? "text-indigo-400" : "text-white"}`}>
                       {MOCK_PATH_COURSES[activeCourseKey].modules[courseModuleIdx].isBoss ? "☠️ " : "📖 "}
                       {MOCK_PATH_COURSES[activeCourseKey].modules[courseModuleIdx].title}
                     </h4>
@@ -1949,7 +1865,7 @@ export default function CodingStagePage() {
                     <button 
                       onClick={closeCourseModal}
                       disabled={!courseVerified}
-                      className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl text-xs transition-colors"
+                      className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl text-xs transition-colors"
                     >
                       Finish Path! 🎓
                     </button>
@@ -1979,7 +1895,7 @@ export default function CodingStagePage() {
                 {/* Console Output logs */}
                 <div className="flex-1 p-3.5 bg-slate-950 border border-white/5 rounded-2xl overflow-y-auto font-mono text-[11px] min-h-[100px]">
                   <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block mb-1">Terminal logs:</span>
-                  {courseOutput && <pre className="text-emerald-400 whitespace-pre-wrap">{courseOutput}</pre>}
+                  {courseOutput && <pre className="text-indigo-400 whitespace-pre-wrap">{courseOutput}</pre>}
                   {courseError && <pre className="text-red-400 whitespace-pre-wrap">{courseError}</pre>}
                   {!courseOutput && !courseError && <span className="text-gray-600 italic">No output logged yet. Run code to verify.</span>}
                 </div>

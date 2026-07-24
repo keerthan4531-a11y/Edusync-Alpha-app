@@ -31,7 +31,7 @@ export function PortfolioGenerator() {
             className="text-stage4 hover:text-amber-500 transition-colors p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg"
             title="Copy URL"
           >
-            {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <LinkIcon className="w-4 h-4" />}
+            {copied ? <Check className="w-4 h-4 text-indigo-500" /> : <LinkIcon className="w-4 h-4" />}
           </button>
         </div>
       </div>
@@ -79,8 +79,8 @@ export function PortfolioGenerator() {
                     </h4>
                     <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-4 leading-normal">Fully optimized RESTful backend built during Stage 3 Project sprints.</p>
                     <div className="flex gap-2">
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-500 font-semibold border border-blue-500/20">TypeScript</span>
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 font-semibold border border-emerald-500/20">Node.js</span>
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 font-semibold border border-indigo-500/20">TypeScript</span>
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 font-semibold border border-indigo-500/20">Node.js</span>
                     </div>
                   </div>
                   <div className="bg-white/80 dark:bg-white/5 p-4 rounded-2xl border border-black/5 dark:border-white/10 shadow-sm">
@@ -91,7 +91,7 @@ export function PortfolioGenerator() {
                     <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-4 leading-normal">Interactive client visualizer displaying classic sorting algorithms.</p>
                     <div className="flex gap-2">
                       <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-500 font-semibold border border-amber-500/20">React</span>
-                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-purple-500/10 text-purple-500 font-semibold border border-purple-500/20">Algorithms</span>
+                      <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 font-semibold border border-indigo-500/20">Algorithms</span>
                     </div>
                   </div>
                 </div>
@@ -102,9 +102,9 @@ export function PortfolioGenerator() {
                   Verified Achievements
                 </h3>
                 <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-500 font-bold text-sm shadow-sm" title="Communication Badge">S1</div>
-                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-sm shadow-sm" title="Coding Badge">S2</div>
-                  <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold text-sm shadow-sm" title="Project Badge">S3</div>
+                  <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 font-bold text-sm shadow-sm" title="Communication Badge">S1</div>
+                  <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-sm shadow-sm" title="Coding Badge">S2</div>
+                  <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold text-sm shadow-sm" title="Project Badge">S3</div>
                   <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-stage4 font-bold text-sm shadow-sm animate-pulse" title="Stage 4 Active">S4</div>
                 </div>
               </div>

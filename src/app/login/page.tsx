@@ -1,149 +1,561 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect, Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { signIn } from "next-auth/react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { LiquidGlassCard } from "@/components/ui/liquid-glass-card"
-import { BrainCircuit, Sparkles, Loader2, Mail, Lock, User, UserCheck, ShieldAlert } from "lucide-react"
+import { Loader2, ChevronDown, ChevronRight, Check, AlertCircle } from "lucide-react"
+
+type Role = "STUDENT" | "FACULTY" | "HOD"
+
+const ROLES: { id: Role; label: string }[] = [
+  { id: "STUDENT", label: "Student" },
+  { id: "FACULTY", label: "Faculty" },
+  { id: "HOD",     label: "HOD"     },
+]
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("student@test.com")
-  const [password, setPassword] = useState("hash")
-  const [isLoading, setIsLoading] = useState(false)
-  const [role, setRole] = useState<"STUDENT" | "FACULTY" | "HOD">("STUDENT")
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
+  )
+}
 
-  const roleColors = {
-    STUDENT: "text-stage1",
-    FACULTY: "text-stage2",
-    HOD: "text-stage3"
-  }
+function LoginContent() {
+  const searchParams                = useSearchParams()
+  const [email, setEmail]           = useState("student@test.com")
+  const [password, setPassword]     = useState("hash")   // matches seed data
+  const [isLoading, setIsLoading]   = useState(false)
+  const [role, setRole]             = useState<Role>("STUDENT")
+  const [dropOpen, setDropOpen]     = useState(false)
+  const [loginError, setLoginError] = useState<string | null>(
+    searchParams.get("error") ? "Invalid email or password. Please try again." : null
+  )
+  const dropRef                     = useRef<HTMLDivElement>(null)
 
-  const roleBackgrounds = {
-    STUDENT: "bg-stage1",
-    FACULTY: "bg-stage2",
-    HOD: "bg-stage3"
+  const activeRole = ROLES.find((r) => r.id === role)!
+
+  // Lock body scroll while login page is mounted
+  useEffect(() => {
+    const html = document.documentElement
+    const body = document.body
+    const prevHtmlOverflow = html.style.overflow
+    const prevBodyOverflow = body.style.overflow
+    html.style.overflow = 'hidden'
+    body.style.overflow = 'hidden'
+    return () => {
+      html.style.overflow = prevHtmlOverflow
+      body.style.overflow = prevBodyOverflow
+    }
+  }, [])
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropRef.current && !dropRef.current.contains(e.target as Node)) {
+        setDropOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handler)
+    return () => document.removeEventListener("mousedown", handler)
+  }, [])
+
+  const handleRoleSelect = (r: Role) => {
+    setRole(r)
+    setEmail(r.toLowerCase() + "@test.com")
+    setDropOpen(false)
   }
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault()
     setIsLoading(true)
-    
+    setLoginError(null)
+
     let callbackUrl = "/student-dashboard"
     if (role === "FACULTY") callbackUrl = "/faculty-dashboard"
-    if (role === "HOD") callbackUrl = "/hod-dashboard"
+    if (role === "HOD")     callbackUrl = "/hod-dashboard"
 
-    await signIn("credentials", { 
-      email, 
-      password, 
-      callbackUrl 
+    const result = await signIn("credentials", {
+      email,
+      password,
+      callbackUrl,
+      redirect: false,   // handle redirect manually so we can catch errors
     })
+
+    if (result?.error) {
+      setLoginError("Invalid email or password. Please try again.")
+      setIsLoading(false)
+      return
+    }
+
+    // Success — navigate to dashboard
+    if (result?.url) {
+      window.location.href = result.url
+    }
   }
 
   return (
-    <div className="flex min-h-screen w-full items-center justify-center bg-[#050505] relative overflow-hidden font-sans">
-      {/* Decorative ambient background glows */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
-        <div className={`absolute -top-[20%] -left-[10%] w-[50%] h-[50%] ${roleBackgrounds[role]}/20 rounded-full blur-[120px] mix-blend-screen transition-colors duration-1000`} />
-        <div className={`absolute bottom-[10%] -right-[10%] w-[60%] h-[60%] ${roleBackgrounds[role]}/10 rounded-full blur-[150px] mix-blend-screen transition-colors duration-1000`} />
-        
-        {/* Animated grid lines */}
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light"></div>
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_50%,#000_10%,transparent_100%)] pointer-events-none"></div>
-      </div>
+    <>
+      <style>{`
+        *, *::before, *::after { box-sizing: border-box; }
 
-      <div className="w-full max-w-[420px] p-6 relative z-10 animate-in fade-in zoom-in-95 duration-700">
-        <LiquidGlassCard className="w-full p-8 relative overflow-hidden" accentColor={role === 'STUDENT' ? '#8b5cf6' : role === 'FACULTY' ? '#3b82f6' : '#10b981'}>
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative group">
-              <div className={`absolute inset-0 ${roleBackgrounds[role]} rounded-2xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500`} />
-              <div className="h-16 w-16 bg-white/5 rounded-2xl flex items-center justify-center mb-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] border border-white/10 backdrop-blur-xl relative z-10">
-                <BrainCircuit className={`h-8 w-8 ${roleColors[role]} drop-shadow-md transition-colors duration-500`} />
+        .lp-root {
+          position: fixed;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          background: #111424;
+          font-family: var(--font-poppins), 'Poppins', system-ui, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          overflow: hidden;
+        }
+
+        /* Ambient geometric background shapes */
+        .lp-ambient-1 {
+          position: fixed;
+          top: -10%;
+          left: -10%;
+          width: 70%;
+          height: 80%;
+          background: #1b1e36;
+          clip-path: polygon(0 0, 100% 0, 30% 100%, 0 100%);
+          pointer-events: none;
+          z-index: 0;
+        }
+        .lp-ambient-2 {
+          position: fixed;
+          bottom: 0;
+          right: 0;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(135deg, transparent 40%, rgba(30, 35, 60, 0.4) 40%, #15182e 100%);
+          pointer-events: none;
+          z-index: 0;
+        }
+        .lp-ambient-3 {
+          position: fixed;
+          bottom: -5%;
+          right: -5%;
+          width: 45%;
+          height: 45%;
+          background: linear-gradient(135deg, #ea580c, #c2410c);
+          clip-path: polygon(100% 25%, 100% 100%, 15% 100%);
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        /* Content wrapper — centered, never scrolls */
+        .lp-scroll {
+          position: relative;
+          z-index: 2;
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          width: 100%;
+          max-width: 420px;
+          margin: 0 auto;
+          padding: 32px 24px 80px;
+        }
+
+        /* ── Brand ── */
+        .lp-brand {
+          margin-bottom: 28px;
+        }
+        .lp-logo-mark {
+          width: 42px;
+          height: 42px;
+          border-radius: 11px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.08);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 22px;
+        }
+        .lp-title {
+          font-size: 25px;
+          font-weight: 700;
+          color: #f4f4f5;
+          letter-spacing: -0.3px;
+          line-height: 1.2;
+          margin-bottom: 5px;
+        }
+        .lp-subtitle {
+          font-size: 13.5px;
+          font-weight: 400;
+          color: #52525b;
+          line-height: 1.5;
+        }
+
+        /* ── Glass card (matches topbar/sidebar style) ── */
+        .lp-card {
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 20px;
+          padding: 26px 22px;
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+        }
+        /* Subtle top sheen on card */
+        .lp-card::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 16%; right: 16%;
+          height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+          border-radius: 1px;
+          pointer-events: none;
+        }
+
+        /* ── Field label ── */
+        .lp-label {
+          display: block;
+          font-size: 11px;
+          font-weight: 600;
+          color: #71717a;
+          letter-spacing: 0.6px;
+          text-transform: uppercase;
+          margin-bottom: 7px;
+        }
+
+        /* ── Dropdown trigger ── */
+        .lp-dropdown-wrap {
+          position: relative;
+        }
+        .lp-dropdown-trigger {
+          width: 100%;
+          height: 50px;
+          padding: 0 14px;
+          background: rgba(0,0,0,0.3);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 12px;
+          color: #e4e4e7;
+          font-size: 14px;
+          font-weight: 500;
+          font-family: inherit;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          transition: border-color 0.18s, background 0.18s;
+          outline: none;
+        }
+        .lp-dropdown-trigger:hover {
+          border-color: rgba(255,255,255,0.14);
+          background: rgba(255,255,255,0.04);
+        }
+        .lp-dropdown-trigger.open {
+          border-color: #6366f1;
+          box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+          background: rgba(99,102,241,0.06);
+        }
+        /* ── Dropdown menu ── */
+        .lp-dropdown-menu {
+          position: absolute;
+          top: calc(100% + 6px);
+          left: 0; right: 0;
+          background: rgba(13, 17, 26, 0.95);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 12px;
+          box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5), 0 8px 10px -6px rgba(0,0,0,0.5);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          z-index: 100;
+          padding: 4px;
+          animation: lpDropIn 0.15s ease-out;
+        }
+        @keyframes lpDropIn {
+          from { opacity: 0; transform: translateY(-4px); }
+          to   { opacity: 1; transform: translateY(0);    }
+        }
+
+        .lp-dropdown-item {
+          width: 100%;
+          padding: 10px 14px;
+          border-radius: 8px;
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          font-family: inherit;
+          transition: background 0.15s, color 0.15s;
+        }
+        .lp-dropdown-item:hover {
+          background: rgba(255,255,255,0.06);
+        }
+        .lp-dropdown-item.selected {
+          background: rgba(99,102,241,0.08);
+        }
+        .lp-item-label {
+          font-size: 13.5px;
+          font-weight: 500;
+          color: #e4e4e7;
+          transition: color 0.15s;
+        }
+        .lp-dropdown-item:hover .lp-item-label {
+          color: #ffffff;
+        }
+        .lp-dropdown-item.selected .lp-item-label {
+          color: #6366f1;
+          font-weight: 600;
+        }
+
+        /* ── Input field ── */
+        .lp-input-wrap {
+          position: relative;
+        }
+        .lp-input {
+          width: 100%;
+          height: 50px;
+          padding: 0 14px;
+          background: rgba(0,0,0,0.3);
+          border: 1px solid rgba(255,255,255,0.08);
+          border-radius: 12px;
+          color: #f4f4f5;
+          font-size: 14px;
+          font-weight: 400;
+          font-family: inherit;
+          outline: none;
+          transition: border-color 0.18s, box-shadow 0.18s, background 0.18s;
+        }
+        .lp-input::placeholder { color: #3f3f46; }
+        .lp-input:focus {
+          border-color: #6366f1;
+          background: rgba(99,102,241,0.05);
+          box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+        }
+
+        /* ── Field header row ── */
+        .lp-field-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 7px;
+        }
+        .lp-forgot {
+          font-size: 11.5px;
+          font-weight: 500;
+          color: #6366f1;
+          background: none;
+          border: none;
+          font-family: inherit;
+          cursor: pointer;
+          transition: color 0.15s;
+          padding: 0;
+        }
+        .lp-forgot:hover { color: #818cf8; }
+
+        /* ── Submit button (matches app primary) ── */
+        .lp-btn {
+          width: 100%;
+          height: 50px;
+          border: none;
+          border-radius: 12px;
+          background: #6366f1;
+          color: #fff;
+          font-size: 14.5px;
+          font-weight: 600;
+          font-family: inherit;
+          letter-spacing: 0.1px;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 7px;
+          transition: background 0.18s, transform 0.15s, box-shadow 0.18s;
+          box-shadow: 0 4px 16px rgba(99,102,241,0.25);
+          margin-top: 2px;
+        }
+        .lp-btn:hover:not(:disabled) {
+          background: #5254cc;
+          transform: translateY(-1px);
+          box-shadow: 0 6px 22px rgba(99,102,241,0.35);
+        }
+        .lp-btn:active:not(:disabled) {
+          transform: translateY(0);
+          box-shadow: 0 2px 8px rgba(99,102,241,0.2);
+        }
+        .lp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ── Footer pinned to bottom ── */
+        .lp-footer {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          padding: 16px 24px 20px;
+          text-align: center;
+          background: linear-gradient(to top, #080A10 60%, transparent);
+          pointer-events: none;
+        }
+        .lp-footer p {
+          font-size: 11px;
+          color: #3f3f46;
+          line-height: 1.7;
+          pointer-events: auto;
+        }
+        .lp-footer span {
+          color: #52525b;
+          text-decoration: underline;
+          text-underline-offset: 2px;
+          cursor: pointer;
+          transition: color 0.15s;
+        }
+        .lp-footer span:hover { color: #71717a; }
+
+        /* Spinner */
+        @keyframes lp-spin { to { transform: rotate(360deg); } }
+        .lp-spin { animation: lp-spin 0.75s linear infinite; }
+
+        /* Fade in */
+        @keyframes lp-fadein {
+          from { opacity: 0; transform: translateY(14px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .lp-scroll { animation: lp-fadein 0.45s ease both; }
+      `}</style>
+
+      <div className="lp-root">
+        <div className="lp-ambient-1" />
+        <div className="lp-ambient-2" />
+        <div className="lp-ambient-3" />
+
+        <div className="lp-scroll">
+
+          {/* Brand */}
+          <div className="lp-brand">
+            <div className="lp-logo-mark">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 10l10-5 10 5-10 5z"/>
+                <path d="M6 12.5v4.5c2 2 8 2 12 0v-4.5"/>
+              </svg>
+            </div>
+            <h1 className="lp-title">EduSync</h1>
+            <p className="lp-subtitle">Sign in to continue your learning</p>
+          </div>
+
+          {/* Form card */}
+          <form onSubmit={handleLogin} style={{ margin: 0 }}>
+          <div className="lp-card" style={{ position: "relative" }}>
+
+            {/* Role dropdown */}
+            <div>
+              <label className="lp-label">Role</label>
+              <div className="lp-dropdown-wrap" ref={dropRef}>
+                <button
+                  type="button"
+                  className={`lp-dropdown-trigger${dropOpen ? " open" : ""}`}
+                  onClick={() => setDropOpen((p) => !p)}
+                >
+                  <span>{activeRole.label}</span>
+                  <ChevronDown
+                    size={16}
+                    color="#71717a"
+                    style={{ transition: "transform 0.2s", transform: dropOpen ? "rotate(180deg)" : "rotate(0deg)" }}
+                  />
+                </button>
+
+                {dropOpen && (
+                  <div className="lp-dropdown-menu">
+                    {ROLES.map((r) => (
+                      <button
+                        key={r.id}
+                        type="button"
+                        className={`lp-dropdown-item${role === r.id ? " selected" : ""}`}
+                        onClick={() => handleRoleSelect(r.id)}
+                      >
+                        <span className="lp-item-label">{r.label}</span>
+                        {role === r.id && (
+                          <Check size={16} color="#6366f1" strokeWidth={2.5} />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-            
-            <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-2 mt-2">
-              EduSync 4.0
-              <Sparkles className="h-5 w-5 text-amber-400 animate-pulse" />
-            </h1>
-            <p className="text-zinc-400 text-sm mt-2 font-medium">Authentication Portal</p>
-          </div>
-          
-          {/* Role Selector Tabs */}
-          <div className="flex p-1 bg-black/40 backdrop-blur-md rounded-xl mb-8 border border-white/10 shadow-inner">
-            {(["STUDENT", "FACULTY", "HOD"] as const).map((r) => (
-              <button
-                key={r}
-                onClick={() => {
-                  setRole(r)
-                  setEmail(r.toLowerCase() + "@test.com")
-                }}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all duration-300 ${
-                  role === r 
-                    ? `${roleBackgrounds[r]} text-white shadow-lg scale-[1.02]` 
-                    : "text-zinc-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
 
-          <form onSubmit={handleLogin} className="space-y-5 mb-8">
-            <div className="space-y-1.5 relative group">
-              <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest ml-1">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
-                <Input 
-                  type="email" 
+            {/* Email */}
+            <div>
+              <label className="lp-label">Email</label>
+              <div className="lp-input-wrap">
+                <input
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 bg-black/40 border-white/10 h-12 rounded-xl text-white placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-white/30 focus-visible:bg-black/60 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)]"
+                  placeholder="Enter your email"
+                  className="lp-input"
+                  required
+                  autoComplete="email"
                 />
               </div>
             </div>
 
-            <div className="space-y-1.5 relative group">
-              <div className="flex justify-between items-center ml-1">
-                <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest">Password</label>
-                <span className="text-[10px] text-zinc-500 hover:text-white cursor-pointer transition-colors">Forgot?</span>
+            {/* Password */}
+            <div>
+              <div className="lp-field-row">
+                <label className="lp-label" style={{ marginBottom: 0 }}>Password</label>
+                <button type="button" className="lp-forgot">Forgot password?</button>
               </div>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500 group-focus-within:text-white transition-colors" />
-                <Input 
-                  type="password" 
+              <div className="lp-input-wrap">
+                <input
+                  type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 bg-black/40 border-white/10 h-12 rounded-xl text-white placeholder:text-zinc-600 focus-visible:ring-1 focus-visible:ring-white/30 focus-visible:bg-black/60 transition-all duration-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)]"
+                  placeholder="Enter your password"
+                  className="lp-input"
+                  required
+                  autoComplete="current-password"
                 />
               </div>
             </div>
 
-            <Button 
-              type="submit"
-              disabled={isLoading}
-              className={`w-full h-12 mt-2 rounded-xl ${roleBackgrounds[role]} hover:opacity-90 text-white font-bold text-sm tracking-wide shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_4px_20px_rgba(0,0,0,0.4)] transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-2`}
-            >
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  {role === "STUDENT" && <User className="w-4 h-4" />}
-                  {role === "FACULTY" && <UserCheck className="w-4 h-4" />}
-                  {role === "HOD" && <ShieldAlert className="w-4 h-4" />}
-                  Sign In as {role.charAt(0) + role.slice(1).toLowerCase()}
-                </>
-              )}
-            </Button>
+            {/* Error message */}
+            {loginError && (
+              <div style={{
+                display: "flex", alignItems: "center", gap: "8px",
+                background: "rgba(239,68,68,0.08)",
+                border: "1px solid rgba(239,68,68,0.2)",
+                borderRadius: "10px", padding: "10px 13px",
+              }}>
+                <AlertCircle size={15} color="#f87171" strokeWidth={2} style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: "12.5px", color: "#f87171", fontWeight: 500 }}>{loginError}</span>
+              </div>
+            )}
+
+            {/* Submit */}
+            <button type="submit" className="lp-btn" disabled={isLoading}>
+              {isLoading
+                ? <Loader2 size={18} className="lp-spin" />
+                : <>Sign in <ChevronRight size={16} strokeWidth={2.5} /></>
+              }
+            </button>
+
+          </div>
           </form>
 
-          <div className="text-center">
-            <p className="text-xs text-zinc-500">
-              By signing in, you agree to our <span className="text-zinc-300 hover:text-white cursor-pointer">Terms of Service</span> & <span className="text-zinc-300 hover:text-white cursor-pointer">Privacy Policy</span>.
-            </p>
-          </div>
-        </LiquidGlassCard>
+        </div>
       </div>
-    </div>
+
+      {/* Footer — pinned to bottom */}
+      <div className="lp-footer">
+        <p>
+          By continuing, you agree to our{" "}
+          <span>Terms of Service</span>
+          {" "}and{" "}
+          <span>Privacy Policy</span>
+        </p>
+      </div>
+    </>
   )
 }

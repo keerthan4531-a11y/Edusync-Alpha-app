@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { Stage1ContentDTO } from "@/types/communication";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { useWriting } from "../hooks/useWriting";
+import { ChallengeSkeleton } from "./ChallengeSkeleton";
+import { DifficultyPicker, Difficulty } from "./DifficultyPicker";
+import Image from "next/image";
 import { 
   PenTool, 
   Image as ImageIcon, 
@@ -14,7 +17,8 @@ import {
   RotateCcw,
   ArrowRight,
   Sparkles,
-  ChevronLeft
+  ChevronLeft,
+  Play
 } from "lucide-react";
 
 interface WritingModuleProps {
@@ -22,6 +26,8 @@ interface WritingModuleProps {
   challenges?: Stage1ContentDTO[];
   onNext: () => void;
   onSubFeatureOpen?: (isOpen: boolean) => void;
+  difficulty?: string;
+  onComplete?: (score: number, timeSec: number) => void;
 }
 
 const NO_FILTER_PROMPTS = [
@@ -45,24 +51,56 @@ const NO_FILTER_PROMPTS = [
 ];
 
 const WRITING_FEATURES = [
-  { id: "tutor" as const, label: "AI Writing Tutor", icon: PenTool, color: "text-emerald-400", bgColor: "bg-emerald-400/10", borderColor: "border-emerald-400/20" },
-  { id: "image" as const, label: "Image Describer", icon: ImageIcon, color: "text-blue-400", bgColor: "bg-blue-400/10", borderColor: "border-blue-400/20" },
-  { id: "filter" as const, label: "No-Filter Rewrite", icon: ShieldAlert, color: "text-orange-400", bgColor: "bg-orange-400/10", borderColor: "border-orange-400/20" },
+  { id: "tutor" as const, label: "Write in", icon: PenTool, color: "text-indigo-500", bgColor: "bg-indigo-500/10", borderColor: "border-indigo-500/20", borderStyle: "rounded-full border border-indigo-500/30 group-hover:border-indigo-500/60 group-hover:shadow-[0_0_15px_rgba(99,102,241,0.2)]" },
+  { id: "image" as const, label: "Write about", icon: PenTool, color: "text-indigo-500", bgColor: "bg-indigo-500/10", borderColor: "border-indigo-500/20", borderStyle: "rounded-full border border-indigo-500/30 group-hover:border-indigo-500/60 group-hover:shadow-[0_0_15px_rgba(99,102,241,0.2)]" },
+  { id: "filter" as const, label: "Write out", icon: PenTool, color: "text-indigo-500", bgColor: "bg-indigo-500/10", borderColor: "border-indigo-500/20", borderStyle: "rounded-full border border-indigo-500/30 group-hover:border-indigo-500/60 group-hover:shadow-[0_0_15px_rgba(99,102,241,0.2)]" },
 ];
 
-export function WritingModule({ content, challenges = [], onNext, onSubFeatureOpen }: WritingModuleProps) {
+export function WritingModule({ content, challenges = [], onNext, onSubFeatureOpen, difficulty, onComplete }: WritingModuleProps) {
   const [activeFeature, setActiveFeature] = useState<"tutor" | "image" | "filter" | null>(null);
-  const [tutorChallengeIdx, setTutorChallengeIdx] = useState(0);
+  const [pendingFeature, setPendingFeature] = useState<"tutor" | "image" | "filter" | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<Difficulty>("MEDIUM");
+
+  // ----------------------------------------------------
+  // WRITE IN (DYNAMIC PROMPT) LOGIC
+  // ----------------------------------------------------
+  const [isTutorLoading, setIsTutorLoading] = useState(false);
+  const [dynamicTutorChallenge, setDynamicTutorChallenge] = useState<any>(null);
 
   useEffect(() => {
     if (onSubFeatureOpen) {
-      onSubFeatureOpen(activeFeature !== null);
+      onSubFeatureOpen(activeFeature !== null || pendingFeature !== null);
     }
-  }, [activeFeature, onSubFeatureOpen]);
+  }, [activeFeature, pendingFeature, onSubFeatureOpen]);
 
-  // Filter writing challenges from challenges array
-  const writingChallenges = challenges.filter(c => c.type === "WRITING");
-  const activeTutorChallenge = writingChallenges[tutorChallengeIdx] || content;
+  // Ensure we load the dynamic challenge when opening the feature
+  useEffect(() => {
+    if (activeFeature === "tutor" && !dynamicTutorChallenge && !isTutorLoading) {
+      loadDynamicTutor();
+    }
+  }, [activeFeature]);
+
+  const loadDynamicTutor = async (diff?: string | any) => {
+    setIsTutorLoading(true);
+    setDynamicTutorChallenge(null);
+    resetTutor();
+    try {
+      const targetDiff = (typeof diff === "string" ? diff : undefined) || selectedDifficulty || "MEDIUM";
+      const res = await fetch("/api/communication/generate-writing-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ difficulty: targetDiff }),
+      });
+      const data = await res.json();
+      if (res.ok && data.id) {
+        setDynamicTutorChallenge(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsTutorLoading(false);
+    }
+  };
 
   // AI Writing Tutor speech Hook
   const {
@@ -73,106 +111,190 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
     result: tutorResult,
     error: tutorError,
     reset: resetTutor
-  } = useWriting(activeTutorChallenge);
+  } = useWriting(dynamicTutorChallenge);
 
   // ----------------------------------------------------
-  // IMAGE DESCRIBER LOGIC
+  // WRITE ABOUT LOGIC (DYNAMIC IMAGE)
   // ----------------------------------------------------
-  const [imageText, setImageText] = useState("");
-  const [isImageSubmitting, setIsImageSubmitting] = useState(false);
-  const [imageResult, setImageResult] = useState<any>(null);
-  const [imageError, setImageError] = useState<string | null>(null);
+  const [isImageLoading, setIsImageLoading] = useState(false);
+  const [dynamicImageChallenge, setDynamicImageChallenge] = useState<any>(null);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
-  const submitImageDescription = () => {
-    setImageError(null);
-    const words = imageText.trim().split(/\s+/).filter(Boolean);
-    if (words.length < 15) {
-      setImageError("Please write a descriptive summary of at least 15 words to describe the details.");
-      return;
+  useEffect(() => {
+    if (activeFeature === "image" && !dynamicImageChallenge && !isImageLoading) {
+      loadDynamicImage();
     }
+  }, [activeFeature]);
 
-    setIsImageSubmitting(true);
-
-    // Mock evaluation based on sensory vocabulary keywords
-    setTimeout(() => {
-      const lowercase = imageText.toLowerCase();
-      const sensoryKeywords = ["rain", "window", "warm", "coffee", "books", "cafe", "gold", "light", "steaming", "cozy", "quiet", "ambient", "read", "mug"];
-      const matches = sensoryKeywords.filter(k => lowercase.includes(k));
-
-      // Calculate score based on vocabulary hits
-      const score = Math.min(100, 50 + matches.length * 10);
-      
-      setImageResult({
-        score,
-        xpAwarded: 20,
-        sensoryMatches: matches,
-        feedback: score >= 80
-          ? "Outstanding creative writing! You successfully captured the warm, quiet library atmosphere and detailed sensory elements."
-          : "Good attempt. Try using more atmospheric descriptors (like 'glowing', 'steaming', or 'cozy') to enrich your scene description.",
-        tamilFeedback: score >= 80
-          ? "மிகச்சிறந்த ஆக்கப்பூர்வமான எழுத்து! அமைதியான நூலகத்தின் சூழலையும் உணர்வுகளையும் மிக நேர்த்தியாக விவரித்துள்ளீர்கள்."
-          : "நல்ல முயற்சி. சூழலை இன்னும் மெருகேற்ற 'இருண்ட', 'சூடான', 'அமைதியான' போன்ற வர்ணனை வார்த்தைகளைப் பயன்படுத்தவும்."
+  const loadDynamicImage = async (diff?: string | any) => {
+    setIsImageLoading(true);
+    setDynamicImageChallenge(null);
+    setImageLoaded(false);
+    resetImage();
+    try {
+      const targetDiff = (typeof diff === "string" ? diff : undefined) || selectedDifficulty || "MEDIUM";
+      const res = await fetch("/api/communication/generate-image-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ difficulty: targetDiff }),
       });
-      setIsImageSubmitting(false);
-    }, 1200);
+      const data = await res.json();
+      if (res.ok && data.id) {
+        setDynamicImageChallenge(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsImageLoading(false);
+    }
   };
 
-  const resetImageDescriber = () => {
-    setImageText("");
-    setImageResult(null);
-    setImageError(null);
-  };
+  const {
+    submissionText: imageText,
+    setSubmissionText: setImageText,
+    submitWriting: submitImageDescription,
+    isSubmitting: isImageSubmitting,
+    result: imageResult,
+    error: imageError,
+    reset: resetImage
+  } = useWriting(dynamicImageChallenge);
 
   // ----------------------------------------------------
-  // NO-FILTER REWRITE LOGIC
+  // WRITE OUT LOGIC (NO-FILTER REWRITE)
   // ----------------------------------------------------
-  const [filterIdx, setFilterIdx] = useState(0);
-  const [filterText, setFilterText] = useState("");
-  const [filterResult, setFilterResult] = useState<any>(null);
-  
-  const activeFilterPrompt = NO_FILTER_PROMPTS[filterIdx];
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
+  const [dynamicFilterChallenge, setDynamicFilterChallenge] = useState<any>(null);
+  const [hintsRevealed, setHintsRevealed] = useState(false);
+  const [isDeductingCoins, setIsDeductingCoins] = useState(false);
+  const [coinError, setCoinError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (activeFeature === "filter" && !dynamicFilterChallenge && !isFilterLoading) {
+      loadDynamicFilter();
+    }
+  }, [activeFeature]);
+
+  const loadDynamicFilter = async (diff?: string | any) => {
+    setIsFilterLoading(true);
+    setDynamicFilterChallenge(null);
+    setHintsRevealed(false);
+    setCoinError(null);
+    resetFilter();
+    try {
+      const targetDiff = (typeof diff === "string" ? diff : undefined) || selectedDifficulty || "MEDIUM";
+      const res = await fetch("/api/communication/generate-rewrite-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ difficulty: targetDiff }),
+      });
+      const data = await res.json();
+      if (res.ok && data.id) {
+        setDynamicFilterChallenge(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsFilterLoading(false);
+    }
+  };
+
+  const revealHints = async () => {
+    setIsDeductingCoins(true);
+    setCoinError(null);
+    try {
+      const res = await fetch("/api/gamification/deduct-coins", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: 10, reason: "Revealed hints for Write out module" })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setHintsRevealed(true);
+      } else {
+        setCoinError(data.error || "Failed to reveal hints");
+      }
+    } catch (e) {
+      setCoinError("Failed to deduct coins. Please try again.");
+    } finally {
+      setIsDeductingCoins(false);
+    }
+  };
+
+  const {
+    submissionText: filterText,
+    setSubmissionText: setFilterText,
+    submitWriting: submitFilterRewrite,
+    isSubmitting: isFilterSubmitting,
+    result: filterResult,
+    error: filterSubmissionError,
+    reset: resetFilter
+  } = useWriting(dynamicFilterChallenge);
+
+  const activeFilterData = dynamicFilterChallenge?.questions?.[0] || { bannedWords: [], hints: {} };
 
   // Helper to find which banned words are typed in real-time
   const getViolatedBannedWords = (text: string) => {
+    if (!activeFilterData.bannedWords) return [];
     const words = text.toLowerCase().split(/\s+/).map(w => w.replace(/[.,/#!$%^&*;:{}=\-_`~()]/g, ""));
-    return activeFilterPrompt.banned.filter(bannedWord => words.includes(bannedWord));
+    return activeFilterData.bannedWords.filter((bannedWord: string) => words.includes(bannedWord.toLowerCase()));
   };
 
   const violatedWords = getViolatedBannedWords(filterText);
-  const hasTextLength = filterText.trim().length >= 15;
-  const isFilterValid = violatedWords.length === 0 && hasTextLength;
+  const isFilterValid = violatedWords.length === 0 && filterText.trim().length >= 10;
 
-  const submitFilterRewrite = () => {
-    if (!isFilterValid) return;
-
-    // Award success score
-    setFilterResult({
-      score: 100,
-      xpAwarded: 20,
-      feedback: "Congratulations! You successfully rewrote the sentence by swapping basic words with advanced adjectives.",
-      tamilFeedback: "வாழ்த்துகள்! எளிய சொற்களுக்குப் பதிலாக மேம்பட்ட சொற்களைப் பயன்படுத்தி வாக்கியத்தை வெற்றிகரமாக மாற்றியமைத்துள்ளீர்கள்."
-    });
+  const titles = {
+    tutor: "Write in",
+    image: "Write about",
+    filter: "Write out",
   };
 
-  const resetFilterRewrite = () => {
-    setFilterText("");
-    setFilterResult(null);
-  };
+  if (pendingFeature) {
+    return (
+      <DifficultyPicker
+        title={titles[pendingFeature] || "Select Difficulty"}
+        onSelect={(diff) => {
+          setSelectedDifficulty(diff);
+          const feat = pendingFeature;
+          setActiveFeature(feat);
+          setPendingFeature(null);
+          if (feat === "tutor") loadDynamicTutor(diff);
+          else if (feat === "image") loadDynamicImage(diff);
+          else if (feat === "filter") loadDynamicFilter(diff);
+        }}
+        onBack={() => {
+          setPendingFeature(null);
+          onSubFeatureOpen?.(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-6">
       {!activeFeature ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
           {WRITING_FEATURES.map((feature) => {
-            const Icon = feature.icon;
             return (
               <button
                 key={feature.id}
-                onClick={() => setActiveFeature(feature.id)}
-                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+                onClick={() => {
+                  setPendingFeature(feature.id);
+                  onSubFeatureOpen?.(true);
+                }}
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl shadow-indigo-500/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
               >
-                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${feature.bgColor} ${feature.borderColor} border transition-transform duration-300 group-hover:scale-110`}>
-                  <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-indigo-500/10 dark:bg-indigo-950/30 border-2 border-indigo-400/20 transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400/50 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+                  <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
+                    <Image 
+                      src="/images/communication/writing.png" 
+                      alt={feature.label}
+                      fill
+                      className="object-contain mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
+                      sizes="(max-width: 768px) 64px, 80px"
+                      priority
+                    />
+                  </div>
                 </div>
                 <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
                   {feature.label}
@@ -193,322 +315,452 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
             </button>
           </div>
 
-          {/* 1. RENDER TAB: AI WRITING TUTOR */}
-          {activeFeature === "tutor" && activeTutorChallenge && (
-        <div className="space-y-6 animate-in fade-in">
-          {/* Challenge list switcher */}
-          {writingChallenges.length > 1 && (
-            <div className="flex gap-2">
-              {writingChallenges.map((c, i) => (
-                <button
-                  key={c.id}
-                  onClick={() => {
-                    setTutorChallengeIdx(i);
-                    resetTutor();
-                  }}
-                  className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all ${
-                    tutorChallengeIdx === i
-                      ? "bg-purple-600 border-purple-500 text-white"
-                      : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
-                  }`}
-                >
-                  Prompt {i + 1}: {c.title}
-                </button>
-              ))}
+          {/* 1. RENDER TAB: WRITE IN */}
+          {activeFeature === "tutor" && (
+            <div className="space-y-6">
+              {isTutorLoading ? (
+                <ChallengeSkeleton variant="writing-tutor" />
+              ) : dynamicTutorChallenge ? (
+                <div className="space-y-6 animate-in fade-in">
+                  <LiquidGlassCard className="p-6 border-indigo-500/20" accentColor="#6366f1">
+                    <h2 className="text-[22px] font-bold text-foreground mb-4">
+                      {dynamicTutorChallenge.title || "Write in"}
+                    </h2>
+                    <p className="text-zinc-600 dark:text-gray-300 text-[17px] leading-relaxed">
+                      {dynamicTutorChallenge.content}
+                    </p>
+                  </LiquidGlassCard>
+
+                  {!tutorResult ? (
+                    <div className="w-full mt-2">
+                      <textarea
+                        value={tutorText}
+                        onChange={(e) => setTutorText(e.target.value)}
+                        disabled={isTutorSubmitting}
+                        rows={10}
+                        placeholder="Type your opinion...."
+                        className="w-full bg-black/5 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-2xl p-6 text-[17px] text-foreground placeholder:text-zinc-500 dark:placeholder:text-gray-500 focus:outline-none focus:border-indigo-500 transition-all resize-none shadow-sm dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      />
+                      
+                      {tutorError && (
+                        <div className="mt-4 text-red-600 dark:text-red-400 text-[15px] font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                          {tutorError}
+                        </div>
+                      )}
+
+                      <button
+                        onClick={submitTutor}
+                        disabled={isTutorSubmitting || tutorText.trim().length < 5}
+                        className="w-full mt-6 py-4 rounded-2xl bg-[#6366f1] text-white font-semibold text-[17px] shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:bg-[#5254cc] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {isTutorSubmitting ? "Evaluating..." : "Submit"}
+                      </button>
+                    </div>
+                  ) : (
+                    <LiquidGlassCard className="p-6 border-indigo-500 bg-indigo-500/5 animate-in slide-in-from-bottom" accentColor="#6366f1">
+                      <h3 className="text-[28px] font-bold text-foreground mb-4">AI Feedback</h3>
+                      
+                      <div className="space-y-6">
+                        <div className="bg-white/50 dark:bg-black/40 p-5 rounded-2xl border border-black/5 dark:border-white/5">
+                          <p className="text-[17px] text-zinc-700 dark:text-gray-200 leading-relaxed font-medium">
+                            {tutorResult.evaluation?.feedback || "Great writing!"}
+                          </p>
+                          {tutorResult.evaluation?.tamilFeedback && (
+                            <p className="text-[15px] text-indigo-600 dark:text-indigo-400 italic mt-3">
+                              {tutorResult.evaluation.tamilFeedback}
+                            </p>
+                          )}
+                        </div>
+
+                        {(tutorResult.evaluation?.grammarIssues?.length > 0 || tutorResult.evaluation?.vocabularySuggestions?.length > 0) && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {tutorResult.evaluation.grammarIssues?.length > 0 && (
+                              <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20">
+                                <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                                  <ShieldAlert className="w-4 h-4" /> Grammar Fixes
+                                </h4>
+                                <ul className="list-disc pl-4 space-y-1">
+                                  {tutorResult.evaluation.grammarIssues.map((issue: string, i: number) => (
+                                    <li key={i} className="text-[14px] text-indigo-700 dark:text-indigo-300">{issue}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {tutorResult.evaluation.vocabularySuggestions?.length > 0 && (
+                              <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20">
+                                <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                                  <Sparkles className="w-4 h-4" /> Better Words
+                                </h4>
+                                <ul className="list-disc pl-4 space-y-1">
+                                  {tutorResult.evaluation.vocabularySuggestions.map((sug: string, i: number) => (
+                                    <li key={i} className="text-[14px] text-indigo-700 dark:text-indigo-300">{sug}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        <div className="mt-8 flex items-center gap-4 flex-wrap">
+                          <span className="px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/50">
+                            Score: {tutorResult.score}%
+                          </span>
+                          <span className="px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/50">
+                            +{tutorResult.xpAwarded} XP
+                          </span>
+                          <div className="flex-1" />
+                          <button
+                            onClick={loadDynamicTutor}
+                            className="px-6 py-2.5 rounded-xl bg-[#6366f1] hover:bg-[#5254cc] text-white font-medium shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      </div>
+                    </LiquidGlassCard>
+                  )}
+                </div>
+              ) : (
+                <div className="text-red-400 text-center py-10">Failed to load writing prompt. Please try again.</div>
+              )}
             </div>
           )}
 
-          <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
-            <h2 className="text-[22px] font-bold text-foreground mb-2">{activeTutorChallenge.title}</h2>
-            <div className="prose dark:prose-invert max-w-none">
-              <p className="text-zinc-600 dark:text-gray-300 text-[17px]">{activeTutorChallenge.content}</p>
-            </div>
-          </LiquidGlassCard>
+      {/* 2. RENDER TAB: WRITE ABOUT (DYNAMIC IMAGE) */}
+      {activeFeature === "image" && (
+        <div className="space-y-6">
+          {isImageLoading || (dynamicImageChallenge?.questions?.[0]?.imageUrl && !imageLoaded) ? (
+            <>
+              <ChallengeSkeleton variant="writing-image" />
+              {/* Preload image in background */}
+              {dynamicImageChallenge?.questions?.[0]?.imageUrl && !isImageLoading && (
+                <img 
+                  src={dynamicImageChallenge.questions[0].imageUrl} 
+                  className="hidden" 
+                  onLoad={() => setImageLoaded(true)}
+                  alt="Preload" 
+                />
+              )}
+            </>
+          ) : dynamicImageChallenge ? (
+            <div className="space-y-6 animate-in fade-in">
+              <LiquidGlassCard className="p-6 border-indigo-500/20" accentColor="#6366f1">
+                <h2 className="text-[22px] font-bold text-foreground mb-4">
+                  {dynamicImageChallenge.title || "Write about"}
+                </h2>
+                
+                {dynamicImageChallenge.questions?.[0]?.imageUrl && (
+                  <div className="flex justify-center mb-4">
+                    <img
+                      src={dynamicImageChallenge.questions[0].imageUrl}
+                      alt="Generated scene"
+                      onClick={() => setZoomedImage(dynamicImageChallenge.questions[0].imageUrl)}
+                      className="w-full rounded-2xl shadow-lg border border-black/10 dark:border-white/10 cursor-pointer hover:opacity-90 hover:scale-[1.02] transition-all"
+                    />
+                  </div>
+                )}
+              </LiquidGlassCard>
 
-          {!tutorResult ? (
-            <LiquidGlassCard className="p-6 border-black/10 dark:border-white/10" accentColor="#8b5cf6">
-              <label className="block text-[15px] font-medium text-zinc-600 dark:text-gray-300 mb-2">
-                Your Paragraph Submission
-              </label>
-              <textarea
-                value={tutorText}
-                onChange={(e) => setTutorText(e.target.value)}
-                disabled={isTutorSubmitting}
-                rows={6}
-                placeholder="Start typing your paragraph response here..."
-                className="w-full bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-2xl p-4 text-[17px] text-foreground placeholder:text-zinc-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-purple-500 transition-all resize-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"
-              />
-              
-              {tutorError && (
-                <div className="mt-4 text-red-600 dark:text-red-400 text-[15px] font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
-                  {tutorError}
+              {zoomedImage && (
+                <div 
+                  className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in"
+                  onClick={() => setZoomedImage(null)}
+                >
+                  <div className="relative max-w-5xl w-full">
+                    <button 
+                      onClick={() => setZoomedImage(null)}
+                      className="absolute -top-12 right-0 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center transition-colors text-white border border-white/20"
+                    >
+                      <XCircle className="w-6 h-6" />
+                    </button>
+                    <img
+                      src={zoomedImage}
+                      alt="Zoomed scene"
+                      className="w-full h-auto rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-white/10 object-contain max-h-[85vh]"
+                    />
+                  </div>
                 </div>
               )}
 
-              <button
-                onClick={submitTutor}
-                disabled={isTutorSubmitting || tutorText.trim().length < 5}
-                className="w-full mt-6 py-3 rounded-2xl bg-purple-600 text-white font-semibold text-[17px] shadow-md hover:bg-purple-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isTutorSubmitting ? "AI is grading..." : "Submit for AI Evaluation"}
-              </button>
-            </LiquidGlassCard>
-          ) : (
-            <LiquidGlassCard className="p-6 border-purple-500 bg-purple-500/5 animate-in slide-in-from-bottom" accentColor="#8b5cf6">
-              <h3 className="text-[28px] font-bold text-foreground mb-4">AI Feedback</h3>
-              
-              <div className="space-y-4">
-                <div className="p-4 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/10 dark:border-white/10">
-                  <h4 className="text-purple-600 dark:text-purple-400 font-semibold mb-1 text-[15px]">General Review</h4>
-                  <p className="text-zinc-600 dark:text-gray-200 text-[15px]">{tutorResult.evaluation.feedback}</p>
-                  <p className="text-zinc-500 dark:text-gray-400 text-[13px] mt-2 italic">{tutorResult.evaluation.tamilFeedback}</p>
+              {!imageResult ? (
+                <div className="w-full mt-2">
+                  <textarea
+                    value={imageText}
+                    onChange={(e) => setImageText(e.target.value)}
+                    disabled={isImageSubmitting}
+                    rows={10}
+                    placeholder="Describe the scene in detail..."
+                    className="w-full bg-black/5 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-2xl p-6 text-[17px] text-foreground placeholder:text-zinc-500 dark:placeholder:text-gray-500 focus:outline-none focus:border-indigo-500 transition-all resize-none shadow-sm dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                  />
+                  
+                  {imageError && (
+                    <div className="mt-4 text-red-600 dark:text-red-400 text-[15px] font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                      {imageError}
+                    </div>
+                  )}
+
+                  <button
+                    onClick={submitImageDescription}
+                    disabled={isImageSubmitting || imageText.trim().length < 5}
+                    className="w-full mt-6 py-4 rounded-2xl bg-[#6366f1] text-white font-semibold text-[17px] shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:bg-[#5254cc] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isImageSubmitting ? "Evaluating..." : "Submit"}
+                  </button>
                 </div>
+              ) : (
+                <LiquidGlassCard className="p-6 border-indigo-500 bg-indigo-500/5 animate-in slide-in-from-bottom" accentColor="#6366f1">
+                  <h3 className="text-[28px] font-bold text-foreground mb-4">AI Feedback</h3>
+                  
+                  <div className="space-y-6">
+                    <div className="bg-white/50 dark:bg-black/40 p-5 rounded-2xl border border-black/5 dark:border-white/5">
+                      <p className="text-[17px] text-zinc-700 dark:text-gray-200 leading-relaxed font-medium">
+                        {imageResult.evaluation?.feedback || "Great description!"}
+                      </p>
+                      {imageResult.evaluation?.tamilFeedback && (
+                        <p className="text-[15px] text-indigo-600 dark:text-indigo-400 italic mt-3">
+                          {imageResult.evaluation.tamilFeedback}
+                        </p>
+                      )}
+                    </div>
 
-                {tutorResult.evaluation.grammarIssues?.length > 0 && (
-                  <div className="p-4 bg-red-500/10 rounded-2xl border border-red-500/20">
-                    <h4 className="text-red-400 font-semibold mb-2 text-sm">Grammar & Syntax</h4>
-                    <ul className="list-disc list-inside space-y-1 text-gray-300 text-xs">
-                      {tutorResult.evaluation.grammarIssues.map((issue: string, idx: number) => (
-                        <li key={idx}>{issue}</li>
-                      ))}
-                    </ul>
+                    {(imageResult.evaluation?.grammarIssues?.length > 0 || imageResult.evaluation?.vocabularySuggestions?.length > 0) && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {imageResult.evaluation.grammarIssues?.length > 0 && (
+                          <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20">
+                            <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                              <ShieldAlert className="w-4 h-4" /> Grammar Fixes
+                            </h4>
+                            <ul className="list-disc pl-4 space-y-1">
+                              {imageResult.evaluation.grammarIssues.map((issue: string, i: number) => (
+                                <li key={i} className="text-[14px] text-indigo-700 dark:text-indigo-300">{issue}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {imageResult.evaluation.vocabularySuggestions?.length > 0 && (
+                          <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20">
+                            <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                              <Sparkles className="w-4 h-4" /> Better Words
+                            </h4>
+                            <ul className="list-disc pl-4 space-y-1">
+                              {imageResult.evaluation.vocabularySuggestions.map((sug: string, i: number) => (
+                                <li key={i} className="text-[14px] text-indigo-700 dark:text-indigo-300">{sug}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-8 flex items-center gap-4 flex-wrap">
+                      <span className="px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/50">
+                        Score: {imageResult.score}%
+                      </span>
+                      <span className="px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/50">
+                        +{imageResult.xpAwarded} XP
+                      </span>
+                      <div className="flex-1" />
+                      <button
+                        onClick={loadDynamicImage}
+                        className="px-6 py-2.5 rounded-xl bg-[#6366f1] hover:bg-[#5254cc] text-white font-medium shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all"
+                      >
+                        Next
+                      </button>
+                    </div>
                   </div>
-                )}
-
-                {tutorResult.evaluation.vocabularySuggestions?.length > 0 && (
-                  <div className="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
-                    <h4 className="text-blue-400 font-semibold mb-2 text-sm">Vocabulary Improvements</h4>
-                    <ul className="list-disc list-inside space-y-1 text-gray-300 text-xs">
-                      {tutorResult.evaluation.vocabularySuggestions.map((sug: string, idx: number) => (
-                        <li key={idx}>{sug}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-8 flex items-center gap-4">
-                <span className="px-4 py-2 rounded-full bg-purple-500/20 text-purple-300 font-bold border border-purple-500/50">
-                  Score: {tutorResult.score}%
-                </span>
-                <span className="px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/50">
-                  +{tutorResult.xpAwarded} XP
-                </span>
-                <div className="flex-1" />
-                <button
-                  onClick={onNext}
-                  className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-medium shadow-md transition-all"
-                >
-                  Continue to Speaking
-                </button>
-              </div>
-            </LiquidGlassCard>
+                </LiquidGlassCard>
+              )}
+            </div>
+          ) : (
+            <div className="text-red-400 text-center py-10">Failed to load creative scene. Please try again.</div>
           )}
         </div>
       )}
 
-      {/* 2. RENDER TAB: IMAGE DESCRIBER */}
-      {activeFeature === "image" && (
-        <div className="space-y-6 animate-in fade-in">
-          <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
-            <h3 className="text-[17px] font-bold text-foreground mb-2 flex items-center gap-2">
-              <ImageIcon className="w-5 h-5 text-purple-400" /> Creative Scene Describer
-            </h3>
-            <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-6">
-              Study the scenery prompt below. Write a creative summary describing its mood, weather, lights, and items in at least 15 words.
-            </p>
+      {/* 3. RENDER TAB: WRITE OUT (NO-FILTER REWRITE) */}
+      {activeFeature === "filter" && (
+        <div className="space-y-6">
+          {isFilterLoading ? (
+            <ChallengeSkeleton variant="writing-filter" />
+          ) : dynamicFilterChallenge ? (
+            <div className="space-y-6 animate-in fade-in">
+              <LiquidGlassCard className="p-6 border-indigo-500/20" accentColor="#6366f1">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-[22px] font-bold text-foreground">
+                    {dynamicFilterChallenge.title || "Write out"}
+                  </h2>
+                </div>
 
-            <div className="flex justify-center mb-6">
-              <img
-                src="/images/creative_writing_scene.png"
-                alt="Cozy library scene"
-                className="w-full max-w-md h-auto rounded-3xl border border-white/10 shadow-xl object-cover max-h-[220px]"
-              />
-            </div>
+                <p className="text-[15px] text-zinc-600 dark:text-gray-300 mb-6 leading-relaxed">
+                  Rewrite the simple sentence below. Make it engaging, but you <strong className="text-indigo-500 dark:text-indigo-400 font-semibold">cannot use basic filter words</strong>.
+                </p>
 
-            {!imageResult ? (
-              <div className="space-y-4">
-                <textarea
-                  value={imageText}
-                  onChange={(e) => setImageText(e.target.value)}
-                  disabled={isImageSubmitting}
-                  rows={4}
-                  placeholder="Describe the cozy library cafe room, rainy streets, coffee cup details..."
-                  className="w-full bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-2xl p-4 text-[13px] text-foreground placeholder:text-zinc-400 dark:placeholder:text-gray-600 focus:outline-none focus:border-purple-500 transition-all resize-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"
-                />
+                <div className="p-5 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl space-y-2 mb-6 shadow-sm">
+                  <span className="text-[11px] text-zinc-500 dark:text-gray-400 font-bold uppercase tracking-wider block">Boring Sentence:</span>
+                  <p className="text-foreground text-[17px] font-medium leading-relaxed">"{dynamicFilterChallenge.content}"</p>
+                </div>
 
-                {imageError && (
-                  <div className="text-[13px] text-red-600 dark:text-red-400 bg-red-500/10 p-2.5 rounded-lg border border-red-500/20">
-                    {imageError}
+                {/* Banned word tokens */}
+                <div className="mb-6 space-y-3">
+                  <span className="text-[11px] text-indigo-500 font-bold uppercase tracking-wider block">Banned Filter Words:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {activeFilterData.bannedWords?.map((w: string) => (
+                      <span key={w} className="px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-500 dark:text-red-400 rounded-lg text-sm font-bold shadow-sm">
+                        🚫 {w}
+                      </span>
+                    ))}
                   </div>
-                )}
+                </div>
 
-                <button
-                  onClick={submitImageDescription}
-                  disabled={isImageSubmitting || !imageText.trim()}
-                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow"
-                >
-                  {isImageSubmitting ? "AI analyzing descriptions..." : "Verify Description"}
-                </button>
-              </div>
-            ) : (
-              <div className="p-5 bg-purple-500/5 border border-purple-500/25 rounded-2xl space-y-3">
-                <h4 className="font-bold text-[15px] text-foreground flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-green-500 dark:text-green-400" /> Summary Grade
-                </h4>
-                <p className="text-[13px] text-zinc-600 dark:text-gray-300 leading-relaxed">{imageResult.feedback}</p>
-                <p className="text-[13px] text-purple-600 dark:text-purple-300 italic">{imageResult.tamilFeedback}</p>
+                {/* Hints Section */}
+                <div className="mb-2">
+                  {!hintsRevealed ? (
+                    <div className="flex flex-col items-start gap-2">
+                      <button 
+                        onClick={revealHints}
+                        disabled={isDeductingCoins}
+                        className="px-4 py-2 bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 rounded-xl text-indigo-600 dark:text-indigo-400 text-sm font-semibold transition-all flex items-center gap-2"
+                      >
+                        {isDeductingCoins ? "Revealing..." : "Reveal Hints (Cost: 10 Coins)"}
+                      </button>
+                      {coinError && <p className="text-red-500 text-xs font-medium">{coinError}</p>}
+                    </div>
+                  ) : (
+                    <div className="p-5 bg-indigo-500/10 border border-indigo-500/20 rounded-2xl space-y-3 animate-in slide-in-from-top-4">
+                      <span className="text-[11px] text-indigo-500 font-bold uppercase tracking-wider block flex items-center gap-2">
+                        <Sparkles className="w-3.5 h-3.5" /> Vocab Suggestions (Hints):
+                      </span>
+                      <div className="grid grid-cols-1 gap-3 text-sm">
+                        {Object.entries(activeFilterData.hints || {}).map(([key, words]) => (
+                          <div key={key} className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                            <span className="text-zinc-600 dark:text-gray-300 font-bold capitalize select-none min-w-[120px]">{key} alternatives:</span>
+                            <span className="text-indigo-600 dark:text-indigo-300 font-medium">{String(words)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </LiquidGlassCard>
 
-                {imageResult.sensoryMatches.length > 0 && (
-                  <div className="text-xs">
-                    <span className="text-purple-400 font-semibold">Matched Sensory Keywords:</span>
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {imageResult.sensoryMatches.map((w: string, idx: number) => (
-                        <span key={idx} className="px-2 py-0.5 bg-purple-500/20 text-purple-300 rounded border border-purple-500/30">
-                          {w}
-                        </span>
-                      ))}
+              {!filterResult ? (
+                <div className="w-full mt-2">
+                  <textarea
+                    value={filterText}
+                    onChange={(e) => setFilterText(e.target.value)}
+                    disabled={isFilterSubmitting}
+                    rows={10}
+                    placeholder="Enter your advanced rewrite here..."
+                    className="w-full bg-black/5 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-2xl p-6 text-[17px] text-foreground placeholder:text-zinc-500 dark:placeholder:text-gray-500 focus:outline-none focus:border-indigo-500 transition-all resize-none shadow-sm dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                  />
+                  
+                  {/* Real time validations */}
+                  <div className="mt-4 space-y-3 p-4 bg-black/5 dark:bg-black/30 rounded-2xl border border-black/10 dark:border-white/5 text-[13px] font-medium">
+                    <div className="flex items-center gap-2">
+                      {violatedWords.length === 0 ? (
+                        <Check className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-500" />
+                      )}
+                      <span className={violatedWords.length === 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
+                        {violatedWords.length === 0 
+                          ? "Does not contain banned words" 
+                          : `Contains banned word(s): ${violatedWords.join(", ")}`}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {filterText.trim().length >= 10 ? (
+                        <Check className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-zinc-400" />
+                      )}
+                      <span className={filterText.trim().length >= 10 ? "text-green-600 dark:text-green-400" : "text-zinc-500 dark:text-gray-400"}>
+                        Length is at least 10 characters
+                      </span>
                     </div>
                   </div>
-                )}
 
-                <div className="flex justify-between items-center text-xs text-yellow-500 font-bold pt-3 border-t border-white/5">
-                  <span>Score: {imageResult.score}% (+{imageResult.xpAwarded} XP)</span>
-                  <button onClick={resetImageDescriber} className="text-purple-400 hover:underline">
-                    Rewrite Summary
-                  </button>
-                </div>
-              </div>
-            )}
-          </LiquidGlassCard>
-        </div>
-      )}
+                  {filterSubmissionError && (
+                    <div className="mt-4 text-red-600 dark:text-red-400 text-[15px] font-medium bg-red-500/10 p-3 rounded-lg border border-red-500/20">
+                      {filterSubmissionError}
+                    </div>
+                  )}
 
-      {/* 3. RENDER TAB: NO-FILTER REWRITE */}
-      {activeFeature === "filter" && (
-        <div className="space-y-6 max-w-lg mx-auto animate-in fade-in">
-          <LiquidGlassCard className="p-6" accentColor="#8b5cf6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-[17px] font-bold text-foreground flex items-center gap-2">
-                <ShieldAlert className="w-5 h-5 text-orange-400 animate-pulse" /> No-Filter Constraints
-              </h3>
-              <div className="flex gap-1">
-                {NO_FILTER_PROMPTS.map((_, i) => (
                   <button
-                    key={i}
-                    onClick={() => {
-                      setFilterIdx(i);
-                      resetFilterRewrite();
-                    }}
-                    className={`w-5 h-5 rounded text-[10px] font-bold border transition-colors ${
-                      filterIdx === i 
-                        ? "bg-purple-600 border-purple-500 text-white" 
-                        : "bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-zinc-500 dark:text-gray-400 hover:text-foreground"
-                    }`}
+                    onClick={submitFilterRewrite}
+                    disabled={!isFilterValid || isFilterSubmitting}
+                    className="w-full mt-6 py-4 rounded-2xl bg-[#6366f1] text-white font-semibold text-[17px] shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:bg-[#5254cc] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {i + 1}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <p className="text-[13px] text-zinc-500 dark:text-gray-400 mb-6 leading-relaxed">
-              Rewrite the simple sentence below. Make it engaging, but you <strong className="text-orange-500 dark:text-orange-400 font-semibold">cannot use basic filter words</strong>.
-            </p>
-
-            <div className="p-4 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl space-y-2 mb-6">
-              <span className="text-[10px] text-zinc-500 dark:text-gray-400 font-bold uppercase tracking-wider block">Boring Sentence:</span>
-              <p className="text-foreground text-[15px] font-semibold">"{activeFilterPrompt.original}"</p>
-            </div>
-
-            {/* Banned word tokens */}
-            <div className="mb-6 space-y-2">
-              <span className="text-[10px] text-orange-400 font-bold uppercase tracking-wider block">Banned Filter Words:</span>
-              <div className="flex flex-wrap gap-2">
-                {activeFilterPrompt.banned.map((w) => (
-                  <span key={w} className="px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-300 rounded-lg text-xs font-bold">
-                    🚫 {w}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Hints list */}
-            <div className="p-4 bg-purple-500/5 border border-purple-500/10 rounded-2xl mb-6 space-y-2">
-              <span className="text-[10px] text-purple-300 font-bold uppercase tracking-wider block">Vocab Suggestions (Hints):</span>
-              <div className="grid grid-cols-1 gap-2 text-xs">
-                {Object.entries(activeFilterPrompt.hints).map(([key, words]) => (
-                  <div key={key} className="flex items-start gap-1">
-                    <span className="text-gray-400 font-bold capitalize select-none">{key} alternatives:</span>
-                    <span className="text-purple-200">{words.join(", ")}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {!filterResult ? (
-              <div className="space-y-4">
-                <textarea
-                  value={filterText}
-                  onChange={(e) => setFilterText(e.target.value)}
-                  rows={3}
-                  placeholder="Enter your advanced rewrite here..."
-                  className="w-full bg-black/5 dark:bg-black/40 border border-black/10 dark:border-white/10 rounded-2xl p-4 text-[13px] text-foreground focus:outline-none focus:border-purple-500 transition-all resize-none shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]"
-                />
-
-                {/* Real time validations */}
-                <div className="space-y-2 p-3 bg-black/5 dark:bg-black/30 rounded-xl border border-black/10 dark:border-white/5 text-[11px]">
-                  <div className="flex items-center gap-1.5">
-                    {violatedWords.length === 0 ? (
-                      <Check className="w-4 h-4 text-green-400" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-red-400" />
-                    )}
-                    <span className={violatedWords.length === 0 ? "text-green-300" : "text-red-400"}>
-                      {violatedWords.length === 0 
-                        ? "Does not contain banned words" 
-                        : `Contains banned word(s): ${violatedWords.join(", ")}`}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    {hasTextLength ? (
-                      <Check className="w-4 h-4 text-green-400" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-red-400" />
-                    )}
-                    <span className={hasTextLength ? "text-green-300" : "text-gray-500"}>
-                      Length is at least 15 characters
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={submitFilterRewrite}
-                  disabled={!isFilterValid}
-                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 text-white text-xs font-bold rounded-xl transition-all shadow"
-                >
-                  Verify Rewrite
-                </button>
-              </div>
-            ) : (
-              <div className="p-4 bg-green-500/10 border border-green-500/25 rounded-2xl space-y-3">
-                <h4 className="font-bold text-[15px] text-green-600 dark:text-green-400 flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4" /> Rewrite Approved!
-                </h4>
-                <p className="text-[13px] text-zinc-600 dark:text-gray-200 leading-relaxed">
-                  {filterResult.feedback}
-                </p>
-                <p className="text-[13px] text-purple-600 dark:text-purple-300 italic">{filterResult.tamilFeedback}</p>
-
-                <div className="flex justify-between items-center text-[13px] text-yellow-600 dark:text-yellow-500 font-bold pt-3 border-t border-black/5 dark:border-white/5">
-                  <span>+{filterResult.xpAwarded} XP Earned</span>
-                  <button onClick={resetFilterRewrite} className="text-purple-400 hover:underline">
-                    Try another sentence
+                    {isFilterSubmitting ? "Evaluating..." : "Verify Rewrite"}
                   </button>
                 </div>
-              </div>
-            )}
-          </LiquidGlassCard>
+              ) : (
+                <LiquidGlassCard className="p-6 border-indigo-500 bg-indigo-500/5 animate-in slide-in-from-bottom" accentColor="#6366f1">
+                  <h3 className="text-[28px] font-bold text-foreground mb-4">AI Feedback</h3>
+                  
+                  <div className="space-y-6">
+                    <div className="bg-white/50 dark:bg-black/40 p-5 rounded-2xl border border-black/5 dark:border-white/5">
+                      <p className="text-[17px] text-zinc-700 dark:text-gray-200 leading-relaxed font-medium">
+                        {filterResult.evaluation?.feedback || "Great rewrite!"}
+                      </p>
+                      {filterResult.evaluation?.tamilFeedback && (
+                        <p className="text-[15px] text-indigo-600 dark:text-indigo-400 italic mt-3">
+                          {filterResult.evaluation.tamilFeedback}
+                        </p>
+                      )}
+                    </div>
+
+                    {(filterResult.evaluation?.grammarIssues?.length > 0 || filterResult.evaluation?.vocabularySuggestions?.length > 0) && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {filterResult.evaluation.grammarIssues?.length > 0 && (
+                          <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20">
+                            <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                              <ShieldAlert className="w-4 h-4" /> Grammar Fixes
+                            </h4>
+                            <ul className="list-disc pl-4 space-y-1">
+                              {filterResult.evaluation.grammarIssues.map((issue: string, i: number) => (
+                                <li key={i} className="text-[14px] text-indigo-700 dark:text-indigo-300">{issue}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {filterResult.evaluation.vocabularySuggestions?.length > 0 && (
+                          <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20">
+                            <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                              <Sparkles className="w-4 h-4" /> Better Words
+                            </h4>
+                            <ul className="list-disc pl-4 space-y-1">
+                              {filterResult.evaluation.vocabularySuggestions.map((sug: string, i: number) => (
+                                <li key={i} className="text-[14px] text-indigo-700 dark:text-indigo-300">{sug}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="mt-8 flex items-center gap-4 flex-wrap">
+                      <span className="px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/50">
+                        Score: {filterResult.score}%
+                      </span>
+                      <span className="px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/50">
+                        +{filterResult.xpAwarded} XP
+                      </span>
+                      <div className="flex-1" />
+                      <button
+                        onClick={loadDynamicFilter}
+                        className="px-6 py-2.5 rounded-xl bg-[#6366f1] hover:bg-[#5254cc] text-white font-medium shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                </LiquidGlassCard>
+              )}
+            </div>
+          ) : (
+            <div className="text-red-400 text-center py-10">Failed to load writing challenge. Please try again.</div>
+          )}
         </div>
       )}
         </div>
