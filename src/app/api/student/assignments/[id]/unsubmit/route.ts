@@ -9,8 +9,21 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const userId = session.user.id;
+    if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    let userId = session.user.id;
+    if (userId) {
+      const userExists = await db.user.findUnique({ where: { id: userId }, select: { id: true } });
+      if (!userExists && session.user.email) {
+        const userByEmail = await db.user.findUnique({ where: { email: session.user.email }, select: { id: true } });
+        if (userByEmail) userId = userByEmail.id;
+      }
+    } else if (session.user.email) {
+      const userByEmail = await db.user.findUnique({ where: { email: session.user.email }, select: { id: true } });
+      if (userByEmail) userId = userByEmail.id;
+    }
+
+    if (!userId) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     const params = await context.params;
     const identifier = params.id; // Could be submissionId or assignmentId
