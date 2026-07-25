@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "declaration": false,
-    "types": ["node", "reflect-metadata"],
+    "types": [],
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, LayoutDashboard, BookOpen, Code, Briefcase, GraduationCap, Users, BarChart3, Mail, Languages, School, User, Map, Layers, Monitor, Compass, CheckSquare, Package, FileText, Settings, BookMarked } from "lucide-react"
+import { Home, LayoutDashboard, BookOpen, Code, Briefcase, GraduationCap, Users, BarChart3, Mail, Languages, School, User, Map, Layers, Monitor, Compass, CheckSquare, Package, FileText, Settings, BookMarked, MessageCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface SidebarProps {
@@ -36,6 +36,7 @@ const getMenuByRole = (role: string): MenuItem[] => {
       { name: "Students", href: "/faculty-dashboard/students", icon: Users },
       { name: "Attendance", href: "/faculty-dashboard/attendance", icon: User },
       { name: "Schedule", href: "/faculty-dashboard/schedule", icon: Compass },
+      { name: "Community", href: "/faculty-dashboard/community", icon: MessageCircle },
     ]
   }
   if (role === "HOD") {

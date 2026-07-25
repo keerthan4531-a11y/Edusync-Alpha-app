@@ -1,6 +1,7 @@
 import { db } from "@/lib/db"
-import { Users, Monitor, BookOpen, Star, Clock, AlertCircle, ArrowRight, CheckCircle2 } from "lucide-react"
+import { Users, Monitor, BookOpen, Star, Clock, AlertCircle, ArrowRight, CheckCircle2, MessageCircle } from "lucide-react"
 import Link from "next/link"
+import { FacultyAiAssistant } from "@/components/faculty/FacultyAiAssistant"
 
 export const dynamic = "force-dynamic"
 
@@ -87,9 +88,9 @@ export default async function FacultyDashboardPage() {
               <Clock className="w-6 h-6" />
               <span className="text-sm font-medium">Attendance</span>
             </Link>
-            <Link href="/faculty-dashboard/students" className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-stage2/10 hover:bg-stage2/20 text-stage2 transition-colors border border-stage2/20">
-              <Users className="w-6 h-6" />
-              <span className="text-sm font-medium">Students</span>
+            <Link href="/faculty-dashboard/community" className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 transition-colors border border-emerald-500/20">
+              <MessageCircle className="w-6 h-6" />
+              <span className="text-sm font-medium">Community</span>
             </Link>
           </div>
         </div>
@@ -125,6 +126,7 @@ export default async function FacultyDashboardPage() {
           </div>
         </div>
       </div>
+      <FacultyAiAssistant />
     </div>
   )
 }
