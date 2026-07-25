@@ -585,7 +585,7 @@ export const aiGenerateImageWithProgress = async (
 };
 
 // ─── Cloudflare Worker URL ─────────────────────────────────────────
-export const CF_WORKER_URL = 'https://divine-leaf-d1cf.antigravity4531.workers.dev';
+export const CF_WORKER_URL = 'https://curly-hill-3303.aegonat29.workers.dev';
 
 // ─── Direct Pollinations API (OpenAI-compatible) ──────────────────
 // text.pollinations.ai/openai — free, no key, CORS-enabled

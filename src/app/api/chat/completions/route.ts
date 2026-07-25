@@ -199,7 +199,7 @@ export async function POST(req: Request) {
       : [{ role: 'system', content: CHART_SYSTEM_PROMPT }, ...chatMessages];
 
     // ── Forward to Cloudflare Worker (UNIVERSAL PROXY) ──
-    const CF_WORKER_URL = 'https://divine-leaf-d1cf.antigravity4531.workers.dev';
+    const CF_WORKER_URL = 'https://curly-hill-3303.aegonat29.workers.dev';
     let ROUTER_URL = `${CF_WORKER_URL}/v1/chat/completions`;
     let ROUTER_API_KEY = '';
 

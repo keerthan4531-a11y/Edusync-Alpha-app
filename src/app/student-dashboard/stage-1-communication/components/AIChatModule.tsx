@@ -192,6 +192,7 @@ export function AIChatModule({ onSubFeatureOpen, onBack }: AIChatModuleProps) {
                 src="/images/communication/aiconvo.png" 
                 alt="AI English Teacher"
                 fill
+                sizes="40px"
                 className="object-contain mix-blend-screen"
                 priority
               />

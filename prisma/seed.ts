@@ -5,6 +5,16 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Seeding database...')
 
+  // Cleanup existing records for clean idempotent seeding
+  await prisma.userBadge.deleteMany().catch(() => { })
+  await prisma.submission.deleteMany().catch(() => { })
+  await prisma.stageProgress.deleteMany().catch(() => { })
+  await prisma.dailyChallenge.deleteMany().catch(() => { })
+  await prisma.problem.deleteMany().catch(() => { })
+  await prisma.badge.deleteMany().catch(() => { })
+  await prisma.user.deleteMany().catch(() => { })
+  await prisma.department.deleteMany().catch(() => { })
+
   // 1. Departments
   const csDept = await prisma.department.create({
     data: { name: 'Computer Science' }
@@ -41,7 +51,7 @@ async function main() {
   const hod = await prisma.user.create({
     data: { name: 'Prof. HOD', email: 'hod@test.com', passwordHash: 'hash', role: 'HOD', departmentId: csDept.id }
   })
-  
+
   // Update HOD department
   await prisma.department.update({
     where: { id: csDept.id },

@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { esChat } from "@/lib/es-engine";
+import { safeJsonParse } from "@/lib/utils";
 import crypto from "crypto";
 
 export async function POST(req: Request) {
@@ -43,7 +44,7 @@ Format:
 Then list those basic words as bannedWords, and provide 3-4 advanced vocabulary alternatives for each banned word as hints.`;
 
     let content = "The weather was very good and I felt happy.";
-    let parsedData = {
+    let parsedData: { bannedWords: string[]; hints: Record<string, string> } = {
       bannedWords: ["good", "happy", "very"],
       hints: {
         "good": "splendid, pleasant, delightful, gorgeous",
@@ -59,16 +60,8 @@ Then list those basic words as bannedWords, and provide 3-4 advanced vocabulary 
       ]);
 
       if (aiResponse) {
-        // Strip markdown backticks if present
-        let cleanJson = aiResponse.trim();
-        if (cleanJson.startsWith("```json")) {
-          cleanJson = cleanJson.replace(/```json/g, "").replace(/```/g, "").trim();
-        } else if (cleanJson.startsWith("```")) {
-          cleanJson = cleanJson.replace(/```/g, "").trim();
-        }
-        
-        const data = JSON.parse(cleanJson);
-        if (data.sentence && data.bannedWords && data.hints) {
+        const data = safeJsonParse<{ sentence?: string; bannedWords?: string[]; hints?: Record<string, string> }>(aiResponse);
+        if (data?.sentence && data?.bannedWords && data?.hints) {
           content = data.sentence;
           parsedData = {
             bannedWords: data.bannedWords,

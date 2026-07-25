@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { awardXp } from "@/lib/gamification";
 import { esChat } from "@/lib/es-engine";
+import { safeJsonParse } from "@/lib/utils";
 
 function generateLocalWritingEvaluation(promptText: string, submissionText: string) {
   const words = submissionText.trim().split(/\s+/).filter(Boolean);
@@ -100,17 +101,23 @@ export async function evaluateWriting(userId: string, contentId: string, submiss
       "vocabularySuggestions": ["suggested better words to use to improve their vocabulary"]
   }`;
 
-  let parsedResponse;
+interface WritingEvaluationResult {
+  score?: number;
+  feedback?: string;
+  tamilFeedback?: string;
+  grammarIssues?: string[];
+  vocabularySuggestions?: string[];
+}
+
+  let parsedResponse: WritingEvaluationResult;
   try {
     const responseText = await esChat([{ role: "user", content: prompt }]);
     
-    // Extract JSON block cleanly using regex
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      parsedResponse = JSON.parse(jsonMatch[0]);
-    } else {
+    const parsed = safeJsonParse<WritingEvaluationResult>(responseText);
+    if (!parsed) {
       throw new Error("No valid JSON found in AI response");
     }
+    parsedResponse = parsed;
   } catch (e) {
     console.warn("AI writing evaluation API call failed or returned non-JSON, using intelligent local evaluator:", e);
     parsedResponse = generateLocalWritingEvaluation(promptText, submissionText);

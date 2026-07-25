@@ -5,20 +5,20 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { Button } from "@/components/ui/button";
 import Editor from "@monaco-editor/react";
-import { 
-  Play, 
-  Loader2, 
-  CheckCircle2, 
+import {
+  Play,
+  Loader2,
+  CheckCircle2,
   Check,
-  XCircle, 
-  Code, 
-  Award, 
-  Flame, 
-  RefreshCw, 
-  HelpCircle, 
-  BookOpen, 
-  Gamepad, 
-  Sword, 
+  XCircle,
+  Code,
+  Award,
+  Flame,
+  RefreshCw,
+  HelpCircle,
+  BookOpen,
+  Gamepad,
+  Sword,
   UserCircle,
   Coins,
   Shield,
@@ -250,9 +250,12 @@ const SHOP_ITEMS = [
 type CodingTab = "code-coach" | "playground" | "arena" | "learning-paths" | "arcade" | "shop";
 
 const CODING_FEATURES = [
-  { id: "code-coach" as CodingTab, label: "Code Coach", icon: Target, color: "text-indigo-400", borderColor: "border-indigo-400/20" },
-  { id: "playground" as CodingTab, label: "Playground", icon: Code, color: "text-indigo-400", borderColor: "border-indigo-400/20" },
-  { id: "arena" as CodingTab, label: "Arena Modes", icon: Sword, color: "text-indigo-400", borderColor: "border-indigo-400/20" },
+  { id: "learning-paths" as CodingTab, label: "Learning Paths", icon: Compass, color: "text-blue-400", borderColor: "border-blue-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(59,130,246,0.3)]", bgGradient: "from-blue-500/20 to-indigo-500/10", desc: "Bite-sized language roadmaps, interactive slides & Boss Battles" },
+  { id: "code-coach" as CodingTab, label: "Code Coach", icon: Target, color: "text-emerald-400", borderColor: "border-emerald-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(16,185,129,0.3)]", bgGradient: "from-emerald-500/20 to-teal-500/10", desc: "Standalone practice algorithm problems with live test harnesses" },
+  { id: "playground" as CodingTab, label: "Playground", icon: Code, color: "text-indigo-400", borderColor: "border-indigo-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(99,102,241,0.3)]", bgGradient: "from-indigo-500/20 to-purple-500/10", desc: "Multi-language online Monaco compiler, custom input & runtime profiler" },
+  { id: "arena" as CodingTab, label: "Arena Modes", icon: Sword, color: "text-rose-400", borderColor: "border-rose-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(244,63,94,0.3)]", bgGradient: "from-rose-500/20 to-pink-500/10", desc: "1v1 Battle Duels, Bug Monster Boss, Bug Hunter & AI Reviewer" },
+  { id: "arcade" as CodingTab, label: "Arcade & Quests", icon: Gamepad, color: "text-amber-400", borderColor: "border-amber-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(245,158,11,0.3)]", bgGradient: "from-amber-500/20 to-yellow-500/10", desc: "Daily coding quests, streak chests & achievement badges cabinet" },
+  { id: "shop" as CodingTab, label: "Profile & Shop", icon: Coins, color: "text-purple-400", borderColor: "border-purple-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(168,85,247,0.3)]", bgGradient: "from-purple-500/20 to-fuchsia-500/10", desc: "Spend virtual coins on editor skins, shield guards & debug duck" },
 ];
 
 export default function CodingStagePage() {
@@ -308,12 +311,12 @@ export default function CodingStagePage() {
     setCourseVerifying(true);
     setCourseOutput("");
     setCourseError("");
-    
+
     const activeCourse = MOCK_PATH_COURSES[activeCourseKey];
     const activeModule = activeCourse.modules[courseModuleIdx];
-    
+
     const langId = activeModule.language === "python" ? "71" : activeModule.language === "javascript" ? "63" : "54";
-    
+
     try {
       const res = await fetch("/api/code/run", {
         method: "POST",
@@ -329,22 +332,22 @@ export default function CodingStagePage() {
         const out = data.results[0];
         const stdout = (out.stdout || "").trim();
         const stderr = out.stderr || out.compile_output || "";
-        
+
         if (stdout) {
           setCourseOutput(stdout);
         }
-        
+
         if (stderr) {
           setCourseError(stderr);
         }
-        
+
         // Match expected output substring
         if (stdout.toLowerCase().includes(activeModule.expectedOutput.toLowerCase().trim())) {
           setCourseVerified(true);
           setXp(prev => prev + 50);
           setCoins(prev => prev + 25);
           setLinesOfCode(prev => prev + 12);
-          
+
           if (activeModule.isBoss) {
             alert(`🎉 Boss Battle Defeated! You completed the final module of the ${activeCourse.title}!`);
             if (activeCourseKey === "python") {
@@ -418,25 +421,29 @@ export default function CodingStagePage() {
   };
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchProblems = async () => {
       try {
         // Fetch coding challenges from the new api route
-        const res = await fetch("/api/challenges");
+        const res = await fetch("/api/challenges", { signal: controller.signal });
         if (res.ok) {
           const data = await res.json();
           if (Array.isArray(data) && data.length > 0) {
             setChallenges(data);
           }
         }
-        
+
         // Fetch problem statements for project compatibility compliance
-        const resPs = await fetch("/api/problem-statements");
+        const resPs = await fetch("/api/problem-statements", { signal: controller.signal });
         if (resPs.ok) {
           const dataPs = await resPs.json();
           console.log("Statically loaded problem statements for project collaboration:", dataPs);
         }
-      } catch (e) {
-        console.warn("Could not fetch DB problems, using fallbacks.", e);
+      } catch (e: any) {
+        if (e.name !== 'AbortError' && e.message !== 'Canceled') {
+          console.warn("Could not fetch DB problems, using fallbacks.", e);
+        }
       }
     };
     fetchProblems();
@@ -474,6 +481,7 @@ export default function CodingStagePage() {
     }, 45000);
 
     return () => {
+      controller.abort();
       clearInterval(simInterval);
     };
   }, []);
@@ -629,7 +637,7 @@ export default function CodingStagePage() {
   // ARENA STATE SIMULATIONS
   // ----------------------------------------------------
   const [arenaMode, setArenaMode] = useState<"lobby" | "duel" | "boss" | "bug" | "interview" | "review">("lobby");
-  
+
   // 1v1 duel states
   const [duelSearchText, setDuelSearchText] = useState("Finding matchmaking opponent...");
   const [duelOpponent, setDuelOpponent] = useState("");
@@ -640,7 +648,7 @@ export default function CodingStagePage() {
     setArenaMode("duel");
     setDuelStatus("search");
     setDuelSearchText("Searching active lobbies...");
-    
+
     setTimeout(() => {
       setDuelSearchText("Connecting to SDE room 409...");
     }, 1200);
@@ -762,7 +770,7 @@ export default function CodingStagePage() {
   if (!activeTab) {
     return (
       <div className="space-y-8 p-2">
-        <div className="mb-4 shrink-0">
+        <div className="flex items-center justify-between">
           <button 
             onClick={() => router.back()}
             className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
@@ -770,25 +778,94 @@ export default function CodingStagePage() {
           >
             <ChevronLeft className="w-6 h-6 text-foreground" />
           </button>
+          
+          <button 
+            onClick={claimDailyChest}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs rounded-full transition-all shadow-lg shadow-amber-500/10 hover:scale-105"
+          >
+            <Flame className="w-4 h-4 text-amber-500 animate-bounce" />
+            <span>{streak} Days Streak</span>
+            <span className="text-[10px] bg-amber-500/30 px-2 py-0.5 rounded-full font-extrabold text-white border border-amber-400/40">Claim Chest 🎁</span>
+          </button>
         </div>
-        <div>
-          <h1 className="text-[28px] md:text-[34px] leading-tight font-semibold text-foreground tracking-tight mb-2">Coding</h1>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+
+        {/* Stage Header Banner */}
+        <LiquidGlassCard className="p-6 md:p-8" accentColor="#3b82f6">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl bg-gradient-to-br from-blue-500/30 to-indigo-600/30 border-2 border-blue-400/40 flex items-center justify-center text-blue-400 shrink-0 shadow-[0_0_30px_rgba(59,130,246,0.35)]">
+                <Code className="w-9 h-9 md:w-10 md:h-10" strokeWidth={2} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[11px] font-extrabold text-blue-400 uppercase tracking-widest bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 rounded-full">Stage 2</span>
+                  <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> Judge0 Active
+                  </span>
+                </div>
+                <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight bg-gradient-to-r from-white via-blue-100 to-indigo-200 bg-clip-text text-transparent">
+                  Coding Fundamentals
+                </h1>
+                <p className="text-xs md:text-sm text-gray-300/90 mt-1 max-w-xl leading-relaxed font-light">
+                  Master syntax roadmaps, solve algorithmic challenges, battle AI Bug Monsters in 1v1 arenas, and test code in real-time.
+                </p>
+              </div>
+            </div>
+            
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full md:w-auto text-center border-t md:border-t-0 border-white/10 pt-4 md:pt-0">
+              <div className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:border-blue-500/40 transition-all hover:scale-105">
+                <span className="text-xl font-extrabold text-blue-400 block">{challengesCount}</span>
+                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Completed</span>
+              </div>
+              <div className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:border-emerald-500/40 transition-all hover:scale-105">
+                <span className="text-xl font-extrabold text-emerald-400 block">{linesOfCode}</span>
+                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Lines of Code</span>
+              </div>
+              <div className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:border-amber-500/40 transition-all hover:scale-105">
+                <span className="text-xl font-extrabold text-amber-400 block">{compilerRuns}</span>
+                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Compiler Runs</span>
+              </div>
+              <div className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:border-purple-500/40 transition-all hover:scale-105">
+                <span className="text-xl font-extrabold text-purple-400 block">{tier}</span>
+                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Current Tier</span>
+              </div>
+            </div>
+          </div>
+        </LiquidGlassCard>
+
+        {/* Feature Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {CODING_FEATURES.map((feature) => {
             const Icon = feature.icon;
             return (
               <button
                 key={feature.id}
                 onClick={() => setActiveTab(feature.id)}
-                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+                className={`group text-left relative flex flex-col justify-between p-6 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)] ${feature.glowColor} h-60`}
               >
-                <div className={`w-20 h-20 rounded-full flex items-center justify-center bg-transparent border-2 ${feature.borderColor} transition-transform duration-300 group-hover:scale-110`}>
-                  <Icon className={`w-10 h-10 ${feature.color}`} strokeWidth={1.5} />
+                <div className="flex items-center justify-between w-full">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br ${feature.bgGradient} border ${feature.borderColor} transition-transform duration-300 group-hover:scale-110 shadow-lg`}>
+                    <Icon className={`w-7 h-7 ${feature.color}`} strokeWidth={2} />
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-blue-600 group-hover:border-blue-500 transition-all">
+                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                  </div>
                 </div>
-                <span className="text-[15px] font-semibold text-zinc-600 dark:text-gray-300 group-hover:text-foreground transition-colors">
-                  {feature.label}
-                </span>
+                
+                <div className="space-y-1.5 mt-4">
+                  <h3 className="text-lg font-extrabold text-foreground dark:text-white group-hover:text-blue-400 transition-colors">
+                    {feature.label}
+                  </h3>
+                  <p className="text-xs text-gray-400 leading-relaxed line-clamp-2 font-light">
+                    {feature.desc}
+                  </p>
+                </div>
+
+                <div className="text-[11px] font-bold text-blue-400 flex items-center gap-1 pt-3 border-t border-white/5 mt-auto">
+                  <span>Open Module</span>
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
               </button>
             );
           })}
@@ -798,23 +875,48 @@ export default function CodingStagePage() {
   }
 
   return (
-    <div className={`space-y-6 transition-all duration-500 p-2 ${
-      activeTheme === "theme_matrix" 
-        ? "dark bg-[#020502] text-green-400 font-mono" 
+    <div className={`space-y-6 transition-all duration-500 p-2 ${activeTheme === "theme_matrix"
+        ? "dark bg-[#020502] text-green-400 font-mono"
         : activeTheme === "theme_cyberpunk"
           ? "dark bg-[#0f051d] text-indigo-400"
           : activeTheme === "theme_dracula"
             ? "dark bg-[#1e1f29] text-[#f8f8f2]"
             : ""
-    }`}>
-      <div className="mb-4 flex items-center">
-        <button
-          onClick={() => setActiveTab(null)}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
-          aria-label="Back to Coding Options"
-        >
-          <ChevronLeft className="w-6 h-6 text-foreground" />
-        </button>
+      }`}>
+      {/* Top Floating Glass Navigation Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 bg-white/70 dark:bg-white/5 border border-white/50 dark:border-white/10 rounded-3xl backdrop-blur-2xl shrink-0 shadow-xl">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <button
+            onClick={() => setActiveTab(null)}
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm shrink-0"
+            aria-label="Back to Coding Options"
+          >
+            <ChevronLeft className="w-5 h-5 text-foreground" />
+          </button>
+          <span className="text-sm font-extrabold text-foreground dark:text-white hidden md:inline">Stage 2: Coding</span>
+        </div>
+
+        {/* Tab Switcher Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+          {CODING_FEATURES.map((feature) => {
+            const isActive = activeTab === feature.id;
+            const Icon = feature.icon;
+            return (
+              <button
+                key={feature.id}
+                onClick={() => setActiveTab(feature.id)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  isActive
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-105"
+                    : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/5"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{feature.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* 1. LEARNING PATHS TAB */}
@@ -833,7 +935,7 @@ export default function CodingStagePage() {
                 <div className="text-lg font-black text-indigo-400">0 / 50 XP</div>
                 <div className="text-[10px] text-gray-500">Earned Today</div>
               </div>
-              <button 
+              <button
                 onClick={() => openCourseModalMock("python")}
                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shrink-0"
               >
@@ -875,7 +977,7 @@ export default function CodingStagePage() {
                   Start Python Path <ChevronRight className="w-3.5 h-3.5 inline ml-0.5" />
                 </button>
               </div>
- 
+
               {/* Web Dev Card */}
               <div className={`bg-white/5 border border-white/10 rounded-3xl p-5 flex flex-col gap-4 relative transition-all duration-300 ${!unlockedPaths.includes("web") ? "opacity-60" : "hover:border-indigo-500/40"}`}>
                 {!unlockedPaths.includes("web") && (
@@ -894,16 +996,15 @@ export default function CodingStagePage() {
                 <button
                   disabled={!unlockedPaths.includes("web")}
                   onClick={() => openCourseModalMock("web")}
-                  className={`w-full py-2 font-bold rounded-xl text-xs text-center mt-2 transition-all ${
-                    !unlockedPaths.includes("web")
+                  className={`w-full py-2 font-bold rounded-xl text-xs text-center mt-2 transition-all ${!unlockedPaths.includes("web")
                       ? "bg-white/5 text-gray-500 border border-white/5 cursor-not-allowed"
                       : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                  }`}
+                    }`}
                 >
                   {!unlockedPaths.includes("web") ? "Locked" : "Start Web Path"}
                 </button>
               </div>
- 
+
               {/* C Programming Card */}
               <div className="bg-white/5 border border-white/10 rounded-3xl p-5 hover:border-indigo-500/40 transition-all flex flex-col gap-4">
                 <span className="text-[10px] font-bold text-indigo-400 tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded w-fit">C MASTER</span>
@@ -974,9 +1075,8 @@ export default function CodingStagePage() {
                     className="p-5 bg-white/5 border border-white/10 rounded-2xl cursor-pointer hover:border-indigo-500/40 hover:scale-[1.02] transition-all flex flex-col justify-between h-48"
                   >
                     <div className="flex justify-between items-start">
-                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                        ch.difficulty === "Easy" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
-                      }`}>{ch.difficulty}</span>
+                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${ch.difficulty === "Easy" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
+                        }`}>{ch.difficulty}</span>
                       <span className="text-[10px] text-yellow-500 font-bold">💰 +{ch.rewardCoins} Coins</span>
                     </div>
                     <div>
@@ -1008,7 +1108,7 @@ export default function CodingStagePage() {
                       {activeChallenge.difficulty} Difficulty
                     </span>
                     <p className="text-xs text-gray-300 leading-relaxed font-light whitespace-pre-wrap">{activeChallenge.description}</p>
-                    
+
                     <div className="border-t border-white/5 pt-4 mt-4 space-y-3">
                       <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Example Test Cases:</span>
                       {activeChallenge.testCases.map((tc, idx) => (
@@ -1028,7 +1128,7 @@ export default function CodingStagePage() {
                   <LiquidGlassCard className="p-4 flex justify-between items-center bg-slate-900 border-white/10">
                     <span className="text-xs font-bold text-white">Coding Workspace</span>
                     <div className="flex items-center gap-2">
-                      <button 
+                      <button
                         onClick={() => {
                           const formatted = formatCodeHelper(coachCode, coachLanguage);
                           setCoachCode(formatted);
@@ -1085,9 +1185,8 @@ export default function CodingStagePage() {
                         {coachResults.map((r: any, idx: number) => {
                           const passed = r.status?.id === 3;
                           return (
-                            <div key={idx} className={`p-2.5 rounded-xl border flex items-center justify-between ${
-                              passed ? "bg-green-500/5 border-green-500/20 text-green-300" : "bg-red-500/5 border-red-500/20 text-red-300"
-                            }`}>
+                            <div key={idx} className={`p-2.5 rounded-xl border flex items-center justify-between ${passed ? "bg-green-500/5 border-green-500/20 text-green-300" : "bg-red-500/5 border-red-500/20 text-red-300"
+                              }`}>
                               <span>Test Case {idx + 1}:</span>
                               <span className="font-bold">{passed ? "Passed" : "Failed"}</span>
                             </div>
@@ -1126,7 +1225,7 @@ export default function CodingStagePage() {
               <h3 className="font-bold text-white text-base mb-4 flex items-center gap-1.5">
                 <Cpu className="w-5 h-5 text-indigo-400" /> Playground Config
               </h3>
-              
+
               <div className="space-y-4 text-xs">
                 <div>
                   <label className="block text-gray-400 font-medium mb-2">Programming Language:</label>
@@ -1384,7 +1483,7 @@ export default function CodingStagePage() {
                   <div className="text-center space-y-3">
                     <Ghost className="w-16 h-16 text-yellow-500 mx-auto animate-bounce" />
                     <h4 className="text-base font-extrabold text-white">Bug Monster Level 14</h4>
-                    
+
                     {/* HP Bar */}
                     <div className="w-full bg-slate-800 h-4 rounded-full border border-white/15 overflow-hidden max-w-md mx-auto">
                       <div className="bg-red-600 h-full rounded-full transition-all duration-300" style={{ width: `${(bossHp / bossMaxHp) * 100}%` }} />
@@ -1394,7 +1493,7 @@ export default function CodingStagePage() {
 
                   <div className="space-y-2 pt-4">
                     <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Attack modules (Solve coding logic):</span>
-                    
+
                     <button
                       onClick={() => attackBoss(150, "C loop logic")}
                       className="w-full p-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs flex justify-between items-center text-left"
@@ -1533,25 +1632,22 @@ export default function CodingStagePage() {
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <button
                       onClick={() => setReviewPersona("linus")}
-                      className={`p-2 rounded-xl border text-xs font-semibold ${
-                        reviewPersona === "linus" ? "bg-red-500/10 border-red-500 text-red-400" : "bg-white/5 border-white/10 text-gray-400"
-                      }`}
+                      className={`p-2 rounded-xl border text-xs font-semibold ${reviewPersona === "linus" ? "bg-red-500/10 border-red-500 text-red-400" : "bg-white/5 border-white/10 text-gray-400"
+                        }`}
                     >
                       😠 Linus Torvalds
                     </button>
                     <button
                       onClick={() => setReviewPersona("ada")}
-                      className={`p-2 rounded-xl border text-xs font-semibold ${
-                        reviewPersona === "ada" ? "bg-indigo-500/10 border-indigo-500 text-indigo-400" : "bg-white/5 border-white/10 text-gray-400"
-                      }`}
+                      className={`p-2 rounded-xl border text-xs font-semibold ${reviewPersona === "ada" ? "bg-indigo-500/10 border-indigo-500 text-indigo-400" : "bg-white/5 border-white/10 text-gray-400"
+                        }`}
                     >
                       🎓 Ada Lovelace
                     </button>
                     <button
                       onClick={() => setReviewPersona("coach")}
-                      className={`p-2 rounded-xl border text-xs font-semibold ${
-                        reviewPersona === "coach" ? "bg-green-500/10 border-green-500 text-green-400" : "bg-white/5 border-white/10 text-gray-400"
-                      }`}
+                      className={`p-2 rounded-xl border text-xs font-semibold ${reviewPersona === "coach" ? "bg-green-500/10 border-green-500 text-green-400" : "bg-white/5 border-white/10 text-gray-400"
+                        }`}
                     >
                       🤝 Friendly Coach
                     </button>
@@ -1593,7 +1689,7 @@ export default function CodingStagePage() {
               <h3 className="font-bold text-white text-base mb-4 flex items-center gap-1.5">
                 <Target className="w-5 h-5 text-indigo-400 animate-pulse" /> Daily Quests
               </h3>
-              
+
               <div className="space-y-3 text-xs">
                 <div className="p-3 bg-white/5 border border-white/10 rounded-xl flex items-center justify-between">
                   <div className="space-y-1">
@@ -1708,11 +1804,10 @@ export default function CodingStagePage() {
                               setActiveTheme(item.id);
                               alert(`Active compiler theme changed to ${item.name}!`);
                             }}
-                            className={`w-full py-1.5 rounded-xl text-xs font-bold transition-all ${
-                              activeTheme === item.id 
-                                ? "bg-indigo-600 text-white" 
+                            className={`w-full py-1.5 rounded-xl text-xs font-bold transition-all ${activeTheme === item.id
+                                ? "bg-indigo-600 text-white"
                                 : "bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300"
-                            }`}
+                              }`}
                           >
                             {activeTheme === item.id ? "Selected Theme" : "Use Theme"}
                           </button>
@@ -1748,28 +1843,26 @@ export default function CodingStagePage() {
 
             {/* Modal Main Content Container */}
             <div className="flex-1 overflow-y-auto flex flex-col md:grid md:grid-cols-10 gap-4 p-5">
-              
+
               {/* Mobile Tab Switcher (Visible on mobile only) */}
               <div className="flex md:hidden border border-white/10 bg-white/5 p-1 rounded-xl gap-1 shrink-0 mb-2">
                 <button
                   type="button"
                   onClick={() => setModalPane("theory")}
-                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                    modalPane === "theory" 
-                      ? "bg-indigo-600 text-white shadow" 
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${modalPane === "theory"
+                      ? "bg-indigo-600 text-white shadow"
                       : "text-gray-400 hover:text-white"
-                  }`}
+                    }`}
                 >
                   📖 Theory & Roadmap
                 </button>
                 <button
                   type="button"
                   onClick={() => setModalPane("workspace")}
-                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${
-                    modalPane === "workspace" 
-                      ? "bg-indigo-600 text-white shadow" 
+                  className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-all ${modalPane === "workspace"
+                      ? "bg-indigo-600 text-white shadow"
                       : "text-gray-400 hover:text-white"
-                  }`}
+                    }`}
                 >
                   💻 Code Sandbox
                 </button>
@@ -1785,8 +1878,8 @@ export default function CodingStagePage() {
                       <span>{Math.round(((courseModuleIdx + 1) / MOCK_PATH_COURSES[activeCourseKey].modules.length) * 100)}%</span>
                     </div>
                     <div className="w-full bg-black/40 h-2 rounded-full border border-white/10 overflow-hidden">
-                      <div 
-                        className="bg-indigo-500 h-full rounded-full transition-all duration-300" 
+                      <div
+                        className="bg-indigo-500 h-full rounded-full transition-all duration-300"
                         style={{ width: `${((courseModuleIdx + 1) / MOCK_PATH_COURSES[activeCourseKey].modules.length) * 100}%` }}
                       />
                     </div>
@@ -1799,7 +1892,7 @@ export default function CodingStagePage() {
                       const isActive = idx === courseModuleIdx;
                       const isCompleted = idx < courseModuleIdx;
                       return (
-                        <div 
+                        <div
                           key={mod.id}
                           onClick={() => {
                             if (idx <= courseModuleIdx || courseVerified) {
@@ -1811,13 +1904,12 @@ export default function CodingStagePage() {
                               setCourseHintVisible(false);
                             }
                           }}
-                          className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all flex items-center justify-between ${
-                            isActive 
-                              ? "bg-indigo-600/20 border-indigo-500 text-white font-bold" 
-                              : isCompleted 
-                                ? "bg-indigo-500/5 border-indigo-500/20 text-indigo-400" 
+                          className={`p-2.5 rounded-xl border text-xs cursor-pointer transition-all flex items-center justify-between ${isActive
+                              ? "bg-indigo-600/20 border-indigo-500 text-white font-bold"
+                              : isCompleted
+                                ? "bg-indigo-500/5 border-indigo-500/20 text-indigo-400"
                                 : "bg-black/20 border-white/5 text-gray-400 cursor-not-allowed opacity-60"
-                          }`}
+                            }`}
                         >
                           <span className="truncate">{idx + 1}. {mod.title}</span>
                           {mod.isBoss && <span className="text-[9px] bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30 px-1.5 py-0.5 rounded">BOSS</span>}
@@ -1835,7 +1927,7 @@ export default function CodingStagePage() {
                     <p className="text-xs text-gray-300 font-light leading-relaxed whitespace-pre-wrap">
                       {MOCK_PATH_COURSES[activeCourseKey].modules[courseModuleIdx].theory}
                     </p>
-                    
+
                     {courseHintVisible && (
                       <div className="p-3 bg-indigo-500/10 border border-indigo-500/25 rounded-xl text-[11px] text-indigo-300 leading-relaxed font-light">
                         <strong>Hint:</strong> {MOCK_PATH_COURSES[activeCourseKey].modules[courseModuleIdx].hint}
@@ -1846,14 +1938,14 @@ export default function CodingStagePage() {
 
                 {/* Left Navigation Buttons */}
                 <div className="flex gap-2 mt-4 md:mt-0">
-                  <button 
+                  <button
                     onClick={() => courseHintVisible ? setCourseHintVisible(false) : setCourseHintVisible(true)}
                     className="px-3 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-semibold rounded-xl text-gray-300 transition-colors"
                   >
                     {courseHintVisible ? "Hide Hint" : "Get Hint"}
                   </button>
                   {courseModuleIdx < MOCK_PATH_COURSES[activeCourseKey].modules.length - 1 && (
-                    <button 
+                    <button
                       onClick={loadNextModule}
                       disabled={!courseVerified}
                       className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-1"
@@ -1862,7 +1954,7 @@ export default function CodingStagePage() {
                     </button>
                   )}
                   {courseModuleIdx === MOCK_PATH_COURSES[activeCourseKey].modules.length - 1 && (
-                    <button 
+                    <button
                       onClick={closeCourseModal}
                       disabled={!courseVerified}
                       className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-xl text-xs transition-colors"
@@ -1901,7 +1993,7 @@ export default function CodingStagePage() {
                 </div>
 
                 <div className="flex gap-2 shrink-0">
-                  <button 
+                  <button
                     onClick={() => {
                       const formatted = formatCodeHelper(courseCode, MOCK_PATH_COURSES[activeCourseKey].modules[courseModuleIdx].language);
                       setCourseCode(formatted);
@@ -1911,7 +2003,7 @@ export default function CodingStagePage() {
                   >
                     Format Code
                   </button>
-                  <button 
+                  <button
                     onClick={() => setCourseCode(MOCK_PATH_COURSES[activeCourseKey].modules[courseModuleIdx].initialCode)}
                     className="px-3 py-2 border border-white/10 hover:bg-white/5 text-xs font-semibold rounded-xl text-gray-300 transition-colors"
                   >
