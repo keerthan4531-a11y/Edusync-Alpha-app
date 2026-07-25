@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { 
   School, User, Calendar, Clock, ArrowLeft, BookOpen, 
   Send, CheckCircle2, AlertCircle, Sparkles, Code, Users, 
@@ -84,7 +84,8 @@ export default function StudentClassroomsPage() {
   // Coding / Practice states
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null)
   const [code, setCode] = useState("")
-  const [language, setLanguage] = useState("python")
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [runningCode, setRunningCode] = useState(false)
   const [submittingAssignment, setSubmittingAssignment] = useState(false)
   
@@ -202,6 +203,7 @@ export default function StudentClassroomsPage() {
   const handleOpenAssignment = (assignment: Assignment) => {
     setSelectedAssignment(assignment)
     setCode(assignment.submission?.code || "")
+    setSelectedFile(null)
     setRunOutput("")
     setRunError("")
     setAiHint("")
@@ -209,21 +211,32 @@ export default function StudentClassroomsPage() {
 
   // Submit Assignment
   const handleSubmitAssignment = async () => {
-    if (!selectedAssignment) return
-    
+    if (!selectedAssignment || (!code.trim() && !selectedFile)) return
     setSubmittingAssignment(true)
+
     try {
-      const res = await fetch(`/api/student/assignments/${selectedAssignment.id}/submit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code
-        })
-      })
+      let res;
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("code", code);
+        
+        res = await fetch(`/api/student/assignments/${selectedAssignment.id}/submit`, {
+          method: "POST",
+          body: formData
+        });
+      } else {
+        res = await fetch(`/api/student/assignments/${selectedAssignment.id}/submit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code })
+        });
+      }
 
       const data = await res.json()
       if (res.ok) {
         setStatusMessage({ type: "success", message: "Assignment submitted successfully!" })
+        setSelectedFile(null)
         
         // Refresh assignments list
         const resAssign = await fetch(`/api/student/classroom/${selectedClassroom?.id}/assignments`)
@@ -515,7 +528,7 @@ export default function StudentClassroomsPage() {
                 )}
               </div>
             ) : activeTab === "classwork" ? (
-              <div className="flex flex-col h-full overflow-hidden">
+              <div className="flex flex-col min-h-full overflow-y-auto pb-16">
                 {/* Assignments List */}
                 {!selectedAssignment && (
                   <div className="space-y-4 overflow-y-auto h-full pr-2">
@@ -646,8 +659,18 @@ export default function StudentClassroomsPage() {
                                       <FileText className="w-5 h-5" />
                                     </div>
                                     <div className="overflow-hidden">
-                                      <div className="text-white text-xs font-medium truncate">{selectedAssignment.title}_submission.txt</div>
-                                      <div className="text-gray-500 text-[10px] uppercase font-bold tracking-wider mt-0.5">Text Response</div>
+                                      <div className="text-white text-xs font-medium truncate">
+                                        {selectedAssignment.submission.code.startsWith("[FILE_UPLOAD_V3]")
+                                          ? selectedAssignment.submission.code.replace("[FILE_UPLOAD_V3]", "").split("|")[0]
+                                          : selectedAssignment.submission.code.startsWith("[FILE_UPLOAD_V2]")
+                                          ? selectedAssignment.submission.code.replace("[FILE_UPLOAD_V2]", "").split("|")[0]
+                                          : selectedAssignment.submission.code.startsWith("[FILE_UPLOAD]")
+                                          ? selectedAssignment.submission.code.replace("[FILE_UPLOAD] ", "")
+                                          : `${selectedAssignment.title}_submission.txt`}
+                                      </div>
+                                      <div className="text-gray-500 text-[10px] uppercase font-bold tracking-wider mt-0.5">
+                                        {selectedAssignment.submission.code.startsWith("[FILE_UPLOAD]") || selectedAssignment.submission.code.startsWith("[FILE_UPLOAD_V2]") || selectedAssignment.submission.code.startsWith("[FILE_UPLOAD_V3]") ? "Document" : "Text Response"}
+                                      </div>
                                     </div>
                                   </div>
                                   {selectedAssignment.submission.status !== "GRADED" && (
@@ -660,6 +683,24 @@ export default function StudentClassroomsPage() {
                                       <X className="w-4 h-4" />
                                     </button>
                                   )}
+                                </div>
+                              ) : selectedFile ? (
+                                /* Selected File Preview */
+                                <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-3 flex items-center justify-between group">
+                                  <div className="flex items-center gap-3 overflow-hidden">
+                                    <FileText className="w-5 h-5 text-indigo-400 shrink-0" />
+                                    <div className="text-white text-xs font-medium truncate">{selectedFile.name}</div>
+                                  </div>
+                                  <button 
+                                    onClick={() => {
+                                      setSelectedFile(null);
+                                      setCode("");
+                                      if (fileInputRef.current) fileInputRef.current.value = "";
+                                    }}
+                                    className="text-gray-400 hover:text-white"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
                                 </div>
                               ) : (
                                 /* Text Editor when Not Submitted */
@@ -679,7 +720,7 @@ export default function StudentClassroomsPage() {
                                 <button 
                                   onClick={handleUnsubmitAssignment}
                                   disabled={submittingAssignment}
-                                  className="w-full py-2 bg-transparent border border-white/20 hover:border-white/30 text-white font-semibold rounded-xl transition-all disabled:opacity-50 text-sm shadow-sm"
+                                  className="w-full py-2.5 bg-transparent border border-white/20 hover:border-white/30 text-white font-semibold rounded-xl transition-all disabled:opacity-50 text-sm shadow-sm cursor-pointer"
                                 >
                                   Unsubmit
                                 </button>
@@ -697,7 +738,7 @@ export default function StudentClassroomsPage() {
                                   <button 
                                     onClick={handleUnsubmitAssignment}
                                     disabled={submittingAssignment}
-                                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all text-sm shadow-md shadow-indigo-500/10"
+                                    className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all text-sm shadow-md shadow-indigo-500/10 cursor-pointer"
                                   >
                                     Resubmit
                                   </button>
@@ -707,17 +748,31 @@ export default function StudentClassroomsPage() {
                               <div className="flex flex-col gap-2">
                                 {/* Google Classroom Style '+ Add or create' Button */}
                                 <button 
-                                  disabled
-                                  className="w-full py-2 bg-transparent border border-white/10 hover:bg-white/5 text-indigo-400 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-sm cursor-not-allowed opacity-50"
+                                  type="button"
+                                  onClick={() => fileInputRef.current?.click()}
+                                  className="w-full py-2.5 bg-transparent border border-white/15 hover:bg-white/10 text-indigo-400 hover:text-indigo-300 font-semibold rounded-xl transition-all flex items-center justify-center gap-2 text-sm cursor-pointer"
                                 >
-                                  <Plus className="w-4 h-4" />
+                                  <Plus className="w-4 h-4 text-indigo-400" />
                                   <span>Add or create</span>
                                 </button>
+                                <input 
+                                  type="file" 
+                                  className="hidden" 
+                                  ref={fileInputRef} 
+                                  onChange={(e) => {
+                                    if (e.target.files && e.target.files[0]) {
+                                      const file = e.target.files[0];
+                                      setSelectedFile(file);
+                                      setCode(`[FILE_UPLOAD] ${file.name}`);
+                                    }
+                                  }} 
+                                  accept=".pdf,.doc,.docx,.txt"
+                                />
                                 
                                 <button 
                                   onClick={handleSubmitAssignment}
-                                  disabled={submittingAssignment || !code.trim()}
-                                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
+                                  disabled={submittingAssignment || (!code.trim() && !selectedFile)}
+                                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-all shadow-md shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm cursor-pointer"
                                 >
                                   {submittingAssignment && <RefreshCw className="w-4 h-4 animate-spin" />}
                                   Turn in

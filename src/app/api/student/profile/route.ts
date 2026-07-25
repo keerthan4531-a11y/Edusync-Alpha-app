@@ -6,30 +6,43 @@ import { db } from "@/lib/db";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const userId = session.user.id;
+    if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    // Fetch user details including the new student profile
-    const user = await db.user.findUnique({
-      where: { id: userId },
-      include: {
-        department: true,
-        studentProfile: {
+    // Fetch user details including student profile
+    let user = session.user.id
+      ? await db.user.findUnique({
+          where: { id: session.user.id },
           include: {
-            class: true
+            department: true,
+            studentProfile: {
+              include: { class: true }
+            },
+            badges: {
+              include: { badge: true }
+            }
           }
-        },
-        badges: {
-          include: {
-            badge: true
+        })
+      : null;
+
+    if (!user && session.user.email) {
+      user = await db.user.findUnique({
+        where: { email: session.user.email },
+        include: {
+          department: true,
+          studentProfile: {
+            include: { class: true }
+          },
+          badges: {
+            include: { badge: true }
           }
         }
-      }
-    });
+      });
+    }
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
+    const userId = user.id;
 
     // Fetch all badges to show earned vs locked
     const allBadges = await db.badge.findMany();

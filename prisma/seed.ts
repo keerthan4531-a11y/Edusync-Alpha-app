@@ -6,6 +6,11 @@ async function main() {
   console.log('Seeding database...')
 
   // Cleanup existing records for clean idempotent seeding
+  await prisma.assignmentSubmission.deleteMany().catch(() => { })
+  await prisma.assignment.deleteMany().catch(() => { })
+  await prisma.announcement.deleteMany().catch(() => { })
+  await prisma.classroomInvitation.deleteMany().catch(() => { })
+  await prisma.classroom.deleteMany().catch(() => { })
   await prisma.userBadge.deleteMany().catch(() => { })
   await prisma.submission.deleteMany().catch(() => { })
   await prisma.stageProgress.deleteMany().catch(() => { })
@@ -108,6 +113,90 @@ async function main() {
       xpReward: 50,
       coinReward: 5,
       type: 'CODING'
+    }
+  })
+
+  // 6. Classrooms, Announcements & Assignments
+  const classroom1 = await prisma.classroom.create({
+    data: {
+      name: 'Web Development & Frameworks',
+      code: 'CS101',
+      facultyId: faculty.id,
+      students: {
+        connect: [
+          { id: demoStudent.id },
+          { id: student1.id },
+          { id: student2.id },
+          { id: student3.id }
+        ]
+      }
+    }
+  })
+
+  const classroom2 = await prisma.classroom.create({
+    data: {
+      name: 'Data Structures & Algorithms',
+      code: 'CS201',
+      facultyId: faculty.id,
+      students: {
+        connect: [
+          { id: demoStudent.id },
+          { id: student1.id },
+          { id: student4.id }
+        ]
+      }
+    }
+  })
+
+  // Announcements
+  await prisma.announcement.create({
+    data: {
+      classroomId: classroom1.id,
+      content: 'Welcome to Web Development! Make sure to review Next.js App Router documentation before class.'
+    }
+  })
+
+  await prisma.announcement.create({
+    data: {
+      classroomId: classroom1.id,
+      content: 'Reminder: The TC Hackathon assignment technical report is due soon!'
+    }
+  })
+
+  // Assignments
+  const assignment1 = await prisma.assignment.create({
+    data: {
+      classroomId: classroom1.id,
+      title: 'TC Hackathon Submission',
+      description: 'Submit your complete technical report and source repository link for the hackathon project.',
+      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      topic: 'Hackathon',
+      maxPoints: 100,
+      xpReward: 100,
+      coinReward: 50
+    }
+  })
+
+  const assignment2 = await prisma.assignment.create({
+    data: {
+      classroomId: classroom1.id,
+      title: 'Next.js & Tailwind CSS UI',
+      description: 'Build a modern responsive dashboard layout using Next.js, React, and Tailwind CSS.',
+      dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      topic: 'Frontend',
+      maxPoints: 100,
+      xpReward: 75,
+      coinReward: 30
+    }
+  })
+
+  // Submissions
+  await prisma.assignmentSubmission.create({
+    data: {
+      assignmentId: assignment1.id,
+      studentId: demoStudent.id,
+      code: '[FILE_UPLOAD_V3]TC_Hackathon.pdf|/uploads/TC_Hackathon.pdf',
+      status: 'SUBMITTED'
     }
   })
 

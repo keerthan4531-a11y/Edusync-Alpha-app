@@ -53,6 +53,19 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.role = user.role
+      } else if (token.email) {
+        try {
+          const dbUser = await db.user.findUnique({
+            where: { email: token.email },
+            select: { id: true, role: true }
+          })
+          if (dbUser) {
+            token.id = dbUser.id
+            token.role = dbUser.role
+          }
+        } catch (e) {
+          console.error("JWT sync error:", e)
+        }
       }
       return token
     },
