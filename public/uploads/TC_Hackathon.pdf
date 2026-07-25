@@ -1,0 +1,71 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /MediaBox [0 0 612 792] /Contents 6 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+6 0 obj
+<< /Length 1326 >>
+stream
+BT
+/F1 20 Tf
+50 730 Td
+(EduSync Hackathon - Technical Report) Tj
+ET
+BT
+/F2 11 Tf
+50 700 Td
+(Student Submission | TC_Hackathon.pdf | Date: 2026-07-25) Tj
+ET
+BT
+/F2 10 Tf
+50 660 Td
+14 TL
+(--------------------------------------------------------------------------------------------------) '
+(PROJECT OVERVIEW:) '
+(This document contains the complete technical submission for the TC Hackathon challenge.) '
+(Our solution focuses on building scalable classroom management tools and real-time student analytics.) '
+() '
+(KEY FEATURES IMPLEMENTED:) '
+(1. Real-time Student & Faculty Synchronization) '
+(2. Interactive Coding Sandbox with AI Grading) '
+(3. Automated Submission Tracking & Feedback Loop) '
+(4. Document & Resource Portal for Classrooms) '
+() '
+(SYSTEM ARCHITECTURE:) '
+(- Frontend: Next.js App Router + React + Tailwind CSS) '
+(- Backend: Next.js API Routes + Prisma ORM) '
+(- Database: SQLite / PostgreSQL Schema with full multi-role support) '
+() '
+(CONCLUSION & FUTURE SCOPE:) '
+(The project successfully satisfies all hackathon submission criteria and passed unit test suites.) '
+(Future work includes adding live voice rooms and collaborative whiteboarding.) '
+(--------------------------------------------------------------------------------------------------) '
+(Submitted by Team Alpha - EduSync Platform) '
+ET
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000251 00000 n 
+0000000326 00000 n 
+0000000396 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+1774
+%%EOF

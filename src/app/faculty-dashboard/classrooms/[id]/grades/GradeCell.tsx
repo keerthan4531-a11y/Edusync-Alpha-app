@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Check, Edit2, X } from "lucide-react"
+import { Loader2, Check, Edit2, X, FileText, ExternalLink } from "lucide-react"
 
 export function GradeCell({ 
   classroomId, 
@@ -18,6 +18,7 @@ export function GradeCell({
   const [grade, setGrade] = useState(submission?.grade?.toString() || "")
   const [feedback, setFeedback] = useState(submission?.feedback || "")
   const [loading, setLoading] = useState(false)
+  const [viewingFile, setViewingFile] = useState<{name: string, data: string | null} | null>(null)
 
   // Status mapping
   const hasSubmitted = !!submission
@@ -58,6 +59,14 @@ export function GradeCell({
     }
   }
 
+  const handleOpenFile = (filename: string, data: string | null = null) => {
+    let fileUrl = data
+    if (!fileUrl && filename) {
+      fileUrl = `/uploads/${filename}`
+    }
+    setViewingFile({ name: filename, data: fileUrl })
+  }
+
   return (
     <>
       <div 
@@ -81,9 +90,62 @@ export function GradeCell({
               </button>
             </div>
 
-            <div className="mb-6 p-4 bg-black/20 rounded-xl border border-white/5 text-sm font-mono text-zinc-300 max-h-40 overflow-y-auto whitespace-pre-wrap">
-              {submission.code || "No text content submitted."}
-            </div>
+            {submission.code?.startsWith("[FILE_UPLOAD_V3]") ? (
+              <div 
+                onClick={() => {
+                  const parts = submission.code.replace("[FILE_UPLOAD_V3]", "").split("|");
+                  handleOpenFile(parts[0], parts[1]);
+                }}
+                className="mb-6 p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-sm font-medium text-indigo-300 flex items-center justify-between cursor-pointer hover:bg-indigo-500/20 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <span className="truncate">{submission.code.replace("[FILE_UPLOAD_V3]", "").split("|")[0]}</span>
+                </div>
+                <div className="text-xs text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap ml-2 flex items-center gap-1 font-semibold">
+                  View PDF ↗
+                </div>
+              </div>
+            ) : submission.code?.startsWith("[FILE_UPLOAD_V2]") ? (
+              <div 
+                onClick={() => {
+                  const parts = submission.code.replace("[FILE_UPLOAD_V2]", "").split("|");
+                  handleOpenFile(parts[0], parts[1]);
+                }}
+                className="mb-6 p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-sm font-medium text-indigo-300 flex items-center justify-between cursor-pointer hover:bg-indigo-500/20 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <span className="truncate">{submission.code.replace("[FILE_UPLOAD_V2]", "").split("|")[0]}</span>
+                </div>
+                <div className="text-xs text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap ml-2 flex items-center gap-1 font-semibold">
+                  View PDF ↗
+                </div>
+              </div>
+            ) : submission.code?.startsWith("[FILE_UPLOAD]") ? (
+              <div 
+                onClick={() => handleOpenFile(submission.code.replace("[FILE_UPLOAD] ", ""))}
+                className="mb-6 p-4 bg-indigo-500/10 rounded-xl border border-indigo-500/20 text-sm font-medium text-indigo-300 flex items-center justify-between cursor-pointer hover:bg-indigo-500/20 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <span className="truncate">{submission.code.replace("[FILE_UPLOAD] ", "")}</span>
+                </div>
+                <div className="text-xs text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap ml-2 flex items-center gap-1 font-semibold">
+                  View PDF ↗
+                </div>
+              </div>
+            ) : (
+              <div className="mb-6 p-4 bg-black/20 rounded-xl border border-white/5 text-sm font-mono text-zinc-300 max-h-40 overflow-y-auto whitespace-pre-wrap">
+                {submission.code || "No text content submitted."}
+              </div>
+            )}
 
             <form onSubmit={handleSave} className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
@@ -128,6 +190,65 @@ export function GradeCell({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* File Viewer Overlay */}
+      {viewingFile && (
+        <div className="fixed inset-0 z-[60] flex flex-col bg-[#1a1d27] animate-in slide-in-from-bottom-2 duration-300">
+          {/* Header */}
+          <div className="h-16 border-b border-white/10 flex items-center justify-between px-6 shrink-0 bg-black/40 backdrop-blur-md">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
+                <FileText className="w-5 h-5 text-indigo-400" />
+              </div>
+              <div>
+                <span className="font-bold text-white block text-sm sm:text-base truncate max-w-[280px] sm:max-w-[400px]">{viewingFile.name}</span>
+                <span className="text-[11px] text-indigo-300 font-mono">PDF Document Viewer</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              {viewingFile.data && (
+                <a 
+                  href={viewingFile.data} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="px-3.5 py-1.5 rounded-xl bg-indigo-500/20 border border-indigo-500/30 hover:bg-indigo-500/30 text-indigo-300 hover:text-white transition-all text-xs font-semibold flex items-center gap-1.5"
+                >
+                  <span>Open Full PDF</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
+              <button 
+                onClick={() => setViewingFile(null)}
+                className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-colors"
+                title="Close"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 bg-[#12141c] overflow-hidden">
+            {viewingFile.data ? (
+              <iframe 
+                src={viewingFile.data} 
+                className="w-full h-full rounded-2xl bg-white border border-white/10 shadow-2xl"
+                title={viewingFile.name}
+              />
+            ) : (
+              <div className="p-8 rounded-3xl bg-white/5 border border-white/10 text-center max-w-md w-full shadow-2xl flex flex-col items-center">
+                <div className="w-20 h-20 bg-indigo-500/10 rounded-2xl flex items-center justify-center mb-5 border border-indigo-500/20">
+                  <FileText className="w-10 h-10 text-indigo-400" />
+                </div>
+                <h2 className="text-xl font-bold text-white mb-2">{viewingFile.name}</h2>
+                <p className="text-zinc-400 text-sm mb-4">
+                  No preview URL available for this file.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
