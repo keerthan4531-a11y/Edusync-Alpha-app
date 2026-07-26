@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { ProjectsListView } from "./components/ProjectsListView";
 import { NewProjectDialog } from "./components/NewProjectDialog";
 import { ProjectWorkspace } from "./components/workspace/ProjectWorkspace";
@@ -17,6 +18,7 @@ import {
   MessageSquare, 
   Lightbulb, 
   CheckCircle, 
+  CheckCircle2,
   Play, 
   Save, 
   Plus, 
@@ -32,19 +34,32 @@ import {
   Code2,
   Clock,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  ChevronLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { GlassCard } from "@/components/ui/glass-card";
+import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { ProjectDTO, ProjectFileDTO, ProblemStatementDTO, MessageDTO } from "@/types/projects";
 
 type TabId = "projects" | "repos" | "teams" | "ai" | "chat" | "problems" | "code-review";
 
+const STAGE3_FEATURES = [
+  { id: "projects" as TabId, label: "My Projects", icon: FolderGit2, color: "text-indigo-600 dark:text-indigo-400", borderColor: "border-indigo-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(99,102,241,0.3)]", bgGradient: "from-indigo-500/20 to-purple-500/10", desc: "Manage multi-file engineering repositories, build fullstack apps & submit for faculty review" },
+  { id: "repos" as TabId, label: "Repositories Explorer", icon: History, color: "text-emerald-600 dark:text-emerald-400", borderColor: "border-emerald-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(16,185,129,0.3)]", bgGradient: "from-emerald-500/20 to-teal-500/10", desc: "Browse project files, inspect version commits history, and test code in live editor sandbox" },
+  { id: "teams" as TabId, label: "Collaborative Teams", icon: Users, color: "text-blue-600 dark:text-blue-400", borderColor: "border-blue-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(59,130,246,0.3)]", bgGradient: "from-blue-500/20 to-indigo-500/10", desc: "Discover student project teams, invite group members, and collaborate on shared codebases" },
+  { id: "ai" as TabId, label: "AI Code Assistant", icon: Bot, color: "text-purple-600 dark:text-purple-400", borderColor: "border-purple-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(168,85,247,0.3)]", bgGradient: "from-purple-500/20 to-fuchsia-500/10", desc: "Ask Gemma AI for coding help, debug recommendations, and dynamic project idea inspiration" },
+  { id: "chat" as TabId, label: "Team Chat", icon: MessageSquare, color: "text-amber-600 dark:text-amber-400", borderColor: "border-amber-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(245,158,11,0.3)]", bgGradient: "from-amber-500/20 to-yellow-500/10", desc: "Real-time chat with your project collaborators, share ideas & stay synchronized" },
+  { id: "problems" as TabId, label: "Problem Statements", icon: Lightbulb, color: "text-rose-600 dark:text-rose-400", borderColor: "border-rose-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(244,63,94,0.3)]", bgGradient: "from-rose-500/20 to-pink-500/10", desc: "Browse Smart India Hackathon & industry problem statements and link them to your projects" },
+  { id: "code-review" as TabId, label: "AI Code Review", icon: CheckCircle, color: "text-cyan-600 dark:text-cyan-400", borderColor: "border-cyan-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(6,182,212,0.3)]", bgGradient: "from-cyan-500/20 to-teal-500/10", desc: "Automated code quality review, security audit & performance optimization suggestions" }
+];
+
 export default function Stage3ProjectsPage() {
   const { data: session } = useSession();
-  const [activeTab, setActiveTab] = useState<TabId>("projects");
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<TabId | null>(null);
   const [projects, setProjects] = useState<ProjectDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
@@ -659,78 +674,164 @@ export default function Stage3ProjectsPage() {
     }
   };
 
-  return (
-    <div className="flex flex-col h-full overflow-hidden text-foreground">
-      {/* Top stage info bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-5 mb-5 border-b border-white/10 shrink-0">
-        <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-stage3/20 text-stage3 border border-stage3/30 mb-2">
-            <FolderGit2 className="h-3 w-3" />
-            Stage 3: Real-world Projects
-          </div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-stage3 to-indigo-400 bg-clip-text text-transparent">
-            CodeKalam - Collaborative Hub
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Build multi-file engineering challenges, review code, collaborate with groups, and solve SIH milestones.
-          </p>
-        </div>
-        
-        {activeTab === "projects" && (
+  // LANDING OVERVIEW VIEW (WHEN NO TAB IS ACTIVE)
+  if (!activeTab) {
+    return (
+      <div className="space-y-8 p-2 text-foreground">
+        <div className="flex items-center justify-between">
+          <button 
+            onClick={() => router.back()}
+            className="flex items-center justify-center w-10 h-10 rounded-full neu-button transition-colors shadow-sm"
+            aria-label="Go back"
+          >
+            <ChevronLeft className="w-6 h-6 text-foreground" />
+          </button>
+          
           <NewProjectDialog onProjectCreated={fetchProjects} />
-        )}
+        </div>
+
+        {/* Stage 3 Header Banner */}
+        <LiquidGlassCard className="p-6 md:p-8 shadow-xl" accentColor="#818cf8">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex items-center gap-5">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl neu-raised-sm flex items-center justify-center text-primary dark:text-indigo-400 shrink-0 shadow-lg">
+                <FolderGit2 className="w-9 h-9 md:w-10 md:h-10" strokeWidth={2} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[11px] font-extrabold text-primary dark:text-indigo-400 uppercase tracking-widest neu-raised-xs px-2.5 py-0.5 rounded-full">Stage 3</span>
+                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" /> CodeKalam Active
+                  </span>
+                </div>
+                <h1 className="text-2xl md:text-3xl font-extrabold text-foreground dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-indigo-100 dark:to-purple-200 tracking-tight">
+                  Projects & Collaborative Hub
+                </h1>
+                <p className="text-xs md:text-sm text-muted-foreground mt-1 max-w-xl leading-relaxed font-medium">
+                  Build multi-file engineering challenges, review code, collaborate with student groups, and solve real-world SIH problem statements.
+                </p>
+              </div>
+            </div>
+            
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full md:w-auto text-center border-t md:border-t-0 border-black/10 dark:border-white/10 pt-4 md:pt-0">
+              <div className="p-3 neu-raised-sm rounded-2xl hover:scale-105 transition-all">
+                <span className="text-xl font-extrabold text-primary dark:text-indigo-400 block">{projects.length}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-extrabold">My Projects</span>
+              </div>
+              <div className="p-3 neu-raised-sm rounded-2xl hover:scale-105 transition-all">
+                <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 block">{projects.filter((p: any) => p.files && p.files.length > 0).length || projects.length}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-extrabold">Active Repos</span>
+              </div>
+              <div className="p-3 neu-raised-sm rounded-2xl hover:scale-105 transition-all">
+                <span className="text-xl font-extrabold text-blue-600 dark:text-blue-400 block">{discoverGroups.length}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-extrabold">Teams & Groups</span>
+              </div>
+              <div className="p-3 neu-raised-sm rounded-2xl hover:scale-105 transition-all">
+                <span className="text-xl font-extrabold text-rose-600 dark:text-rose-400 block">{problems.length || 5}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-extrabold">SIH Challenges</span>
+              </div>
+            </div>
+          </div>
+        </LiquidGlassCard>
+
+        {/* Feature Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {STAGE3_FEATURES.map((feature) => {
+            const Icon = feature.icon;
+            return (
+              <button
+                key={feature.id}
+                onClick={() => {
+                  setActiveTab(feature.id);
+                  setSelectedRepoId(null);
+                  setSelectedTeamId(null);
+                  setSelectedProblem(null);
+                }}
+                className={`group text-left relative flex flex-col justify-between p-6 neu-flat rounded-[2rem] hover:scale-[1.01] transition-all duration-300 shadow-xl ${feature.glowColor} h-60 dark:bg-white/5 dark:border-white/10`}
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br ${feature.bgGradient} border ${feature.borderColor} transition-transform duration-300 group-hover:scale-110 shadow-lg`}>
+                    <Icon className={`w-7 h-7 ${feature.color}`} strokeWidth={2} />
+                  </div>
+                  <div className="w-8 h-8 rounded-full neu-button flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary-foreground group-hover:translate-x-0.5 transition-all" />
+                  </div>
+                </div>
+                
+                <div className="space-y-1.5 mt-4">
+                  <h3 className="text-lg font-extrabold text-foreground dark:text-white group-hover:text-primary dark:group-hover:text-indigo-400 transition-colors">
+                    {feature.label}
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 font-normal">
+                    {feature.desc}
+                  </p>
+                </div>
+
+                <div className="text-[11px] font-bold text-primary dark:text-indigo-400 flex items-center gap-1 pt-3 border-t border-black/5 dark:border-white/5 mt-auto">
+                  <span>Open Module</span>
+                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </div>
+    );
+  }
 
-      {/* Tabs list navigation */}
-      <div className="flex overflow-x-auto gap-2 border-b border-white/10 pb-3 mb-6 scrollbar-none shrink-0">
-        {(["projects", "repos", "teams", "ai", "chat", "problems", "code-review"] as TabId[]).map((tab) => {
-          const tabLabels: Record<TabId, string> = {
-            projects: "My Projects",
-            repos: "Repositories",
-            teams: "Teams",
-            ai: "AI Assistant",
-            chat: "Team Chat",
-            problems: "Problem Statements",
-            "code-review": "Code Review"
-          };
-          const tabIcons: Record<TabId, any> = {
-            projects: FolderGit2,
-            repos: History,
-            teams: Users,
-            ai: Bot,
-            chat: MessageSquare,
-            problems: Lightbulb,
-            "code-review": CheckCircle
-          };
-          const Icon = tabIcons[tab];
-          const isActive = activeTab === tab;
+  // ACTIVE TAB VIEW WITH TOP NEUMORPHIC FLOATING BAR
+  return (
+    <div className="flex flex-col h-full overflow-hidden text-foreground space-y-6 p-2">
+      {/* Top Floating Glass Navigation Bar */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 neu-raised rounded-3xl shrink-0 shadow-xl dark:bg-white/5 dark:border-white/10">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <button
+            onClick={() => {
+              setActiveTab(null);
+              setSelectedRepoId(null);
+              setSelectedTeamId(null);
+              setSelectedProblem(null);
+            }}
+            className="flex items-center justify-center w-9 h-9 rounded-full neu-button transition-colors shadow-sm shrink-0"
+            aria-label="Back to Stage 3 Options"
+          >
+            <ChevronLeft className="w-5 h-5 text-foreground" />
+          </button>
+          <span className="text-sm font-extrabold text-foreground dark:text-white hidden md:inline">Stage 3: Projects</span>
+        </div>
 
-          return (
-            <Button
-              key={tab}
-              variant={isActive ? "default" : "ghost"}
-              className={`flex items-center gap-2 rounded-xl text-sm transition-all py-5 ${
-                isActive 
-                  ? "bg-stage3 hover:bg-stage3/90 text-stage3-foreground shadow-lg shadow-stage3/20" 
-                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-              }`}
-              onClick={() => {
-                setActiveTab(tab);
-                setSelectedRepoId(null);
-                setSelectedTeamId(null);
-                setSelectedProblem(null);
-              }}
-            >
-              <Icon className="h-4 w-4" />
-              <span>{tabLabels[tab]}</span>
-              {tab === "projects" && projects.length > 0 && (
-                <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] bg-black/30 font-bold">
-                  {projects.length}
-                </span>
-              )}
-            </Button>
-          );
-        })}
+        {/* Tab Switcher Pills */}
+        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+          {STAGE3_FEATURES.map((feature) => {
+            const isActive = activeTab === feature.id;
+            const Icon = feature.icon;
+            return (
+              <button
+                key={feature.id}
+                onClick={() => {
+                  setActiveTab(feature.id);
+                  setSelectedRepoId(null);
+                  setSelectedTeamId(null);
+                  setSelectedProblem(null);
+                }}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-md scale-105 neu-button"
+                    : "neu-button text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{feature.label}</span>
+                {feature.id === "projects" && projects.length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] neu-raised-xs font-bold">
+                    {projects.length}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Main dynamic tabs containers */}
