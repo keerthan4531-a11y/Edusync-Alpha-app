@@ -14,7 +14,10 @@ const slides = [
     buttonText: "Start Practice",
     link: "/student-dashboard/stage-1-communication",
     image: "/images/slider-ai.png",
-    bgClass: "from-indigo-900/40 to-purple-900/40 border-indigo-500/20"
+    // Light mode: warm indigo gradient. Dark mode: dark indigo.
+    lightBg: "from-indigo-500 to-purple-600",
+    darkBg: "dark:from-indigo-900/40 dark:to-purple-900/40",
+    borderClass: "border-indigo-400/30 dark:border-indigo-500/20"
   },
   {
     id: 2,
@@ -23,7 +26,9 @@ const slides = [
     buttonText: "Solve Challenges",
     link: "/student-dashboard/stages",
     image: "/images/slider-tech.png",
-    bgClass: "from-teal-900/40 to-emerald-900/40 border-teal-500/20"
+    lightBg: "from-teal-500 to-emerald-600",
+    darkBg: "dark:from-teal-900/40 dark:to-emerald-900/40",
+    borderClass: "border-teal-400/30 dark:border-teal-500/20"
   },
   {
     id: 3,
@@ -32,7 +37,9 @@ const slides = [
     buttonText: "Explore Projects",
     link: "/student-dashboard/stages",
     image: "/images/slider-capstone.png",
-    bgClass: "from-rose-900/40 to-orange-900/40 border-rose-500/20"
+    lightBg: "from-rose-500 to-orange-500",
+    darkBg: "dark:from-rose-900/40 dark:to-orange-900/40",
+    borderClass: "border-rose-400/30 dark:border-rose-500/20"
   }
 ]
 
@@ -48,7 +55,7 @@ export function PromoSlider() {
   }, [])
 
   return (
-    <div className="relative w-full overflow-hidden rounded-[32px] mb-2 shadow-2xl">
+    <div className="relative w-full overflow-hidden rounded-[32px] mb-2 neu-raised-lg dark:shadow-2xl dark:border-0">
       <div 
         className="flex transition-transform duration-700 ease-in-out" 
         style={{ transform: `translateX(-${currentSlide * 100}%)` }}
@@ -58,14 +65,16 @@ export function PromoSlider() {
             <div className={cn(
               "flex flex-row items-center justify-between p-6 md:p-12 h-[200px] md:h-[250px]",
               "bg-gradient-to-br border backdrop-blur-3xl",
-              slide.bgClass
+              slide.lightBg,
+              slide.darkBg,
+              slide.borderClass
             )}>
               {/* Text Content */}
               <div className="flex flex-col items-start gap-2 md:gap-4 z-10 w-3/5 text-left">
                 <h2 className="text-xl md:text-4xl font-extrabold tracking-tight text-white drop-shadow-md leading-tight">
                   {slide.title}
                 </h2>
-                <p className="text-gray-300 font-medium text-sm md:text-base">
+                <p className="text-white/80 dark:text-gray-300 font-medium text-sm md:text-base">
                   {slide.subtitle}
                 </p>
                 <Button 

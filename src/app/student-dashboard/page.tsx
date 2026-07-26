@@ -48,12 +48,12 @@ export default async function StudentDashboardPage() {
       {/* Gamification Top Stats - Compact (XP and Points) */}
       <div className="flex flex-row gap-4 w-full md:w-[60%] lg:w-[50%]">
         {/* XP Badge */}
-        <div className="flex-1 flex items-center gap-4 p-4 rounded-[20px] bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 shadow-md backdrop-blur-xl hover:bg-white/80 dark:hover:bg-white/10 transition-colors">
-          <div className="w-12 h-12 shrink-0 rounded-2xl bg-[#0a0a0a] border border-purple-500/30 flex items-center justify-center overflow-hidden shadow-inner">
-            <img src="/images/xp_icon.png" alt="XP" className="w-[120%] h-[120%] object-cover mix-blend-screen hover:scale-110 transition-transform duration-300" />
+        <div className="flex-1 flex items-center gap-4 p-4 rounded-[20px] neu-raised dark:bg-white/5 dark:border dark:border-white/10 dark:shadow-none hover:scale-[1.02] transition-all duration-300">
+          <div className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center overflow-hidden neu-inset-sm dark:bg-[#0a0a0a] dark:border dark:border-purple-500/30 dark:shadow-inner">
+            <img src="/images/xp_icon.png" alt="XP" className="w-[120%] h-[120%] object-cover dark:mix-blend-screen hover:scale-110 transition-transform duration-300" />
           </div>
           <div>
-            <p className="text-[10px] sm:text-xs font-bold text-zinc-500 dark:text-gray-400 uppercase tracking-widest mb-0.5">XP.</p>
+            <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mb-0.5">XP.</p>
             <div className="text-xl sm:text-2xl font-extrabold text-foreground leading-none">
               {user.xp}
             </div>
@@ -61,12 +61,12 @@ export default async function StudentDashboardPage() {
         </div>
         
         {/* Points Badge */}
-        <div className="flex-1 flex items-center gap-4 p-4 rounded-[20px] bg-white/70 dark:bg-white/5 border border-black/10 dark:border-white/10 shadow-md backdrop-blur-xl hover:bg-white/80 dark:hover:bg-white/10 transition-colors">
-          <div className="w-12 h-12 shrink-0 rounded-2xl bg-[#0a0a0a] border border-yellow-500/30 flex items-center justify-center overflow-hidden shadow-inner">
-            <img src="/images/points_icon.png" alt="Points" className="w-[120%] h-[120%] object-cover mix-blend-screen hover:scale-110 transition-transform duration-300" />
+        <div className="flex-1 flex items-center gap-4 p-4 rounded-[20px] neu-raised dark:bg-white/5 dark:border dark:border-white/10 dark:shadow-none hover:scale-[1.02] transition-all duration-300">
+          <div className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center overflow-hidden neu-inset-sm dark:bg-[#0a0a0a] dark:border dark:border-yellow-500/30 dark:shadow-inner">
+            <img src="/images/points_icon.png" alt="Points" className="w-[120%] h-[120%] object-cover dark:mix-blend-screen hover:scale-110 transition-transform duration-300" />
           </div>
           <div>
-            <p className="text-[10px] sm:text-xs font-bold text-zinc-500 dark:text-gray-400 uppercase tracking-widest mb-0.5">Points</p>
+            <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-widest mb-0.5">Points</p>
             <div className="text-xl sm:text-2xl font-extrabold text-foreground leading-none">
               {user.coins}
             </div>
@@ -86,7 +86,7 @@ export default async function StudentDashboardPage() {
       {/* Leaderboard Section */}
       <div>
         <h2 className="text-xl font-bold tracking-tight text-foreground mb-4">College Leaderboard</h2>
-        <div className="bg-white/70 dark:bg-white/5 backdrop-blur-2xl rounded-3xl border border-black/10 dark:border-white/10 shadow-xl shadow-black/5 dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden">
+        <div className="rounded-3xl overflow-hidden neu-raised-lg dark:bg-white/5 dark:backdrop-blur-2xl dark:border dark:border-white/10 dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
           <Leaderboard data={leaderboardData} />
         </div>
       </div>

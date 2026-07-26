@@ -10,10 +10,10 @@ export async function StageProgressOverview({ userId }: { userId: string }) {
   })
 
   const stageColors: Record<number, string> = {
-    1: "bg-stage1 text-stage1 border-stage1/30 shadow-[inset_0_0_20px_rgba(139,92,246,0.2)]",
-    2: "bg-stage2 text-stage2 border-stage2/30 shadow-[inset_0_0_20px_rgba(59,130,246,0.2)]",
-    3: "bg-stage3 text-stage3 border-stage3/30 shadow-[inset_0_0_20px_rgba(16,185,129,0.2)]",
-    4: "bg-stage4 text-stage4 border-stage4/30 shadow-[inset_0_0_20px_rgba(245,158,11,0.2)]",
+    1: "bg-stage1 text-stage1 border-stage1/30",
+    2: "bg-stage2 text-stage2 border-stage2/30",
+    3: "bg-stage3 text-stage3 border-stage3/30",
+    4: "bg-stage4 text-stage4 border-stage4/30",
   }
 
   const stageAccents: Record<number, string> = {
@@ -43,26 +43,26 @@ export async function StageProgressOverview({ userId }: { userId: string }) {
             accentColor={isLocked ? undefined : accent}
           >
             <div className="flex justify-between items-start mb-4">
-              <div className={`p-2 rounded-xl bg-opacity-20 border ${colorClass.split(' ')[0]}/20 ${colorClass.split(' ')[2]} backdrop-blur-md`}>
+              <div className={`p-2 rounded-xl ${colorClass.split(' ')[0]}/20 ${colorClass.split(' ')[2]} neu-raised-sm dark:backdrop-blur-md dark:shadow-none dark:border`}>
                 <span className={`font-bold ${colorClass.split(' ')[1]}`}>
                   S{p.stage.number}
                 </span>
               </div>
               <div>
-                {isLocked && <Lock className="w-5 h-5 text-gray-500" />}
-                {isCompleted && <CheckCircle2 className="w-5 h-5 text-green-500 drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]" />}
-                {isActive && <PlayCircle className="w-5 h-5 text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]" />}
+                {isLocked && <Lock className="w-5 h-5 text-muted-foreground dark:text-gray-500" />}
+                {isCompleted && <CheckCircle2 className="w-5 h-5 text-green-500 dark:drop-shadow-[0_0_8px_rgba(34,197,94,0.8)]" />}
+                {isActive && <PlayCircle className="w-5 h-5 text-blue-500 dark:text-blue-400 dark:drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]" />}
               </div>
             </div>
             
             <h3 className="font-semibold text-foreground mb-1">{p.stage.name}</h3>
             
             <div className="mt-auto pt-4 space-y-2">
-              <div className="flex justify-between text-xs text-zinc-500 dark:text-gray-400 font-medium">
+              <div className="flex justify-between text-xs text-muted-foreground font-medium">
                 <span>{isLocked ? "Locked" : isCompleted ? "Completed" : "In Progress"}</span>
                 <span>{isCompleted ? "100%" : isLocked ? "0%" : "45%"}</span> {/* Stub progress % for active */}
               </div>
-              <div className="h-1.5 w-full bg-black/10 dark:bg-black/40 rounded-full overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
+              <div className="h-1.5 w-full rounded-full overflow-hidden neu-progress-track">
                 <div 
                   className={`h-full rounded-full transition-all duration-1000 ${colorClass.split(' ')[0]}`}
                   style={{ width: isCompleted ? '100%' : isLocked ? '0%' : '45%' }}

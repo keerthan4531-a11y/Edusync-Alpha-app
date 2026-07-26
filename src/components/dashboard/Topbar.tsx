@@ -18,6 +18,8 @@ import { Button } from "@/components/ui/button"
 
 import { useState, useEffect } from "react"
 
+import { BrandLogo } from "@/components/ui/BrandLogo"
+
 interface TopbarProps {
   user: {
     name: string
@@ -68,19 +70,10 @@ export function Topbar({ user }: TopbarProps) {
   }, [])
 
   return (
-    <header className="flex h-16 shrink-0 items-center justify-between rounded-2xl border border-black/10 dark:border-white/10 bg-white/70 dark:bg-white/5 px-4 md:px-6 mx-2 md:mx-6 mt-2 mb-2 backdrop-blur-2xl shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)] z-10 relative transition-colors duration-300">
+    <header className="flex h-16 shrink-0 items-center justify-between rounded-2xl mx-2 md:mx-6 mt-2 mb-2 px-4 md:px-6 z-10 relative transition-all duration-300 neu-topbar dark:bg-white/5 dark:backdrop-blur-2xl dark:border dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]">
       {/* Logo - Left Corner */}
-      <div className="flex items-center select-none pt-1">
-        <Image 
-          src="/images/edusync-logo.png" 
-          alt="EduSync Logo" 
-          width={0} 
-          height={0} 
-          sizes="100vw"
-          style={{ width: "auto", height: "50px" }}
-          className="object-contain"
-          priority
-        />
+      <div className="flex items-center select-none">
+        <BrandLogo showBadge={true} />
       </div>
 
       <div className="flex flex-1 items-center gap-4 justify-center">
@@ -88,12 +81,12 @@ export function Topbar({ user }: TopbarProps) {
       </div>
       
       <div className="flex items-center gap-3">
-        <Link href="/student-dashboard/notifications" className="flex h-10 w-10 items-center justify-center rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors relative text-zinc-600 dark:text-gray-300">
+        <Link href="/student-dashboard/notifications" className="flex h-10 w-10 items-center justify-center rounded-full neu-button dark:bg-white/5 dark:border dark:border-white/10 dark:shadow-none transition-colors relative text-muted-foreground dark:text-gray-300 hover:text-foreground">
           <Bell className="w-5 h-5" />
-          <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white dark:border-[#0B0F19]"></span>
+          <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border-2 border-[#dde1e7] dark:border-[#0B0F19]"></span>
         </Link>
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex h-10 w-10 items-center justify-center rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors outline-none ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 overflow-hidden text-zinc-600 dark:text-gray-300">
+          <DropdownMenuTrigger className="flex h-10 w-10 items-center justify-center rounded-full neu-button dark:bg-white/5 dark:border dark:border-white/10 dark:shadow-none transition-colors outline-none ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 overflow-hidden text-muted-foreground dark:text-gray-300">
             <Avatar className="h-full w-full bg-transparent flex items-center justify-center">
               {avatarUrl ? (
                 <img src={avatarUrl} alt={user.name} className="w-full h-full object-cover" />
@@ -104,18 +97,22 @@ export function Topbar({ user }: TopbarProps) {
               )}
             </Avatar>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-64 bg-[#0B0F19]/90 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.5)] p-2" align="end" sideOffset={10}>
-            <div className="flex flex-col space-y-1.5 px-3 py-3 font-normal bg-white/5 rounded-xl mb-2 border border-white/5">
-              <p className="text-sm font-bold text-white">{displayName}</p>
-              <p className="text-xs leading-none text-indigo-300 font-medium">
+          <DropdownMenuContent 
+            className="w-64 rounded-2xl p-2 neu-raised-lg dark:bg-[#0B0F19]/90 dark:backdrop-blur-2xl dark:border dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]" 
+            align="end" 
+            sideOffset={10}
+          >
+            <div className="flex flex-col space-y-1.5 px-3 py-3 font-normal rounded-xl mb-2 neu-inset-sm dark:bg-white/5 dark:border dark:border-white/5">
+              <p className="text-sm font-bold text-foreground dark:text-white">{displayName}</p>
+              <p className="text-xs leading-none text-primary dark:text-indigo-300 font-medium">
                 {displayEmail}
               </p>
             </div>
-            <DropdownMenuItem onClick={() => router.push('/student-dashboard/profile')} className="cursor-pointer text-gray-300 focus:bg-indigo-500/20 focus:text-indigo-300 rounded-xl px-3 py-2.5 transition-colors">
+            <DropdownMenuItem onClick={() => router.push('/student-dashboard/profile')} className="cursor-pointer text-foreground dark:text-gray-300 focus:bg-primary/10 dark:focus:bg-indigo-500/20 focus:text-primary dark:focus:text-indigo-300 rounded-xl px-3 py-2.5 transition-colors">
               <UserIcon className="mr-3 h-4 w-4" />
               <span className="font-semibold">Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer text-rose-400 focus:bg-rose-500/20 focus:text-rose-300 rounded-xl px-3 py-2.5 transition-colors mt-1">
+            <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer text-red-500 dark:text-rose-400 focus:bg-red-500/10 dark:focus:bg-rose-500/20 focus:text-red-600 dark:focus:text-rose-300 rounded-xl px-3 py-2.5 transition-colors mt-1">
               <LogOut className="mr-3 h-4 w-4" />
               <span className="font-semibold">Log out</span>
             </DropdownMenuItem>

@@ -54,6 +54,8 @@ const getMenuByRole = (role: string): MenuItem[] => {
   return []
 }
 
+import { BrandLogo } from "@/components/ui/BrandLogo"
+
 export function Sidebar({ role, isMobileNavVisible = true }: SidebarProps) {
   const menu = getMenuByRole(role)
   const pathname = usePathname()
@@ -62,11 +64,18 @@ export function Sidebar({ role, isMobileNavVisible = true }: SidebarProps) {
     <div 
       id="app-sidebar"
       className={cn(
-      "flex md:h-full w-[calc(100%-1rem)] md:w-64 flex-col border md:border-t-0 md:border-b-0 md:border-l-0 md:border-r border-black/10 dark:border-white/10 bg-white/70 dark:bg-[#080A10]/60 md:dark:bg-white/5 backdrop-blur-2xl shrink-0 z-50 order-2 md:order-1 fixed bottom-2 left-2 right-2 md:bottom-auto md:left-auto md:right-auto rounded-2xl md:rounded-none shadow-xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)] md:dark:shadow-none transition-transform duration-500 ease-in-out",
+      // Layout
+      "flex md:h-full w-[calc(100%-1rem)] md:w-64 flex-col shrink-0 z-50 order-2 md:order-1 fixed bottom-2 left-2 right-2 md:bottom-auto md:left-auto md:right-auto rounded-2xl md:rounded-none",
+      // Light mode: Neumorphic
+      "neu-sidebar",
+      // Dark mode: Glass (overridden via .dark .neu-sidebar in CSS)
+      "dark:bg-[#080A10]/60 dark:md:bg-white/5 dark:backdrop-blur-2xl dark:border dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]",
+      // Animation
+      "transition-transform duration-500 ease-in-out",
       !isMobileNavVisible ? "translate-y-[150%] md:translate-y-0" : "translate-y-0"
     )}>
-      <div className="hidden md:flex h-16 items-center border-b border-black/10 dark:border-white/10 px-6">
-        <h1 className="text-xl font-bold tracking-tight text-foreground">EduSync 4.0</h1>
+      <div className="hidden md:flex h-16 items-center border-b border-black/5 dark:border-white/10 px-6">
+        <BrandLogo showBadge={true} />
       </div>
       <div className="w-full md:flex-1 py-1 md:py-6 no-scrollbar">
         <nav className="flex justify-around items-center md:grid md:gap-2 px-2 md:px-4 md:block whitespace-nowrap w-full h-[60px] md:h-auto">
@@ -87,10 +96,10 @@ export function Sidebar({ role, isMobileNavVisible = true }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center justify-center md:justify-start gap-2 md:gap-3 rounded-full md:rounded-md transition-all flex-shrink-0",
+                  "flex items-center justify-center md:justify-start gap-2 md:gap-3 rounded-full md:rounded-xl transition-all flex-shrink-0",
                   isActive 
-                    ? `${activeBg} p-2.5 md:px-4 md:py-2.5 md:border-l-4 md:border-transparent font-bold shadow-sm` 
-                    : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground p-2.5 md:px-3 md:py-2 font-medium"
+                    ? `${activeBg} p-2.5 md:px-4 md:py-2.5 font-bold neu-raised-sm dark:shadow-none dark:bg-white/10` 
+                    : "text-muted-foreground hover:text-foreground p-2.5 md:px-3 md:py-2 font-medium neu-flat dark:bg-transparent dark:shadow-none dark:hover:bg-white/5"
                 )}
               >
                 <item.icon className={cn("h-6 w-6 md:h-5 md:w-5", isActive && "opacity-100")} />
