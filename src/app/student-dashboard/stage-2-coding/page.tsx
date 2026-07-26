@@ -773,7 +773,7 @@ export default function CodingStagePage() {
         <div className="flex items-center justify-between">
           <button 
             onClick={() => router.back()}
-            className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
+            className="flex items-center justify-center w-10 h-10 rounded-full neu-button transition-colors shadow-sm"
             aria-label="Go back"
           >
             <ChevronLeft className="w-6 h-6 text-foreground" />
@@ -781,54 +781,54 @@ export default function CodingStagePage() {
           
           <button 
             onClick={claimDailyChest}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/40 text-amber-300 font-bold text-xs rounded-full transition-all shadow-lg shadow-amber-500/10 hover:scale-105"
+            className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 dark:bg-gradient-to-r dark:from-amber-500/20 dark:to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/40 text-amber-700 dark:text-amber-300 font-bold text-xs rounded-full transition-all shadow-lg shadow-amber-500/10 hover:scale-105"
           >
             <Flame className="w-4 h-4 text-amber-500 animate-bounce" />
             <span>{streak} Days Streak</span>
-            <span className="text-[10px] bg-amber-500/30 px-2 py-0.5 rounded-full font-extrabold text-white border border-amber-400/40">Claim Chest 🎁</span>
+            <span className="text-[10px] bg-amber-500/20 dark:bg-amber-500/30 px-2 py-0.5 rounded-full font-extrabold text-amber-900 dark:text-white border border-amber-400/40">Claim Chest 🎁</span>
           </button>
         </div>
 
         {/* Stage Header Banner */}
-        <LiquidGlassCard className="p-6 md:p-8" accentColor="#3b82f6">
+        <LiquidGlassCard className="p-6 md:p-8 shadow-xl" accentColor="#3b82f6">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-center gap-5">
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl bg-gradient-to-br from-blue-500/30 to-indigo-600/30 border-2 border-blue-400/40 flex items-center justify-center text-blue-400 shrink-0 shadow-[0_0_30px_rgba(59,130,246,0.35)]">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl neu-raised-sm flex items-center justify-center text-primary dark:text-blue-400 shrink-0 shadow-lg">
                 <Code className="w-9 h-9 md:w-10 md:h-10" strokeWidth={2} />
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] font-extrabold text-blue-400 uppercase tracking-widest bg-blue-500/10 border border-blue-500/20 px-2.5 py-0.5 rounded-full">Stage 2</span>
-                  <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                  <span className="text-[11px] font-extrabold text-primary dark:text-blue-400 uppercase tracking-widest neu-raised-xs px-2.5 py-0.5 rounded-full">Stage 2</span>
+                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" /> Judge0 Active
                   </span>
                 </div>
-                <h1 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight bg-gradient-to-r from-white via-blue-100 to-indigo-200 bg-clip-text text-transparent">
+                <h1 className="text-2xl md:text-3xl font-extrabold text-foreground dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-blue-100 dark:to-indigo-200 tracking-tight">
                   Coding Fundamentals
                 </h1>
-                <p className="text-xs md:text-sm text-gray-300/90 mt-1 max-w-xl leading-relaxed font-light">
+                <p className="text-xs md:text-sm text-muted-foreground mt-1 max-w-xl leading-relaxed font-medium">
                   Master syntax roadmaps, solve algorithmic challenges, battle AI Bug Monsters in 1v1 arenas, and test code in real-time.
                 </p>
               </div>
             </div>
             
             {/* Quick Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full md:w-auto text-center border-t md:border-t-0 border-white/10 pt-4 md:pt-0">
-              <div className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:border-blue-500/40 transition-all hover:scale-105">
-                <span className="text-xl font-extrabold text-blue-400 block">{challengesCount}</span>
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Completed</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full md:w-auto text-center border-t md:border-t-0 border-black/10 dark:border-white/10 pt-4 md:pt-0">
+              <div className="p-3 neu-raised-sm rounded-2xl hover:scale-105 transition-all">
+                <span className="text-xl font-extrabold text-primary dark:text-blue-400 block">{challengesCount}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-extrabold">Completed</span>
               </div>
-              <div className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:border-emerald-500/40 transition-all hover:scale-105">
-                <span className="text-xl font-extrabold text-emerald-400 block">{linesOfCode}</span>
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Lines of Code</span>
+              <div className="p-3 neu-raised-sm rounded-2xl hover:scale-105 transition-all">
+                <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 block">{linesOfCode}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-extrabold">Lines of Code</span>
               </div>
-              <div className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:border-amber-500/40 transition-all hover:scale-105">
-                <span className="text-xl font-extrabold text-amber-400 block">{compilerRuns}</span>
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Compiler Runs</span>
+              <div className="p-3 neu-raised-sm rounded-2xl hover:scale-105 transition-all">
+                <span className="text-xl font-extrabold text-amber-600 dark:text-amber-400 block">{compilerRuns}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-extrabold">Compiler Runs</span>
               </div>
-              <div className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:border-purple-500/40 transition-all hover:scale-105">
-                <span className="text-xl font-extrabold text-purple-400 block">{tier}</span>
-                <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Current Tier</span>
+              <div className="p-3 neu-raised-sm rounded-2xl hover:scale-105 transition-all">
+                <span className="text-xl font-extrabold text-purple-600 dark:text-purple-400 block">{tier}</span>
+                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-extrabold">Current Tier</span>
               </div>
             </div>
           </div>
@@ -842,27 +842,27 @@ export default function CodingStagePage() {
               <button
                 key={feature.id}
                 onClick={() => setActiveTab(feature.id)}
-                className={`group text-left relative flex flex-col justify-between p-6 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl shadow-black/5 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)] ${feature.glowColor} h-60`}
+                className={`group text-left relative flex flex-col justify-between p-6 neu-flat rounded-[2rem] hover:scale-[1.01] transition-all duration-300 shadow-xl ${feature.glowColor} h-60 dark:bg-white/5 dark:border-white/10`}
               >
                 <div className="flex items-center justify-between w-full">
                   <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br ${feature.bgGradient} border ${feature.borderColor} transition-transform duration-300 group-hover:scale-110 shadow-lg`}>
                     <Icon className={`w-7 h-7 ${feature.color}`} strokeWidth={2} />
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center group-hover:bg-blue-600 group-hover:border-blue-500 transition-all">
-                    <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                  <div className="w-8 h-8 rounded-full neu-button flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary-foreground group-hover:translate-x-0.5 transition-all" />
                   </div>
                 </div>
                 
                 <div className="space-y-1.5 mt-4">
-                  <h3 className="text-lg font-extrabold text-foreground dark:text-white group-hover:text-blue-400 transition-colors">
+                  <h3 className="text-lg font-extrabold text-foreground dark:text-white group-hover:text-primary dark:group-hover:text-blue-400 transition-colors">
                     {feature.label}
                   </h3>
-                  <p className="text-xs text-gray-400 leading-relaxed line-clamp-2 font-light">
+                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 font-normal">
                     {feature.desc}
                   </p>
                 </div>
 
-                <div className="text-[11px] font-bold text-blue-400 flex items-center gap-1 pt-3 border-t border-white/5 mt-auto">
+                <div className="text-[11px] font-bold text-primary dark:text-blue-400 flex items-center gap-1 pt-3 border-t border-black/5 dark:border-white/5 mt-auto">
                   <span>Open Module</span>
                   <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </div>
@@ -884,11 +884,11 @@ export default function CodingStagePage() {
             : ""
       }`}>
       {/* Top Floating Glass Navigation Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 bg-white/70 dark:bg-white/5 border border-white/50 dark:border-white/10 rounded-3xl backdrop-blur-2xl shrink-0 shadow-xl">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 neu-raised rounded-3xl shrink-0 shadow-xl dark:bg-white/5 dark:border-white/10">
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <button
             onClick={() => setActiveTab(null)}
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors shadow-sm shrink-0"
+            className="flex items-center justify-center w-9 h-9 rounded-full neu-button transition-colors shadow-sm shrink-0"
             aria-label="Back to Coding Options"
           >
             <ChevronLeft className="w-5 h-5 text-foreground" />
@@ -907,8 +907,8 @@ export default function CodingStagePage() {
                 onClick={() => setActiveTab(feature.id)}
                 className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
                   isActive
-                    ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-105"
-                    : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10 border border-white/5"
+                    ? "bg-primary text-primary-foreground shadow-md scale-105 neu-button"
+                    : "neu-button text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -923,21 +923,21 @@ export default function CodingStagePage() {
       {activeTab === "learning-paths" && (
         <div className="space-y-6 animate-in fade-in">
           {/* Daily Goal UI */}
-          <div className="bg-gradient-to-r from-indigo-600/20 to-indigo-600/20 p-5 rounded-3xl border border-indigo-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="neu-raised p-5 rounded-3xl border border-indigo-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 dark:bg-gradient-to-r dark:from-indigo-600/20 dark:to-indigo-600/20">
             <div>
-              <h3 className="text-white font-bold text-base flex items-center gap-2">
-                <Target className="w-5 h-5 text-yellow-500 animate-pulse" /> Daily Goal: 5-10 Mins of Coding
+              <h3 className="text-foreground dark:text-white font-bold text-base flex items-center gap-2">
+                <Target className="w-5 h-5 text-amber-500 animate-pulse" /> Daily Goal: 5-10 Mins of Coding
               </h3>
-              <p className="text-xs text-gray-400 mt-1">Complete 1 Lesson + 1 Quiz to earn daily XP and maintain your streak!</p>
+              <p className="text-xs text-muted-foreground mt-1">Complete 1 Lesson + 1 Quiz to earn daily XP and maintain your streak!</p>
             </div>
             <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
               <div className="text-right">
-                <div className="text-lg font-black text-indigo-400">0 / 50 XP</div>
-                <div className="text-[10px] text-gray-500">Earned Today</div>
+                <div className="text-lg font-black text-primary dark:text-indigo-400">0 / 50 XP</div>
+                <div className="text-[10px] text-muted-foreground">Earned Today</div>
               </div>
               <button
                 onClick={() => openCourseModalMock("python")}
-                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shrink-0"
+                className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold rounded-xl transition-all shadow-md shrink-0 neu-button"
               >
                 Start Quick Lesson
               </button>
@@ -945,60 +945,60 @@ export default function CodingStagePage() {
           </div>
 
           <LiquidGlassCard className="p-6" accentColor="#6366f1">
-            <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-              <Compass className="w-5 h-5 text-indigo-400" /> Career Learning Paths
+            <h2 className="text-xl font-bold text-foreground dark:text-white mb-2 flex items-center gap-2">
+              <Compass className="w-5 h-5 text-primary dark:text-indigo-400" /> Career Learning Paths
             </h2>
-            <p className="text-xs text-gray-400 leading-relaxed mb-6">
+            <p className="text-xs text-muted-foreground leading-relaxed mb-6">
               Master specific coding languages with bite-sized lessons, interactive slides, and sequential roadmaps.
             </p>
 
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {/* Python Card */}
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-5 hover:border-indigo-500/40 transition-all flex flex-col gap-4">
-                <span className="text-[10px] font-bold text-indigo-400 tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded w-fit">PYTHON DEVELOPER</span>
+              <div className="neu-flat rounded-3xl p-5 hover:scale-[1.01] transition-all flex flex-col gap-4 dark:bg-white/5 dark:border-white/10">
+                <span className="text-[10px] font-bold text-primary dark:text-indigo-400 tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded w-fit">PYTHON DEVELOPER</span>
                 <div>
-                  <h3 className="font-bold text-white text-base">Python Developer Path</h3>
-                  <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">Syntax, arrays, decorators, and data analysis using NumPy and Pandas.</p>
+                  <h3 className="font-bold text-foreground dark:text-white text-base">Python Developer Path</h3>
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">Syntax, arrays, decorators, and data analysis using NumPy and Pandas.</p>
                 </div>
-                <div className="mt-auto border-t border-white/5 pt-4 text-xs space-y-2 text-gray-400">
+                <div className="mt-auto border-t border-black/5 dark:border-white/5 pt-4 text-xs space-y-2 text-muted-foreground">
                   <div className="flex justify-between">
                     <span>Lessons:</span>
-                    <span className="text-white font-semibold">15 Bite-sized Modules</span>
+                    <span className="text-foreground dark:text-white font-semibold">15 Bite-sized Modules</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Status:</span>
-                    <span className="text-indigo-400 font-semibold">Active</span>
+                    <span className="text-primary dark:text-indigo-400 font-semibold">Active</span>
                   </div>
                 </div>
                 <button
                   onClick={() => openCourseModalMock("python")}
-                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs text-center transition-all mt-2"
+                  className="w-full py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs text-center transition-all mt-2 neu-button"
                 >
                   Start Python Path <ChevronRight className="w-3.5 h-3.5 inline ml-0.5" />
                 </button>
               </div>
 
               {/* Web Dev Card */}
-              <div className={`bg-white/5 border border-white/10 rounded-3xl p-5 flex flex-col gap-4 relative transition-all duration-300 ${!unlockedPaths.includes("web") ? "opacity-60" : "hover:border-indigo-500/40"}`}>
+              <div className={`neu-flat rounded-3xl p-5 flex flex-col gap-4 relative transition-all duration-300 dark:bg-white/5 dark:border-white/10 ${!unlockedPaths.includes("web") ? "opacity-60" : "hover:scale-[1.01]"}`}>
                 {!unlockedPaths.includes("web") && (
-                  <div className="absolute top-4 right-4 bg-red-500/10 text-red-400 p-1.5 rounded-lg border border-red-500/20">
+                  <div className="absolute top-4 right-4 bg-red-500/10 text-red-600 dark:text-red-400 p-1.5 rounded-lg border border-red-500/20">
                     <Lock className="w-3.5 h-3.5" />
                   </div>
                 )}
-                <span className="text-[10px] font-bold text-gray-400 tracking-wider bg-white/5 px-2 py-0.5 rounded w-fit">WEB DEVELOPER</span>
+                <span className="text-[10px] font-bold text-muted-foreground tracking-wider neu-raised-xs px-2 py-0.5 rounded w-fit">WEB DEVELOPER</span>
                 <div>
-                  <h3 className="font-bold text-gray-300 text-base">Web Developer Path</h3>
-                  <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">HTML5 semantic grids, responsive CSS flexbox, and JavaScript interfaces.</p>
+                  <h3 className="font-bold text-foreground dark:text-gray-300 text-base">Web Developer Path</h3>
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">HTML5 semantic grids, responsive CSS flexbox, and JavaScript interfaces.</p>
                 </div>
-                <div className="mt-auto border-t border-white/5 pt-4 text-xs text-gray-500 space-y-1">
+                <div className="mt-auto border-t border-black/5 dark:border-white/5 pt-4 text-xs text-muted-foreground space-y-1">
                   <p>{!unlockedPaths.includes("web") ? "Prerequisites: Complete Python Boss Battle" : "Status: Ready"}</p>
                 </div>
                 <button
                   disabled={!unlockedPaths.includes("web")}
                   onClick={() => openCourseModalMock("web")}
-                  className={`w-full py-2 font-bold rounded-xl text-xs text-center mt-2 transition-all ${!unlockedPaths.includes("web")
-                      ? "bg-white/5 text-gray-500 border border-white/5 cursor-not-allowed"
-                      : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                  className={`w-full py-2 font-bold rounded-xl text-xs text-center mt-2 transition-all neu-button ${!unlockedPaths.includes("web")
+                      ? "text-muted-foreground cursor-not-allowed"
+                      : "bg-primary hover:bg-primary/90 text-primary-foreground"
                     }`}
                 >
                   {!unlockedPaths.includes("web") ? "Locked" : "Start Web Path"}
@@ -1006,50 +1006,50 @@ export default function CodingStagePage() {
               </div>
 
               {/* C Programming Card */}
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-5 hover:border-indigo-500/40 transition-all flex flex-col gap-4">
-                <span className="text-[10px] font-bold text-indigo-400 tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded w-fit">C MASTER</span>
+              <div className="neu-flat rounded-3xl p-5 hover:scale-[1.01] transition-all flex flex-col gap-4 dark:bg-white/5 dark:border-white/10">
+                <span className="text-[10px] font-bold text-primary dark:text-indigo-400 tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded w-fit">C MASTER</span>
                 <div>
-                  <h3 className="font-bold text-white text-base">C Programming Master</h3>
-                  <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">Pointers, memory management structures, dynamic arrays, and file handling basics.</p>
+                  <h3 className="font-bold text-foreground dark:text-white text-base">C Programming Master</h3>
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">Pointers, memory management structures, dynamic arrays, and file handling basics.</p>
                 </div>
-                <div className="mt-auto border-t border-white/5 pt-4 text-xs space-y-2 text-gray-400">
+                <div className="mt-auto border-t border-black/5 dark:border-white/5 pt-4 text-xs space-y-2 text-muted-foreground">
                   <div className="flex justify-between">
                     <span>Lessons:</span>
-                    <span className="text-white font-semibold">2 Modules</span>
+                    <span className="text-foreground dark:text-white font-semibold">2 Modules</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Status:</span>
-                    <span className="text-indigo-400 font-semibold">Ready</span>
+                    <span className="text-primary dark:text-indigo-400 font-semibold">Ready</span>
                   </div>
                 </div>
                 <button
                   onClick={() => openCourseModalMock("c")}
-                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs text-center transition-all mt-2"
+                  className="w-full py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs text-center transition-all mt-2 neu-button"
                 >
                   Start C Roadmap <ChevronRight className="w-3.5 h-3.5 inline ml-0.5" />
                 </button>
               </div>
 
               {/* C++ Programming Card */}
-              <div className="bg-white/5 border border-white/10 rounded-3xl p-5 hover:border-indigo-500/40 transition-all flex flex-col gap-4">
-                <span className="text-[10px] font-bold text-indigo-400 tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded w-fit">C++ MASTER</span>
+              <div className="neu-flat rounded-3xl p-5 hover:scale-[1.01] transition-all flex flex-col gap-4 dark:bg-white/5 dark:border-white/10">
+                <span className="text-[10px] font-bold text-primary dark:text-indigo-400 tracking-wider bg-indigo-500/10 px-2 py-0.5 rounded w-fit">C++ MASTER</span>
                 <div>
-                  <h3 className="font-bold text-white text-base">C++ Programming Path</h3>
-                  <p className="text-xs text-gray-400 mt-1.5 leading-relaxed">Classes, object oriented design patterns, and Class Inheritance Dragon boss battles.</p>
+                  <h3 className="font-bold text-foreground dark:text-white text-base">C++ Programming Path</h3>
+                  <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">Classes, object oriented design patterns, and Class Inheritance Dragon boss battles.</p>
                 </div>
-                <div className="mt-auto border-t border-white/5 pt-4 text-xs space-y-2 text-gray-400">
+                <div className="mt-auto border-t border-black/5 dark:border-white/5 pt-4 text-xs space-y-2 text-muted-foreground">
                   <div className="flex justify-between">
                     <span>Lessons:</span>
-                    <span className="text-white font-semibold">2 Modules</span>
+                    <span className="text-foreground dark:text-white font-semibold">2 Modules</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Status:</span>
-                    <span className="text-indigo-400 font-semibold">Ready</span>
+                    <span className="text-primary dark:text-indigo-400 font-semibold">Ready</span>
                   </div>
                 </div>
                 <button
                   onClick={() => openCourseModalMock("cpp")}
-                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs text-center transition-all mt-2"
+                  className="w-full py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-xl text-xs text-center transition-all mt-2 neu-button"
                 >
                   Start C++ Path <ChevronRight className="w-3.5 h-3.5 inline ml-0.5" />
                 </button>
