@@ -119,57 +119,57 @@ function LoginContent() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 md:p-10 bg-background text-foreground relative overflow-hidden select-none font-sans">
-      {/* Animated Gradient Mesh & Soft Floating Blob Shapes */}
-      <div className="absolute top-[-10%] left-[-10%] w-[55vw] h-[55vw] max-w-[600px] max-h-[600px] bg-gradient-to-br from-indigo-600/25 via-purple-600/20 to-pink-500/15 rounded-full blur-[100px] pointer-events-none animate-pulse duration-[8000ms]" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[55vw] h-[55vw] max-w-[600px] max-h-[600px] bg-gradient-to-tl from-purple-600/25 via-indigo-500/20 to-cyan-500/15 rounded-full blur-[100px] pointer-events-none animate-pulse duration-[10000ms]" />
-      <div className="absolute top-[35%] right-[15%] w-72 h-72 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+      {/* Dynamic Animated Mesh & Soft Floating Blob Shapes for Depth */}
+      <div className="absolute top-[-15%] left-[-15%] w-[65vw] h-[65vw] max-w-[700px] max-h-[700px] bg-gradient-to-br from-[#6366F1]/30 via-[#4F46E5]/25 to-purple-600/20 rounded-full blur-[120px] pointer-events-none animate-pulse duration-[7000ms]" />
+      <div className="absolute bottom-[-15%] right-[-15%] w-[65vw] h-[65vw] max-w-[700px] max-h-[700px] bg-gradient-to-tl from-[#4F46E5]/30 via-[#6366F1]/25 to-pink-500/20 rounded-full blur-[120px] pointer-events-none animate-pulse duration-[9000ms]" />
+      <div className="absolute top-[30%] right-[10%] w-80 h-80 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-lg space-y-7 relative z-10 my-auto">
-        {/* Logo & Header Area */}
-        <div className="flex flex-col items-center text-center space-y-3">
-          {/* Prominent Graduation Cap Logo Mark with Glow */}
+      <div className="w-full max-w-lg space-y-8 relative z-10 my-auto">
+        {/* Header Section: Prominent Logo Mark & Custom Typography */}
+        <div className="flex flex-col items-center text-center space-y-3.5">
+          {/* Prominent Graduation Cap Icon with Subtle Glow/Shadow */}
           <div className="relative group cursor-pointer">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center shadow-[0_0_35px_rgba(99,102,241,0.5)] group-hover:scale-110 transition-transform duration-300 ring-4 ring-indigo-500/20">
-              <GraduationCap className="w-9 h-9 sm:w-11 sm:h-11 text-white drop-shadow-md" strokeWidth={2.2} />
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-[2rem] bg-gradient-to-br from-[#6366F1] via-indigo-500 to-[#4F46E5] flex items-center justify-center shadow-[0_0_45px_rgba(99,102,241,0.6)] group-hover:scale-110 transition-all duration-300 ring-4 ring-indigo-500/30">
+              <GraduationCap className="w-11 h-11 sm:w-13 sm:h-13 text-white drop-shadow-lg" strokeWidth={2.2} />
             </div>
-            <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full border-2 border-background flex items-center gap-1 shadow-md">
+            <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border-2 border-background flex items-center gap-1.5 shadow-lg">
               <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
               <span>LIVE</span>
             </div>
           </div>
 
-          {/* Typography */}
-          <div className="space-y-1">
-            <div className="flex items-center justify-center gap-2">
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-foreground">
-                Edu<span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">Sync</span>
+          {/* Typography: Bold EduSync with Gradient Text on "Sync" */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-center gap-2.5">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-foreground">
+                Edu<span className="bg-gradient-to-r from-[#6366F1] via-purple-500 to-indigo-500 bg-clip-text text-transparent">Sync</span>
               </h1>
-              <span className="px-2 py-0.5 text-[10px] font-extrabold tracking-widest uppercase rounded-lg bg-indigo-500/15 text-indigo-600 dark:bg-indigo-400/20 dark:text-indigo-300 border border-indigo-500/30 neu-raised-xs">
+              <span className="px-2.5 py-0.5 text-[10px] font-extrabold tracking-widest uppercase rounded-xl bg-indigo-500/15 text-indigo-600 dark:bg-indigo-400/20 dark:text-indigo-300 border border-indigo-500/30 neu-raised-xs">
                 ALPHA
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-muted-foreground font-medium max-w-sm">
-              AI-Powered Gen-Z Learning Platform. Access your personal portal.
+            <p className="text-xs sm:text-sm text-muted-foreground font-semibold max-w-sm">
+              AI-Powered Educational Platform built for Gen-Z learners.
             </p>
           </div>
         </div>
 
-        {/* Main Card Container */}
-        <div className="neu-flat p-6 sm:p-8 rounded-[2.5rem] shadow-2xl backdrop-blur-2xl border border-black/5 dark:border-white/10 space-y-6 dark:bg-slate-900/80">
+        {/* Elevated Glassmorphic Card Container */}
+        <div className="neu-flat p-6 sm:p-9 rounded-[2.5rem] shadow-2xl backdrop-blur-2xl border border-black/5 dark:border-white/10 space-y-7 dark:bg-slate-900/85">
           
-          {/* Role Selector Section */}
-          <div className="space-y-2.5">
+          {/* Role Selector Cards (Student / Faculty / HOD) */}
+          <div className="space-y-3">
             <div className="flex items-center justify-between px-1">
               <label className="text-[11px] font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                <span>Select Your Role</span>
+                <span>Select Your Portal Role</span>
               </label>
-              <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full">
-                {activeRole.label} Mode Active
+              <span className="text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2.5 py-0.5 rounded-full">
+                {activeRole.label} Selected
               </span>
             </div>
 
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-3 gap-3">
               {ROLES.map((r) => {
                 const Icon = r.icon;
                 const isSelected = role === r.id;
@@ -180,7 +180,7 @@ function LoginContent() {
                     onClick={() => handleRoleSelect(r)}
                     className={`group relative flex flex-col items-center justify-between p-3.5 sm:p-4 rounded-2xl transition-all duration-300 text-left ${
                       isSelected
-                        ? "bg-gradient-to-br from-indigo-600 via-indigo-500 to-purple-600 text-white shadow-[0_10px_30px_rgba(99,102,241,0.35)] scale-[1.03] ring-2 ring-indigo-400/50"
+                        ? "bg-gradient-to-br from-[#6366F1] via-indigo-500 to-[#4F46E5] text-white shadow-[0_12px_30px_rgba(99,102,241,0.4)] scale-[1.03] ring-2 ring-indigo-400/60"
                         : "neu-flat hover:scale-[1.01] hover:border-indigo-500/30 text-muted-foreground hover:text-foreground dark:bg-white/5"
                     }`}
                   >
@@ -202,7 +202,9 @@ function LoginContent() {
                     </div>
 
                     {isSelected && (
-                      <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-white shadow-sm" />
+                      <div className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-white shadow-md flex items-center justify-center">
+                        <span className="w-1 h-1 rounded-full bg-indigo-600" />
+                      </div>
                     )}
                   </button>
                 );
@@ -210,9 +212,9 @@ function LoginContent() {
             </div>
           </div>
 
-          {/* Form */}
+          {/* Form Fields with Floating Label Style */}
           <form onSubmit={handleLogin} className="space-y-5">
-            {/* Email Floating Label Input */}
+            {/* Email Field */}
             <div className="relative">
               <div className={`relative flex items-center rounded-2xl border transition-all duration-300 ${
                 isEmailFocused 
@@ -242,7 +244,7 @@ function LoginContent() {
               </div>
             </div>
 
-            {/* Password Floating Label Input */}
+            {/* Password Field */}
             <div className="relative space-y-1">
               <div className={`relative flex items-center rounded-2xl border transition-all duration-300 ${
                 isPasswordFocused 
@@ -300,11 +302,11 @@ function LoginContent() {
               </div>
             )}
 
-            {/* Full Gradient CTA Button with Icon Slide Animation */}
+            {/* CTA Button: High-Contrast Purple-to-Indigo Gradient with Sliding Arrow Animation */}
             <button
               type="submit"
               disabled={isLoading}
-              className="group w-full h-13 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-sm tracking-wide shadow-[0_8px_30px_rgba(99,102,241,0.4)] hover:shadow-[0_12px_35px_rgba(99,102,241,0.5)] hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:pointer-events-none neu-button"
+              className="group w-full h-13 rounded-2xl bg-gradient-to-r from-[#6366F1] via-indigo-500 to-[#4F46E5] hover:from-indigo-500 hover:to-indigo-600 text-white font-black text-sm tracking-wide shadow-[0_10px_35px_rgba(99,102,241,0.5)] hover:shadow-[0_14px_45px_rgba(99,102,241,0.6)] hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2.5 disabled:opacity-50 disabled:pointer-events-none neu-button"
             >
               {isLoading ? (
                 <>
@@ -314,7 +316,7 @@ function LoginContent() {
               ) : (
                 <>
                   <span>Sign In as {activeRole.label}</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform duration-200" strokeWidth={2.5} />
+                  <ArrowRight className="w-4.5 h-4.5 group-hover:translate-x-2 transition-transform duration-300" strokeWidth={2.5} />
                 </>
               )}
             </button>
