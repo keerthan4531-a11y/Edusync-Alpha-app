@@ -624,14 +624,14 @@ export default function LanguageCoursesPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] w-full gap-6 text-white pb-6 max-w-6xl mx-auto">
+    <div className="flex flex-col h-[calc(100vh-140px)] w-full gap-6 text-foreground pb-6 max-w-6xl mx-auto">
       {/* Top Banner Status */}
       {statusMessage.type && (
         <div className={cn(
           "p-4 rounded-2xl border text-sm flex items-center gap-3 shrink-0 mx-4 md:mx-0 shadow-lg",
           statusMessage.type === "success" 
-            ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" 
-            : "bg-red-500/10 border-red-500/20 text-red-400"
+            ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-600 dark:text-indigo-400" 
+            : "bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400"
         )}>
           {statusMessage.type === "success" ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
           <span className="font-medium">{statusMessage.message}</span>
@@ -643,13 +643,13 @@ export default function LanguageCoursesPage() {
         <div className="flex-1 flex flex-col gap-6 overflow-y-auto px-4 md:px-0">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold tracking-tight text-white drop-shadow-md">Language Courses</h1>
-              <p className="text-gray-400 mt-1">Upgrade your coding proficiency in sequential learning roadmaps.</p>
+              <h1 className="text-3xl font-bold tracking-tight text-foreground">Language Courses</h1>
+              <p className="text-muted-foreground mt-1">Upgrade your coding proficiency in sequential learning roadmaps.</p>
             </div>
             <button 
               onClick={() => fetchProgress(true)}
               disabled={refreshing}
-              className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 active:scale-95 transition-all text-gray-300 hover:text-white"
+              className="p-3 neu-button rounded-2xl transition-all text-muted-foreground hover:text-foreground dark:bg-white/5 dark:border-white/10"
             >
               <RefreshCw className={cn("w-4 h-4", refreshing && "animate-spin")} />
             </button>
@@ -657,31 +657,31 @@ export default function LanguageCoursesPage() {
 
           {/* Leaderboard stats box */}
           <div className="grid gap-6 sm:grid-cols-3">
-            <LiquidGlassCard className="p-5 flex items-center gap-4 border-indigo-500/20" accentColor="#818cf8">
-              <Award className="w-8 h-8 text-indigo-400 shrink-0" />
+            <LiquidGlassCard className="p-5 flex items-center gap-4" accentColor="#818cf8">
+              <Award className="w-8 h-8 text-primary dark:text-indigo-400 shrink-0" />
               <div>
-                <span className="text-xs text-gray-400 block font-semibold uppercase tracking-wider">C Progress</span>
-                <span className="text-xl font-black text-white">
+                <span className="text-xs text-muted-foreground block font-semibold uppercase tracking-wider">C Progress</span>
+                <span className="text-xl font-black text-foreground dark:text-white">
                   {courseProgress.C ? `${courseProgress.C.completedExercises}/12 Modules` : "0/12 Modules"}
                 </span>
               </div>
             </LiquidGlassCard>
 
-            <LiquidGlassCard className="p-5 flex items-center gap-4 border-indigo-500/20" accentColor="#38bdf8">
-              <BookOpenCheck className="w-8 h-8 text-indigo-400 shrink-0" />
+            <LiquidGlassCard className="p-5 flex items-center gap-4" accentColor="#38bdf8">
+              <BookOpenCheck className="w-8 h-8 text-primary dark:text-indigo-400 shrink-0" />
               <div>
-                <span className="text-xs text-gray-400 block font-semibold uppercase tracking-wider">C++ Progress</span>
-                <span className="text-xl font-black text-white">
+                <span className="text-xs text-muted-foreground block font-semibold uppercase tracking-wider">C++ Progress</span>
+                <span className="text-xl font-black text-foreground dark:text-white">
                   {courseProgress.CPP ? `${courseProgress.CPP.completedExercises}/10 Modules` : "0/10 Modules"}
                 </span>
               </div>
             </LiquidGlassCard>
 
-            <LiquidGlassCard className="p-5 flex items-center gap-4 border-indigo-500/20" accentColor="#a78bfa">
-              <Flame className="w-8 h-8 text-indigo-400 shrink-0" />
+            <LiquidGlassCard className="p-5 flex items-center gap-4" accentColor="#a78bfa">
+              <Flame className="w-8 h-8 text-primary dark:text-indigo-400 shrink-0" />
               <div>
-                <span className="text-xs text-gray-400 block font-semibold uppercase tracking-wider">Python Progress</span>
-                <span className="text-xl font-black text-white">
+                <span className="text-xs text-muted-foreground block font-semibold uppercase tracking-wider">Python Progress</span>
+                <span className="text-xl font-black text-foreground dark:text-white">
                   {courseProgress.PYTHON ? `${courseProgress.PYTHON.completedExercises}/15 Modules` : "0/15 Modules"}
                 </span>
               </div>
@@ -690,7 +690,7 @@ export default function LanguageCoursesPage() {
 
           {/* Courses Roadmap List */}
           <div className="flex flex-col gap-6 mt-4">
-            <h2 className="text-lg font-bold text-gray-300">Available Learning Roadmaps</h2>
+            <h2 className="text-lg font-bold text-foreground dark:text-gray-300">Available Learning Roadmaps</h2>
             
             <div className="grid gap-6 md:grid-cols-3">
               {Object.values(LANGUAGE_COURSES).map(course => {
@@ -709,41 +709,41 @@ export default function LanguageCoursesPage() {
                     className={cn(
                       "group rounded-[2rem] overflow-hidden transition-all duration-300 relative border",
                       isLocked 
-                        ? "bg-black/40 border-white/5 opacity-60 cursor-not-allowed" 
-                        : "bg-white/5 border-white/10 hover:border-white/20 cursor-pointer hover:scale-[1.02] shadow-xl"
+                        ? "neu-flat opacity-60 cursor-not-allowed dark:bg-black/40 dark:border-white/5" 
+                        : "neu-flat cursor-pointer hover:scale-[1.02] shadow-xl dark:bg-white/5 dark:border-white/10"
                     )}
                   >
                     {/* Locked overlay lock icon */}
                     {isLocked && (
-                      <div className="absolute top-4 right-4 bg-red-500/20 text-red-400 border border-red-500/30 p-2 rounded-xl">
+                      <div className="absolute top-4 right-4 bg-red-500/20 text-red-600 dark:text-red-400 border border-red-500/30 p-2 rounded-xl">
                         <Lock className="w-4 h-4" />
                       </div>
                     )}
 
                     <div className="p-6 flex flex-col gap-4 h-full">
                       <div className="flex justify-between items-start">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-white/5 px-2.5 py-1 rounded-md">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest neu-raised-xs px-2.5 py-1 rounded-md dark:bg-white/5">
                           {course.difficulty.toUpperCase()}
                         </span>
                         {isCompleted && (
-                          <span className="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+                          <span className="bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
                             Completed
                           </span>
                         )}
                       </div>
 
                       <div>
-                        <h3 className="font-bold text-white text-lg tracking-tight group-hover:text-indigo-300 transition-colors">
+                        <h3 className="font-bold text-foreground group-hover:text-primary dark:text-white dark:group-hover:text-indigo-300 transition-colors text-lg tracking-tight">
                           {course.title}
                         </h3>
-                        <p className="text-sm text-gray-400 mt-2 line-clamp-3 leading-relaxed">
+                        <p className="text-sm text-muted-foreground mt-2 line-clamp-3 leading-relaxed">
                           {course.description}
                         </p>
                       </div>
 
                       {/* Prerequisites warnings */}
                       {isLocked && (
-                        <div className="bg-indigo-500/10 border border-indigo-500/25 p-3 rounded-xl text-xs text-indigo-300 flex items-start gap-2">
+                        <div className="bg-indigo-500/10 border border-indigo-500/25 p-3 rounded-xl text-xs text-indigo-600 dark:text-indigo-300 flex items-start gap-2">
                           <Lock className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                           <span>Requires completion of {course.prerequisites.map(p => p.toUpperCase()).join(" & ")} first.</span>
                         </div>
@@ -751,25 +751,25 @@ export default function LanguageCoursesPage() {
 
                       {/* Progress roadmap details */}
                       {!isLocked && (
-                        <div className="space-y-4 mt-auto pt-4 border-t border-white/5">
+                        <div className="space-y-4 mt-auto pt-4 border-t border-black/5 dark:border-white/5">
                           <div className="space-y-1">
                             <div className="flex justify-between text-xs font-semibold">
-                              <span className="text-gray-400">Roadmap Progress</span>
-                              <span className="text-indigo-400">{percent}%</span>
+                              <span className="text-muted-foreground">Roadmap Progress</span>
+                              <span className="text-primary dark:text-indigo-400">{percent}%</span>
                             </div>
-                            <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/5">
-                              <div className="bg-gradient-to-r from-indigo-500 to-indigo-400 h-full rounded-full transition-all" style={{ width: `${percent}%` }} />
+                            <div className="w-full h-2 rounded-full overflow-hidden neu-progress-track">
+                              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-500 dark:to-indigo-400 h-full rounded-full transition-all" style={{ width: `${percent}%` }} />
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4 text-xs font-medium text-gray-400">
+                          <div className="grid grid-cols-2 gap-4 text-xs font-medium text-muted-foreground">
                             <div>
-                              <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-wider">Credits</span>
-                              <span className="text-white font-bold">{course.credits} Points</span>
+                              <span className="text-[10px] text-muted-foreground block uppercase font-bold tracking-wider">Credits</span>
+                              <span className="text-foreground dark:text-white font-bold">{course.credits} Points</span>
                             </div>
                             <div>
-                              <span className="text-[10px] text-gray-500 block uppercase font-bold tracking-wider">Duration</span>
-                              <span className="text-white font-bold">{course.duration}</span>
+                              <span className="text-[10px] text-muted-foreground block uppercase font-bold tracking-wider">Duration</span>
+                              <span className="text-foreground dark:text-white font-bold">{course.duration}</span>
                             </div>
                           </div>
                         </div>
@@ -785,27 +785,27 @@ export default function LanguageCoursesPage() {
         // ACTIVE WORKSPACE VIEW
         <div className="flex-1 flex flex-col overflow-hidden px-4 md:px-0">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/10 pb-4 mb-4 gap-4 shrink-0">
+          <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-black/10 dark:border-white/10 pb-4 mb-4 gap-4 shrink-0">
             <div className="flex items-center gap-4">
               <button 
                 onClick={() => setSelectedCourse(null)}
-                className="p-3 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 active:scale-95 transition-all text-indigo-400"
+                className="p-3 neu-button rounded-2xl transition-all text-primary dark:text-indigo-400 dark:bg-white/5 dark:border-white/10"
               >
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight text-white">{selectedCourse.title}</h1>
-                <p className="text-xs text-indigo-300 font-semibold mt-1">Module {currentModuleIdx + 1} of {selectedCourse.modules_list.length}: {selectedCourse.modules_list[currentModuleIdx].title}</p>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground dark:text-white">{selectedCourse.title}</h1>
+                <p className="text-xs text-primary dark:text-indigo-300 font-semibold mt-1">Module {currentModuleIdx + 1} of {selectedCourse.modules_list.length}: {selectedCourse.modules_list[currentModuleIdx].title}</p>
               </div>
             </div>
 
             {/* Mobile View Toggle Tabs */}
-            <div className="flex md:hidden bg-black/30 border border-white/10 rounded-xl p-1 shrink-0">
+            <div className="flex md:hidden neu-inset-sm rounded-xl p-1 shrink-0 dark:bg-black/30">
               <button 
                 onClick={() => setMobileTab("theory")}
                 className={cn(
                   "px-4 py-2 text-xs font-semibold rounded-lg transition-all",
-                  mobileTab === "theory" ? "bg-white/10 text-white" : "text-gray-400"
+                  mobileTab === "theory" ? "neu-raised-sm text-foreground dark:bg-white/10 dark:text-white" : "text-muted-foreground"
                 )}
               >
                 Theory
@@ -814,7 +814,7 @@ export default function LanguageCoursesPage() {
                 onClick={() => setMobileTab("coding")}
                 className={cn(
                   "px-4 py-2 text-xs font-semibold rounded-lg transition-all",
-                  mobileTab === "coding" ? "bg-white/10 text-white" : "text-gray-400"
+                  mobileTab === "coding" ? "neu-raised-sm text-foreground dark:bg-white/10 dark:text-white" : "text-muted-foreground"
                 )}
               >
                 Coding
@@ -830,8 +830,8 @@ export default function LanguageCoursesPage() {
               mobileTab === "theory" ? "flex" : "hidden md:flex"
             )}>
               {/* Module Nav Links */}
-              <div className="bg-[#0b0f19] border border-white/10 rounded-3xl p-4 flex flex-col gap-2 shrink-0 max-h-48 overflow-y-auto">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 px-1">Syllabus Outline</span>
+              <div className="neu-raised-lg rounded-3xl p-4 flex flex-col gap-2 shrink-0 max-h-48 overflow-y-auto dark:bg-[#0b0f19] dark:border-white/10">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-1 px-1">Syllabus Outline</span>
                 <div className="space-y-1">
                   {selectedCourse.modules_list.map((mod, idx) => {
                     const isCompleted = idx < (courseProgress[selectedCourse.id.toUpperCase()]?.completedExercises || 0)
@@ -843,10 +843,10 @@ export default function LanguageCoursesPage() {
                         className={cn(
                           "w-full text-left px-3 py-2 text-xs font-semibold rounded-xl flex items-center justify-between border transition-all",
                           isActive 
-                            ? "bg-indigo-500/10 border-indigo-500/25 text-white" 
+                            ? "neu-raised-sm text-primary dark:bg-indigo-500/10 dark:border-indigo-500/25 dark:text-white" 
                             : isCompleted
-                            ? "bg-indigo-500/5 border-transparent text-indigo-400 hover:bg-indigo-500/10"
-                            : "bg-transparent border-transparent text-gray-400 hover:bg-white/5 hover:text-white"
+                            ? "bg-indigo-500/5 border-transparent text-primary dark:text-indigo-400 hover:bg-indigo-500/10"
+                            : "bg-transparent border-transparent text-muted-foreground hover:text-foreground"
                         )}
                       >
                         <span className="truncate max-w-[180px]">{idx + 1}. {mod.title}</span>
@@ -858,35 +858,35 @@ export default function LanguageCoursesPage() {
               </div>
 
               {/* Theory Content Card */}
-              <LiquidGlassCard className="p-6 flex-1 overflow-y-auto flex flex-col gap-4 border-white/10 shadow-lg">
-                <h3 className="font-bold text-white text-lg tracking-tight">
+              <LiquidGlassCard className="p-6 flex-1 overflow-y-auto flex flex-col gap-4 shadow-lg">
+                <h3 className="font-bold text-foreground dark:text-white text-lg tracking-tight">
                   {selectedCourse.modules_list[currentModuleIdx].title}
                 </h3>
                 
-                <div className="space-y-3 text-sm text-gray-300 leading-relaxed font-sans border-t border-white/5 pt-3">
-                  <h4 className="font-bold text-white text-xs uppercase tracking-wider text-indigo-400">Topics covered in this module:</h4>
-                  <ul className="list-disc pl-5 space-y-1.5 text-xs">
+                <div className="space-y-3 text-sm text-muted-foreground leading-relaxed font-sans border-t border-black/5 dark:border-white/5 pt-3">
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-primary dark:text-indigo-400">Topics covered in this module:</h4>
+                  <ul className="list-disc pl-5 space-y-1.5 text-xs text-foreground dark:text-gray-300">
                     {selectedCourse.modules_list[currentModuleIdx].topics.map((topic, i) => (
                       <li key={i}>{topic}</li>
                     ))}
                   </ul>
                   
-                  <div className="bg-white/5 border border-white/5 p-4 rounded-2xl mt-4">
-                    <h5 className="font-bold text-white text-xs flex items-center gap-1.5">
-                      <HelpCircle className="w-4 h-4 text-indigo-400" />
+                  <div className="neu-inset-sm p-4 rounded-2xl mt-4 dark:bg-white/5">
+                    <h5 className="font-bold text-foreground dark:text-white text-xs flex items-center gap-1.5">
+                      <HelpCircle className="w-4 h-4 text-primary dark:text-indigo-400" />
                       <span>Exercise Objective</span>
                     </h5>
-                    <p className="text-xs text-gray-400 mt-2 font-medium">
+                    <p className="text-xs text-muted-foreground mt-2 font-medium">
                       {getExerciseForModule(selectedCourse.modules_list[currentModuleIdx].id, selectedCourse.id).description}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-auto pt-4 border-t border-white/5 flex gap-2 shrink-0">
+                <div className="mt-auto pt-4 border-t border-black/5 dark:border-white/5 flex gap-2 shrink-0">
                   <Button 
                     onClick={() => currentModuleIdx > 0 && handleLoadModule(currentModuleIdx - 1)}
                     disabled={currentModuleIdx === 0}
-                    className="flex-1 rounded-xl py-2 flex items-center justify-center gap-1 text-xs"
+                    className="flex-1 rounded-xl py-2 flex items-center justify-center gap-1 text-xs neu-button"
                     variant="outline"
                   >
                     <ChevronLeft className="w-3.5 h-3.5" />
@@ -895,7 +895,7 @@ export default function LanguageCoursesPage() {
                   <Button 
                     onClick={() => currentModuleIdx < selectedCourse.modules_list.length - 1 && handleLoadModule(currentModuleIdx + 1)}
                     disabled={currentModuleIdx === selectedCourse.modules_list.length - 1}
-                    className="flex-1 rounded-xl py-2 flex items-center justify-center gap-1 text-xs"
+                    className="flex-1 rounded-xl py-2 flex items-center justify-center gap-1 text-xs neu-button"
                     variant="outline"
                   >
                     <span>Next</span>
@@ -907,17 +907,17 @@ export default function LanguageCoursesPage() {
 
             {/* Right Column: Code Editor & Exec Output (hidden on mobile if Theory tab active) */}
             <div className={cn(
-              "md:col-span-3 flex flex-col h-full bg-[#0b0f19] border border-white/10 rounded-3xl overflow-hidden shadow-2xl",
+              "md:col-span-3 flex flex-col h-full neu-raised-lg rounded-3xl overflow-hidden shadow-2xl dark:bg-[#0b0f19] dark:border-white/10",
               mobileTab === "coding" ? "flex" : "hidden md:flex"
             )}>
               {/* Editor Header */}
-              <div className="p-4 bg-white/5 border-b border-white/10 flex items-center justify-between shrink-0">
-                <span className="text-xs font-bold text-gray-300 flex items-center gap-2">
-                  <Code className="w-4 h-4 text-indigo-400" />
+              <div className="p-4 border-b border-black/10 dark:border-white/10 flex items-center justify-between shrink-0">
+                <span className="text-xs font-bold text-foreground dark:text-gray-300 flex items-center gap-2">
+                  <Code className="w-4 h-4 text-primary dark:text-indigo-400" />
                   <span>Interactive Editor</span>
                 </span>
                 
-                <span className="font-mono bg-black/40 px-2.5 py-0.5 rounded text-[10px] uppercase font-bold text-gray-400">
+                <span className="font-mono neu-raised-xs px-2.5 py-0.5 rounded text-[10px] uppercase font-bold text-muted-foreground dark:bg-black/40">
                   Language: {selectedCourse.id.toUpperCase()}
                 </span>
               </div>
@@ -942,10 +942,10 @@ export default function LanguageCoursesPage() {
                 </div>
 
                 {/* Console Panel */}
-                <div className="flex flex-col bg-[#070b12] border-t border-white/5 overflow-hidden min-h-[180px]">
+                <div className="flex flex-col border-t border-black/10 dark:border-white/5 overflow-hidden min-h-[180px] dark:bg-[#070b12]">
                   {/* Console Controls */}
-                  <div className="px-4 py-2 border-b border-white/5 bg-black/40 flex items-center justify-between shrink-0">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                  <div className="px-4 py-2 border-b border-black/10 dark:border-white/5 flex items-center justify-between shrink-0 dark:bg-black/40">
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                       <Terminal className="w-3.5 h-3.5" />
                       <span>Console & Review</span>
                     </span>
@@ -953,15 +953,15 @@ export default function LanguageCoursesPage() {
                       <button 
                         onClick={handleRunCode}
                         disabled={runningCode}
-                        className="flex items-center gap-1.5 px-3 py-1 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
+                        className="flex items-center gap-1.5 px-3 py-1 neu-button text-foreground text-xs font-semibold rounded-lg transition-all disabled:opacity-50 dark:bg-white/5 dark:text-white"
                       >
-                        {runningCode ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 text-indigo-400" />}
+                        {runningCode ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 text-primary dark:text-indigo-400" />}
                         <span>Run</span>
                       </button>
                       <button 
                         onClick={handleSubmitExercise}
                         disabled={submittingSolution}
-                        className="flex items-center gap-1.5 px-3 py-1 bg-indigo-505 bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold rounded-lg transition-all shadow-md shadow-indigo-500/10"
+                        className="flex items-center gap-1.5 px-3 py-1 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold rounded-lg transition-all neu-button"
                       >
                         {submittingSolution && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                         <span>Submit Code</span>
@@ -970,39 +970,39 @@ export default function LanguageCoursesPage() {
                   </div>
 
                   {/* Console screen logs */}
-                  <div className="flex-1 p-4 overflow-y-auto font-mono text-xs leading-relaxed text-gray-300 space-y-3">
+                  <div className="flex-1 p-4 overflow-y-auto font-mono text-xs leading-relaxed text-foreground dark:text-gray-300 space-y-3">
                     {runningCode && (
-                      <div className="flex items-center gap-2 text-indigo-400">
+                      <div className="flex items-center gap-2 text-primary dark:text-indigo-400">
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
                         <span>Compiling code execution sandbox...</span>
                       </div>
                     )}
 
                     {!runningCode && !runOutput && !runError && !aiFeedback && (
-                      <span className="text-gray-500">Run code to see stdout, or submit for evaluation.</span>
+                      <span className="text-muted-foreground">Run code to see stdout, or submit for evaluation.</span>
                     )}
 
                     {runOutput && (
-                      <div className="text-indigo-400">
-                        <div className="font-bold text-[10px] text-gray-500 uppercase tracking-wider mb-1">Stdout:</div>
-                        <pre className="whitespace-pre-wrap font-mono bg-black/30 p-2.5 rounded-lg border border-white/5">{runOutput}</pre>
+                      <div className="text-primary dark:text-indigo-400">
+                        <div className="font-bold text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Stdout:</div>
+                        <pre className="whitespace-pre-wrap font-mono neu-inset-sm p-2.5 rounded-lg dark:bg-black/30 dark:border-white/5">{runOutput}</pre>
                       </div>
                     )}
 
                     {runError && (
-                      <div className="text-indigo-400">
-                        <div className="font-bold text-[10px] text-gray-500 uppercase tracking-wider mb-1">Execution Error:</div>
-                        <pre className="whitespace-pre-wrap font-mono bg-black/30 p-2.5 rounded-lg border border-white/5">{runError}</pre>
+                      <div className="text-red-600 dark:text-red-400">
+                        <div className="font-bold text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Execution Error:</div>
+                        <pre className="whitespace-pre-wrap font-mono bg-red-500/10 border border-red-500/20 p-2.5 rounded-lg">{runError}</pre>
                       </div>
                     )}
 
                     {aiFeedback && (
                       <div className="p-3.5 bg-indigo-500/10 border border-indigo-500/20 rounded-xl space-y-1">
-                        <div className="text-indigo-300 font-bold flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
-                          <Sparkles className="w-4 h-4 text-indigo-400" />
+                        <div className="text-primary dark:text-indigo-300 font-bold flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
+                          <Sparkles className="w-4 h-4 text-primary dark:text-indigo-400" />
                           <span>AI Assistant Review</span>
                         </div>
-                        <p className="text-gray-300 text-xs leading-relaxed font-sans whitespace-pre-wrap">{aiFeedback}</p>
+                        <p className="text-foreground dark:text-gray-300 text-xs leading-relaxed font-sans whitespace-pre-wrap">{aiFeedback}</p>
                       </div>
                     )}
                   </div>
