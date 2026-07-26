@@ -1,7 +1,8 @@
 import { db } from "@/lib/db"
-import { Users, BookOpen, ChevronRight, MoreVertical } from "lucide-react"
+import { Users, BookOpen, ChevronRight, MoreVertical, Monitor, Plus } from "lucide-react"
 import Link from "next/link"
 import { CreateClassroomButton } from "./CreateClassroomButton"
+import { LiquidGlassCard } from "@/components/ui/liquid-glass-card"
 
 export const dynamic = "force-dynamic"
 
@@ -26,53 +27,62 @@ export default async function FacultyClassroomsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8 max-w-7xl mx-auto p-4 md:p-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Classrooms</h1>
-          <p className="text-muted-foreground mt-1">Manage your active classes and view student progress.</p>
+    <div className="flex flex-col gap-8 max-w-7xl mx-auto p-4 md:p-8 text-foreground">
+      {/* Top Banner Header */}
+      <LiquidGlassCard className="p-6 md:p-8 shadow-xl" accentColor="#6366f1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-2xl neu-raised-sm flex items-center justify-center text-primary dark:text-indigo-400 shrink-0">
+              <Monitor className="w-7 h-7" strokeWidth={2} />
+            </div>
+            <div>
+              <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">Faculty Classrooms</h1>
+              <p className="text-xs md:text-sm text-muted-foreground mt-0.5 font-medium">Manage active courses, post assignments, and track student roster progress.</p>
+            </div>
+          </div>
+          <CreateClassroomButton />
         </div>
-        <CreateClassroomButton />
-      </div>
+      </LiquidGlassCard>
 
       {classrooms.length === 0 ? (
-        <div className="text-center py-20 border border-dashed border-white/10 rounded-2xl bg-white/5 backdrop-blur-2xl">
-          <p className="text-zinc-400">No classrooms found. Create one to get started.</p>
+        <div className="text-center py-20 neu-flat rounded-[2rem] p-8 shadow-xl dark:bg-white/5 dark:border-white/10">
+          <Monitor className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-40" />
+          <p className="text-base font-extrabold text-foreground">No classrooms created yet.</p>
+          <p className="text-xs text-muted-foreground mt-1">Create your first course classroom to begin enrolling students.</p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {classrooms.map((cls) => (
             <Link key={cls.id} href={`/faculty-dashboard/classrooms/${cls.id}`} className="group block">
-              <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-2xl p-6 transition-all hover:bg-white/10 hover:border-white/20">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground group-hover:text-indigo-400 transition-colors">{cls.name}</h2>
-                    <p className="text-sm text-zinc-500 mt-1">Code: <span className="font-mono text-zinc-300">{cls.code}</span></p>
-                  </div>
-                  <button className="text-zinc-500 hover:text-white transition-colors">
-                    <MoreVertical className="w-5 h-5" />
-                  </button>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 mt-6">
-                  <div className="flex flex-col gap-1 p-3 rounded-xl bg-black/20">
-                    <div className="flex items-center gap-2 text-zinc-400 text-sm">
-                      <Users className="w-4 h-4" />
-                      <span>Students</span>
+              <div className="neu-flat p-6 rounded-[2rem] transition-all hover:scale-[1.01] duration-300 shadow-xl flex flex-col justify-between h-full dark:bg-white/5 dark:border-white/10">
+                <div>
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h2 className="text-lg font-extrabold text-foreground group-hover:text-primary dark:group-hover:text-indigo-400 transition-colors">{cls.name}</h2>
+                      <p className="text-xs text-muted-foreground font-medium mt-1">Course Code: <span className="font-mono font-bold text-foreground neu-raised-xs px-2 py-0.5 rounded-md">{cls.code}</span></p>
                     </div>
-                    <span className="text-lg font-semibold text-foreground">{cls._count.students}</span>
                   </div>
-                  <div className="flex flex-col gap-1 p-3 rounded-xl bg-black/20">
-                    <div className="flex items-center gap-2 text-zinc-400 text-sm">
-                      <BookOpen className="w-4 h-4" />
-                      <span>Assignments</span>
+                  
+                  <div className="grid grid-cols-2 gap-3 mt-6">
+                    <div className="flex flex-col gap-1 p-3 rounded-2xl neu-raised-xs">
+                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-extrabold uppercase">
+                        <Users className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                        <span>Students</span>
+                      </div>
+                      <span className="text-xl font-extrabold text-foreground mt-1">{cls._count.students}</span>
                     </div>
-                    <span className="text-lg font-semibold text-foreground">{cls._count.assignments}</span>
+                    <div className="flex flex-col gap-1 p-3 rounded-2xl neu-raised-xs">
+                      <div className="flex items-center gap-1.5 text-muted-foreground text-xs font-extrabold uppercase">
+                        <BookOpen className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                        <span>Assignments</span>
+                      </div>
+                      <span className="text-xl font-extrabold text-foreground mt-1">{cls._count.assignments}</span>
+                    </div>
                   </div>
                 </div>
 
-                <div className="mt-6 flex items-center justify-between text-sm text-indigo-400 font-medium">
-                  <span>View Details</span>
+                <div className="mt-6 pt-4 border-t border-black/5 dark:border-white/5 flex items-center justify-between text-xs font-extrabold text-primary dark:text-indigo-400">
+                  <span>Manage Classroom Roster</span>
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>

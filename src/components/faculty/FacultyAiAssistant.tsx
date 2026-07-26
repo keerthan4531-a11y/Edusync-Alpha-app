@@ -223,7 +223,7 @@ export function FacultyAiAssistant() {
         <div
           id="faculty-ai-panel"
           className={cn(
-            "fixed bottom-32 md:bottom-20 right-3 md:right-6 left-3 md:left-auto z-[998] flex flex-col rounded-3xl border border-white/15 bg-[#0B0F19]/95 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.7)] transition-all duration-300",
+            "fixed bottom-32 md:bottom-20 right-3 md:right-6 left-3 md:left-auto z-[998] flex flex-col rounded-3xl neu-flat bg-background/95 backdrop-blur-2xl shadow-2xl transition-all duration-300 border border-black/10 dark:border-white/15 text-foreground",
             isMinimized
               ? "w-72 h-14 overflow-hidden"
               : "w-[calc(100vw-1.5rem)] md:w-[400px] h-[75vh] md:h-auto max-h-[580px]"
@@ -231,42 +231,42 @@ export function FacultyAiAssistant() {
           style={{ animation: "slideUpFadeIn 0.3s ease forwards" }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 md:px-5 py-3 border-b border-white/10 shrink-0 bg-white/[0.02]">
+          <div className="flex items-center justify-between px-4 md:px-5 py-3 border-b border-black/5 dark:border-white/10 shrink-0 neu-raised-xs rounded-t-3xl">
             <div className="flex items-center gap-2.5">
               <div className="relative">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-violet-600 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-md">
+                  <Sparkles className="w-4 h-4" />
                 </div>
                 <span className={cn(
-                  "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-[#0B0F19]",
-                  assistantState === "idle" && "bg-blue-400",
-                  assistantState === "listening" && "bg-amber-400 animate-pulse",
-                  assistantState === "thinking" && "bg-violet-400 animate-pulse",
+                  "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-background",
+                  assistantState === "idle" && "bg-blue-500",
+                  assistantState === "listening" && "bg-amber-500 animate-pulse",
+                  assistantState === "thinking" && "bg-purple-500 animate-pulse",
                 )} />
               </div>
               <div>
-                <h3 className="text-xs md:text-sm font-bold text-white">Faculty AI Assistant</h3>
-                <p className="text-[10px] text-emerald-400 font-medium">Powered by Gemini AI</p>
+                <h3 className="text-xs md:text-sm font-extrabold text-foreground">Faculty AI Assistant</h3>
+                <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">Powered by Gemini AI</p>
               </div>
             </div>
             <div className="flex gap-1">
               <button
                 onClick={clearChat}
-                className="p-1.5 rounded-xl text-zinc-400 hover:text-amber-400 hover:bg-amber-400/10 transition-colors"
+                className="p-1.5 neu-button rounded-xl text-muted-foreground hover:text-amber-600 transition-colors"
                 title="Clear chat"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setIsMinimized(!isMinimized)}
-                className="p-1.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-colors hidden sm:block"
+                className="p-1.5 neu-button rounded-xl text-muted-foreground hover:text-foreground transition-colors hidden sm:block"
                 title="Minimize"
               >
                 <Minimize2 className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-xl text-zinc-400 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                className="p-1.5 neu-button rounded-xl text-muted-foreground hover:text-rose-600 transition-colors"
                 title="Close"
               >
                 <X className="w-4 h-4" />
@@ -291,8 +291,8 @@ export function FacultyAiAssistant() {
                       className={cn(
                         "max-w-[88%] md:max-w-[85%] px-3.5 md:px-4 py-2.5 md:py-3 text-xs md:text-[13px] leading-relaxed",
                         msg.role === "user"
-                          ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-2xl rounded-br-sm shadow-md"
-                          : "bg-white/5 border border-white/10 text-zinc-200 rounded-2xl rounded-bl-sm backdrop-blur-md"
+                          ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl rounded-br-sm shadow-md font-medium"
+                          : "neu-raised-sm text-foreground rounded-2xl rounded-bl-sm border border-black/5 dark:border-white/10 dark:bg-white/5 font-medium"
                       )}
                     >
                       {renderContent(msg.content)}
@@ -301,9 +301,9 @@ export function FacultyAiAssistant() {
                 ))}
                 {isLoading && (
                   <div className="flex justify-start" style={{ animation: "slideUpFadeIn 0.25s ease forwards" }}>
-                    <div className="bg-white/5 border border-white/10 text-zinc-400 rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
-                      <span className="text-xs text-zinc-300">Thinking...</span>
+                    <div className="neu-raised-xs text-muted-foreground rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      <span className="text-xs font-bold text-foreground">Thinking...</span>
                     </div>
                   </div>
                 )}
@@ -311,29 +311,29 @@ export function FacultyAiAssistant() {
               </div>
 
               {/* Quick Commands Grid */}
-              <div className="grid grid-cols-2 gap-1.5 px-3 md:px-4 py-2.5 border-t border-white/10 shrink-0 bg-black/20">
+              <div className="grid grid-cols-2 gap-1.5 px-3 md:px-4 py-2.5 border-t border-black/5 dark:border-white/5 shrink-0">
                 {QUICK_COMMANDS.map((cmd) => (
                   <button
                     key={cmd.label}
                     onClick={() => sendCommand(cmd.command)}
                     disabled={isLoading}
-                    className="flex items-center justify-center gap-2 p-2 rounded-xl bg-white/5 border border-white/5 text-zinc-300 hover:bg-emerald-500/15 hover:text-emerald-400 hover:border-emerald-500/30 transition-all text-xs font-medium disabled:opacity-40"
+                    className="flex items-center justify-center gap-2 p-2 rounded-xl neu-button text-foreground hover:text-primary transition-all text-xs font-bold disabled:opacity-40"
                   >
-                    <cmd.icon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <cmd.icon className="w-3.5 h-3.5 text-primary shrink-0" />
                     <span className="truncate">{cmd.label}</span>
                   </button>
                 ))}
               </div>
 
               {/* Input Control Bar */}
-              <div className="flex items-center gap-2 px-3 md:px-4 py-3 border-t border-white/10 shrink-0 bg-white/[0.02]">
+              <div className="flex items-center gap-2 px-3 md:px-4 py-3 border-t border-black/5 dark:border-white/5 shrink-0">
                 <button
                   onClick={toggleListening}
                   className={cn(
-                    "shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center transition-all",
+                    "shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-xl flex items-center justify-center transition-all neu-button",
                     isListening
-                      ? "bg-gradient-to-br from-red-500 to-orange-500 text-white shadow-lg shadow-red-500/40 animate-pulse"
-                      : "bg-white/10 hover:bg-white/20 text-emerald-400 border border-white/10"
+                      ? "bg-gradient-to-br from-rose-500 to-orange-500 text-white shadow-lg shadow-rose-500/40 animate-pulse"
+                      : "text-primary"
                   )}
                   title={isListening ? "Stop listening" : "Start voice input"}
                 >
@@ -347,12 +347,12 @@ export function FacultyAiAssistant() {
                   onKeyDown={handleKeyDown}
                   placeholder={isListening ? "Listening..." : "Ask me anything..."}
                   disabled={isLoading || isListening}
-                  className="flex-1 bg-black/30 border border-white/10 rounded-xl px-3 py-2 text-xs md:text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/50 disabled:opacity-40 transition-colors"
+                  className="flex-1 h-10 neu-inset-sm bg-transparent border-0 rounded-xl px-3 text-xs md:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-40 transition-colors dark:bg-white/5"
                 />
                 <button
                   onClick={handleSend}
                   disabled={isLoading || !inputValue.trim()}
-                  className="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center hover:shadow-lg hover:shadow-emerald-500/30 transition-all disabled:opacity-40"
+                  className="shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-xl neu-button bg-primary text-primary-foreground flex items-center justify-center shadow-md hover:scale-105 transition-all disabled:opacity-40"
                   title="Send"
                 >
                   <Send className="w-4 h-4" />
@@ -360,21 +360,21 @@ export function FacultyAiAssistant() {
               </div>
 
               {/* Footer Status */}
-              <div className="flex items-center justify-between px-4 py-1.5 border-t border-white/5 shrink-0 bg-black/40 rounded-b-3xl">
+              <div className="flex items-center justify-between px-4 py-2 border-t border-black/5 dark:border-white/5 shrink-0 neu-raised-xs rounded-b-3xl">
                 <div className="flex items-center gap-2">
                   <span className={cn(
                     "w-2 h-2 rounded-full",
-                    assistantState === "idle" && "bg-blue-400",
-                    assistantState === "listening" && "bg-amber-400 animate-pulse",
-                    assistantState === "thinking" && "bg-violet-400 animate-pulse",
+                    assistantState === "idle" && "bg-emerald-500",
+                    assistantState === "listening" && "bg-amber-500 animate-pulse",
+                    assistantState === "thinking" && "bg-purple-500 animate-pulse",
                   )} />
-                  <span className="text-[10px] text-zinc-400">
+                  <span className="text-[10px] font-extrabold text-muted-foreground">
                     {assistantState === "idle" && "Ready to assist"}
                     {assistantState === "listening" && "Listening..."}
                     {assistantState === "thinking" && "Processing..."}
                   </span>
                 </div>
-                <span className="text-[10px] text-zinc-500">EduSync Faculty AI</span>
+                <span className="text-[10px] font-bold text-muted-foreground">EduSync Faculty AI</span>
               </div>
             </>
           )}
