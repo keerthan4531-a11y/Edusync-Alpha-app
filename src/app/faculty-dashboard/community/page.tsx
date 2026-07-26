@@ -5,9 +5,10 @@ import {
   Users, Shield, Calendar, Award, Rocket,
   MessageSquare, BookOpen, Code, Trophy, Zap,
   AlertTriangle, Crown, GraduationCap,
-  CheckCircle2, Copy, ExternalLink
+  CheckCircle2, Copy, ExternalLink, MessageCircle
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { LiquidGlassCard } from "@/components/ui/liquid-glass-card"
 
 // ─── Tab Data ────────────────────────────────────────────────
 
@@ -25,13 +26,13 @@ type TabId = typeof TABS[number]["id"]
 
 function PhaseHeader({ phase, title, description }: { phase: number; title: string; description: string }) {
   return (
-    <div className="flex items-center gap-3.5 md:gap-4 mb-6 md:mb-7 pb-4 border-b-2 border-emerald-500/20">
-      <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center font-extrabold text-base md:text-lg text-white shadow-lg shadow-emerald-500/30 shrink-0">
+    <div className="flex items-center gap-3.5 md:gap-4 mb-6 md:mb-7 pb-4 border-b border-black/5 dark:border-white/5">
+      <div className="w-12 h-12 md:w-14 md:h-14 rounded-2xl neu-raised-sm bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-extrabold text-base md:text-lg text-white shadow-lg shadow-emerald-500/20 shrink-0">
         {phase}
       </div>
       <div>
-        <h2 className="text-lg md:text-xl font-bold text-white">{title}</h2>
-        <p className="text-xs md:text-sm text-zinc-400">{description}</p>
+        <h2 className="text-lg md:text-xl font-extrabold text-foreground">{title}</h2>
+        <p className="text-xs md:text-sm text-muted-foreground font-medium">{description}</p>
       </div>
     </div>
   )
@@ -39,17 +40,17 @@ function PhaseHeader({ phase, title, description }: { phase: number; title: stri
 
 function StepCard({ num, title, description, emoji }: { num: number; title: string; description: string; emoji?: string }) {
   return (
-    <div className="relative bg-white/5 border border-white/10 rounded-2xl p-4 md:p-5 flex gap-3.5 md:gap-4 transition-all hover:translate-x-1.5 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5 overflow-hidden group">
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-emerald-500 to-teal-700 rounded-l-2xl" />
-      <div className="w-9 h-9 md:w-10 md:h-10 min-w-[36px] md:min-w-[40px] rounded-full bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold text-xs md:text-sm shrink-0">
+    <div className="relative neu-flat p-4 md:p-5 rounded-2xl flex gap-3.5 md:gap-4 transition-all hover:scale-[1.01] overflow-hidden group dark:bg-white/5 dark:border-white/10">
+      <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-gradient-to-b from-emerald-500 to-teal-600 rounded-l-2xl" />
+      <div className="w-9 h-9 md:w-10 md:h-10 min-w-[36px] md:min-w-[40px] rounded-xl neu-raised-xs text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-extrabold text-xs md:text-sm shrink-0">
         {num}
       </div>
       <div>
-        <h4 className="text-xs md:text-sm font-semibold text-white mb-1">
+        <h4 className="text-xs md:text-sm font-extrabold text-foreground mb-1">
           {emoji && <span className="mr-1.5">{emoji}</span>}
           {title}
         </h4>
-        <p className="text-[11px] md:text-xs text-zinc-400 leading-relaxed">{description}</p>
+        <p className="text-[11px] md:text-xs text-muted-foreground leading-relaxed font-medium">{description}</p>
       </div>
     </div>
   )
@@ -57,14 +58,14 @@ function StepCard({ num, title, description, emoji }: { num: number; title: stri
 
 function InfoCard({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-4 md:p-6 transition-all hover:-translate-y-1 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5">
+    <div className="neu-flat p-4 md:p-6 rounded-2xl transition-all hover:scale-[1.01] dark:bg-white/5 dark:border-white/10">
       <div className="flex items-center gap-3 mb-3.5">
-        <div className="w-9 h-9 md:w-11 md:h-11 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0">
+        <div className="w-9 h-9 md:w-11 md:h-11 rounded-2xl neu-raised-xs text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
           <Icon className="w-4 h-4 md:w-5 md:h-5" />
         </div>
-        <h4 className="text-xs md:text-sm font-semibold text-white">{title}</h4>
+        <h4 className="text-xs md:text-sm font-extrabold text-foreground">{title}</h4>
       </div>
-      <div className="text-[11px] md:text-xs text-zinc-400 leading-relaxed space-y-1.5">
+      <div className="text-[11px] md:text-xs text-muted-foreground font-medium leading-relaxed space-y-1.5">
         {children}
       </div>
     </div>
@@ -81,7 +82,7 @@ function CopyButton({ text, label }: { text: string; label: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors"
+      className="flex items-center gap-1.5 px-4 py-2 rounded-xl neu-button text-emerald-600 dark:text-emerald-400 text-xs font-extrabold hover:scale-105 transition-all"
     >
       {copied ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
       {copied ? "Copied!" : label}
@@ -108,7 +109,7 @@ function PhaseSetup() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
         <InfoCard icon={MessageSquare} title="Welcome Message Template">
-          <pre className="whitespace-pre-wrap text-zinc-300 bg-black/30 p-3 rounded-lg border border-white/5 text-[10px] md:text-[11px] leading-relaxed overflow-x-auto">
+          <pre className="whitespace-pre-wrap text-foreground neu-inset-sm p-4 rounded-xl text-[10px] md:text-[11px] font-mono leading-relaxed overflow-x-auto dark:bg-white/5">
             {welcomeTemplate}
           </pre>
           <div className="mt-3">
@@ -126,8 +127,8 @@ function PhaseSetup() {
               { name: "🆘 Doubt Clearing", desc: "Students help each other." },
             ].map(g => (
               <div key={g.name} className="flex items-start gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
-                <div><span className="text-zinc-200 font-medium">{g.name}</span> — {g.desc}</div>
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
+                <div><span className="text-foreground font-extrabold">{g.name}</span> — {g.desc}</div>
               </div>
             ))}
           </div>
@@ -151,31 +152,31 @@ function PhaseContent() {
     <div>
       <PhaseHeader phase={2} title="Content Strategy" description="Plan engaging weekly content to keep students active" />
 
-      <h3 className="text-xs md:text-sm font-semibold text-white mb-4 flex items-center gap-2">
-        <Calendar className="w-4 h-4 text-emerald-400" />
+      <h3 className="text-xs md:text-sm font-extrabold text-foreground mb-4 flex items-center gap-2">
+        <Calendar className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
         Weekly Content Calendar
       </h3>
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 mb-8 bg-black/20">
-        <table className="w-full text-xs md:text-sm text-left min-w-[500px]">
+      <div className="overflow-x-auto rounded-[2rem] neu-flat mb-8 shadow-xl dark:bg-white/5 dark:border-white/10">
+        <table className="w-full text-xs text-left min-w-[500px]">
           <thead>
-            <tr className="bg-gradient-to-r from-emerald-950/80 to-teal-950/80">
-              <th className="px-4 md:px-5 py-3 text-emerald-400 font-semibold text-[10px] md:text-xs uppercase tracking-wider">Day</th>
-              <th className="px-4 md:px-5 py-3 text-emerald-400 font-semibold text-[10px] md:text-xs uppercase tracking-wider">Theme</th>
-              <th className="px-4 md:px-5 py-3 text-emerald-400 font-semibold text-[10px] md:text-xs uppercase tracking-wider">Content Idea</th>
+            <tr className="neu-raised-xs border-b border-black/5 dark:border-white/5">
+              <th className="px-5 py-4 text-emerald-600 dark:text-emerald-400 font-extrabold text-[11px] uppercase tracking-wider">Day</th>
+              <th className="px-5 py-4 text-emerald-600 dark:text-emerald-400 font-extrabold text-[11px] uppercase tracking-wider">Theme</th>
+              <th className="px-5 py-4 text-emerald-600 dark:text-emerald-400 font-extrabold text-[11px] uppercase tracking-wider">Content Idea</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-black/5 dark:divide-white/5">
             {schedule.map(s => (
-              <tr key={s.day} className="bg-white/[0.02] hover:bg-emerald-500/5 transition-colors">
-                <td className="px-4 md:px-5 py-3.5">
-                  <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[11px] font-semibold">{s.day}</span>
+              <tr key={s.day} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                <td className="px-5 py-3.5">
+                  <span className="inline-block px-3 py-1 rounded-full neu-raised-xs text-emerald-600 dark:text-emerald-400 text-[11px] font-extrabold">{s.day}</span>
                 </td>
-                <td className="px-4 md:px-5 py-3.5 text-zinc-200 font-medium">
+                <td className="px-5 py-3.5 text-foreground font-bold">
                   <span className="mr-1.5">{s.emoji}</span>
                   {s.theme}
                 </td>
-                <td className="px-4 md:px-5 py-3.5 text-zinc-400">{s.description}</td>
+                <td className="px-5 py-3.5 text-muted-foreground font-medium">{s.description}</td>
               </tr>
             ))}
           </tbody>
@@ -186,7 +187,7 @@ function PhaseContent() {
         <InfoCard icon={Zap} title="Engagement Boosters">
           {["Use polls for quick feedback", "Share relevant memes", "Create voice note summaries", "Host live Q&A sessions"].map(tip => (
             <div key={tip} className="flex items-start gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
               <span>{tip}</span>
             </div>
           ))}
@@ -194,7 +195,7 @@ function PhaseContent() {
         <InfoCard icon={BookOpen} title="Content Types">
           {["Text-based mini lessons", "Infographics & diagrams", "Short video explanations", "Code snippets & solutions"].map(tip => (
             <div key={tip} className="flex items-start gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
               <span>{tip}</span>
             </div>
           ))}
@@ -202,7 +203,7 @@ function PhaseContent() {
         <InfoCard icon={Trophy} title="Gamification Ideas">
           {["Weekly leaderboard updates", "Bonus XP for participation", "Student spotlight awards", "Streak challenges"].map(tip => (
             <div key={tip} className="flex items-start gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
               <span>{tip}</span>
             </div>
           ))}
@@ -226,44 +227,44 @@ function PhaseModeration() {
     <div>
       <PhaseHeader phase={3} title="Moderation & Rules" description="Maintain a productive learning environment" />
 
-      <h3 className="text-xs md:text-sm font-semibold text-white mb-4 flex items-center gap-2">
-        <Shield className="w-4 h-4 text-emerald-400" />
+      <h3 className="text-xs md:text-sm font-extrabold text-foreground mb-4 flex items-center gap-2">
+        <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
         Community Rules
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 md:gap-4 mb-8">
         {rules.map(r => (
-          <div key={r.title} className="bg-white/5 border border-white/10 rounded-xl p-4 md:p-5 flex gap-3.5 transition-all hover:border-emerald-500/30">
-            <div className="w-9 h-9 md:w-10 md:h-10 min-w-[36px] rounded-xl bg-emerald-500/12 text-emerald-400 flex items-center justify-center shrink-0">
+          <div key={r.title} className="neu-flat p-4 md:p-5 rounded-2xl flex gap-3.5 transition-all hover:scale-[1.01] dark:bg-white/5 dark:border-white/10">
+            <div className="w-9 h-9 md:w-10 md:h-10 min-w-[36px] rounded-xl neu-raised-xs text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
               <r.icon className="w-4 h-4 md:w-4.5 md:h-4.5" />
             </div>
             <div>
-              <h4 className="text-xs md:text-sm font-semibold text-white mb-1">{r.title}</h4>
-              <p className="text-[11px] md:text-xs text-zinc-400 leading-relaxed">{r.desc}</p>
+              <h4 className="text-xs md:text-sm font-extrabold text-foreground mb-1">{r.title}</h4>
+              <p className="text-[11px] md:text-xs text-muted-foreground leading-relaxed font-medium">{r.desc}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <h3 className="text-xs md:text-sm font-semibold text-white mb-4 flex items-center gap-2">
-        <AlertTriangle className="w-4 h-4 text-amber-400" />
+      <h3 className="text-xs md:text-sm font-extrabold text-foreground mb-4 flex items-center gap-2">
+        <AlertTriangle className="w-4 h-4 text-amber-500" />
         Enforcement Process
       </h3>
 
-      <div className="flex items-center justify-center flex-col sm:flex-row gap-3 mb-8">
-        <div className="px-5 py-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center w-full sm:w-auto sm:min-w-[150px]">
-          <h5 className="text-xs md:text-sm font-semibold text-amber-400 mb-0.5">⚠️ 1st Warning</h5>
-          <p className="text-[10px] text-zinc-400">Friendly DM reminder</p>
+      <div className="flex items-center justify-center flex-col sm:flex-row gap-4 mb-8">
+        <div className="p-4 rounded-2xl neu-flat text-center w-full sm:w-auto sm:min-w-[160px] dark:bg-white/5">
+          <h5 className="text-xs md:text-sm font-extrabold text-amber-600 dark:text-amber-400 mb-0.5">⚠️ 1st Warning</h5>
+          <p className="text-[10px] text-muted-foreground font-semibold">Friendly DM reminder</p>
         </div>
-        <span className="text-zinc-600 text-lg hidden sm:inline">→</span>
-        <div className="px-5 py-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-center w-full sm:w-auto sm:min-w-[150px]">
-          <h5 className="text-xs md:text-sm font-semibold text-indigo-400 mb-0.5">🔇 2nd: Mute</h5>
-          <p className="text-[10px] text-zinc-400">24-hour group mute</p>
+        <span className="text-muted-foreground text-lg hidden sm:inline font-extrabold">→</span>
+        <div className="p-4 rounded-2xl neu-flat text-center w-full sm:w-auto sm:min-w-[160px] dark:bg-white/5">
+          <h5 className="text-xs md:text-sm font-extrabold text-indigo-600 dark:text-indigo-400 mb-0.5">🔇 2nd: Mute</h5>
+          <p className="text-[10px] text-muted-foreground font-semibold">24-hour group mute</p>
         </div>
-        <span className="text-zinc-600 text-lg hidden sm:inline">→</span>
-        <div className="px-5 py-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-center w-full sm:w-auto sm:min-w-[150px]">
-          <h5 className="text-xs md:text-sm font-semibold text-red-400 mb-0.5">🚫 3rd: Remove</h5>
-          <p className="text-[10px] text-zinc-400">Removed from group</p>
+        <span className="text-muted-foreground text-lg hidden sm:inline font-extrabold">→</span>
+        <div className="p-4 rounded-2xl neu-flat text-center w-full sm:w-auto sm:min-w-[160px] dark:bg-white/5">
+          <h5 className="text-xs md:text-sm font-extrabold text-rose-600 dark:text-rose-400 mb-0.5">🚫 3rd: Remove</h5>
+          <p className="text-[10px] text-muted-foreground font-semibold">Removed from group</p>
         </div>
       </div>
 
@@ -276,7 +277,7 @@ function PhaseModeration() {
           "Review group weekly for off-topic content",
         ].map(tip => (
           <div key={tip} className="flex items-start gap-2">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
             <span>{tip}</span>
           </div>
         ))}
@@ -287,10 +288,10 @@ function PhaseModeration() {
 
 function PhaseLeadership() {
   const roles = [
-    { emoji: "👨‍🏫", title: "Faculty Lead", badge: "Admin", color: "from-emerald-500 to-emerald-700", responsibilities: ["Final authority on group decisions", "Content approval & scheduling", "Direct student mentorship", "Community strategy planning"] },
-    { emoji: "🎓", title: "Student Admin", badge: "Moderator", color: "from-blue-500 to-blue-700", responsibilities: ["Day-to-day moderation", "Welcome new members", "Forward student queries", "Maintain group etiquette"] },
-    { emoji: "💻", title: "Tech Lead", badge: "Contributor", color: "from-violet-500 to-violet-700", responsibilities: ["Share coding resources", "Help debug student code", "Organize hackathons", "Maintain resource links"] },
-    { emoji: "📚", title: "Peer Tutor", badge: "Helper", color: "from-amber-500 to-amber-700", responsibilities: ["Answer academic doubts", "Share study materials", "Organize study groups", "Create revision notes"] },
+    { emoji: "👨‍🏫", title: "Faculty Lead", badge: "Admin", responsibilities: ["Final authority on group decisions", "Content approval & scheduling", "Direct student mentorship", "Community strategy planning"] },
+    { emoji: "🎓", title: "Student Admin", badge: "Moderator", responsibilities: ["Day-to-day moderation", "Welcome new members", "Forward student queries", "Maintain group etiquette"] },
+    { emoji: "💻", title: "Tech Lead", badge: "Contributor", responsibilities: ["Share coding resources", "Help debug student code", "Organize hackathons", "Maintain resource links"] },
+    { emoji: "📚", title: "Peer Tutor", badge: "Helper", responsibilities: ["Answer academic doubts", "Share study materials", "Organize study groups", "Create revision notes"] },
   ]
 
   return (
@@ -299,23 +300,22 @@ function PhaseLeadership() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5 mb-8">
         {roles.map(role => (
-          <div key={role.title} className="relative bg-white/5 border border-white/10 rounded-2xl p-5 md:p-6 transition-all hover:-translate-y-1 hover:border-emerald-500/30 overflow-hidden">
-            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${role.color}`} />
+          <div key={role.title} className="relative neu-flat p-5 md:p-6 rounded-2xl transition-all hover:scale-[1.01] dark:bg-white/5 dark:border-white/10">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-white/5 border-2 border-emerald-500/30 flex items-center justify-center text-xl shrink-0">
+              <div className="w-12 h-12 rounded-2xl neu-raised-xs flex items-center justify-center text-2xl shrink-0">
                 {role.emoji}
               </div>
               <div>
-                <h3 className="text-sm md:text-base font-bold text-white">{role.title}</h3>
-                <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[9px] md:text-[10px] font-semibold uppercase tracking-wider">
+                <h3 className="text-sm md:text-base font-extrabold text-foreground">{role.title}</h3>
+                <span className="inline-block px-2.5 py-0.5 rounded-full neu-raised-xs text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold uppercase tracking-wider mt-0.5">
                   {role.badge}
                 </span>
               </div>
             </div>
             <div className="space-y-2">
               {role.responsibilities.map(r => (
-                <div key={r} className="flex items-start gap-2 text-xs text-zinc-400">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+                <div key={r} className="flex items-start gap-2 text-xs font-medium text-muted-foreground">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
                   <span>{r}</span>
                 </div>
               ))}
@@ -333,7 +333,7 @@ function PhaseLeadership() {
           "Recognize and reward outstanding moderators with XP bonuses",
         ].map(tip => (
           <div key={tip} className="flex items-start gap-2">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
             <span>{tip}</span>
           </div>
         ))}
@@ -362,8 +362,8 @@ function PhaseEngagement() {
     <div>
       <PhaseHeader phase={5} title="Engagement & Growth" description="Scale your community with gamification and events" />
 
-      <h3 className="text-xs md:text-sm font-semibold text-white mb-4 flex items-center gap-2">
-        <Award className="w-4 h-4 text-emerald-400" />
+      <h3 className="text-xs md:text-sm font-extrabold text-foreground mb-4 flex items-center gap-2">
+        <Award className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
         Community Milestones
       </h3>
 
@@ -371,42 +371,42 @@ function PhaseEngagement() {
         <div className="absolute left-[14px] md:left-[18px] top-0 bottom-0 w-[3px] bg-gradient-to-b from-emerald-500 via-teal-600 to-emerald-500/20 rounded-full" />
 
         {milestones.map(m => (
-          <div key={m.title} className="relative bg-white/5 border border-white/10 rounded-xl p-4 md:p-5 transition-all hover:translate-x-1 hover:border-emerald-500/30">
-            <div className="absolute -left-[20px] md:-left-[22px] top-5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-[3px] border-[#0B0F19] shadow-[0_0_10px_rgba(16,185,129,0.4)]" />
+          <div key={m.title} className="relative neu-flat p-4 md:p-5 rounded-2xl transition-all hover:scale-[1.01] dark:bg-white/5 dark:border-white/10">
+            <div className="absolute -left-[20px] md:-left-[22px] top-5 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-background shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-base md:text-lg font-bold text-emerald-400">{m.members}</span>
-              <h4 className="text-xs md:text-sm font-semibold text-white">{m.title}</h4>
+              <span className="text-base md:text-lg font-extrabold text-emerald-600 dark:text-emerald-400">{m.members}</span>
+              <h4 className="text-xs md:text-sm font-extrabold text-foreground">{m.title}</h4>
             </div>
-            <p className="text-[11px] md:text-xs text-zinc-400 leading-relaxed">{m.description}</p>
-            <span className="inline-block mt-2 px-2.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 text-[10px] font-semibold">
+            <p className="text-[11px] md:text-xs text-muted-foreground leading-relaxed font-medium">{m.description}</p>
+            <span className="inline-block mt-2 px-2.5 py-0.5 rounded-md neu-raised-xs text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold">
               {m.tag}
             </span>
           </div>
         ))}
       </div>
 
-      <h3 className="text-xs md:text-sm font-semibold text-white mb-4 flex items-center gap-2">
-        <Rocket className="w-4 h-4 text-emerald-400" />
+      <h3 className="text-xs md:text-sm font-extrabold text-foreground mb-4 flex items-center gap-2">
+        <Rocket className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
         Community Events Calendar
       </h3>
 
-      <div className="overflow-x-auto rounded-2xl border border-white/10 mb-8 bg-black/20">
-        <table className="w-full text-xs md:text-sm text-left min-w-[480px]">
+      <div className="overflow-x-auto rounded-[2rem] neu-flat mb-8 shadow-xl dark:bg-white/5 dark:border-white/10">
+        <table className="w-full text-xs text-left min-w-[480px]">
           <thead>
-            <tr className="bg-gradient-to-r from-emerald-950/80 to-teal-950/80">
-              <th className="px-4 md:px-5 py-3 text-emerald-400 font-semibold text-[10px] md:text-xs uppercase tracking-wider">Event</th>
-              <th className="px-4 md:px-5 py-3 text-emerald-400 font-semibold text-[10px] md:text-xs uppercase tracking-wider">Frequency</th>
-              <th className="px-4 md:px-5 py-3 text-emerald-400 font-semibold text-[10px] md:text-xs uppercase tracking-wider">Description</th>
+            <tr className="neu-raised-xs border-b border-black/5 dark:border-white/5">
+              <th className="px-5 py-4 text-emerald-600 dark:text-emerald-400 font-extrabold text-[11px] uppercase tracking-wider">Event</th>
+              <th className="px-5 py-4 text-emerald-600 dark:text-emerald-400 font-extrabold text-[11px] uppercase tracking-wider">Frequency</th>
+              <th className="px-5 py-4 text-emerald-600 dark:text-emerald-400 font-extrabold text-[11px] uppercase tracking-wider">Description</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-black/5 dark:divide-white/5">
             {events.map(e => (
-              <tr key={e.name} className="bg-white/[0.02] hover:bg-emerald-500/5 transition-colors">
-                <td className="px-4 md:px-5 py-3 text-zinc-200 font-medium">{e.name}</td>
-                <td className="px-4 md:px-5 py-3">
-                  <span className="inline-block px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[11px] font-semibold">{e.freq}</span>
+              <tr key={e.name} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                <td className="px-5 py-3.5 text-foreground font-extrabold">{e.name}</td>
+                <td className="px-5 py-3.5">
+                  <span className="inline-block px-3 py-1 rounded-full neu-raised-xs text-emerald-600 dark:text-emerald-400 text-[11px] font-extrabold">{e.freq}</span>
                 </td>
-                <td className="px-4 md:px-5 py-3 text-zinc-400">{e.desc}</td>
+                <td className="px-5 py-3.5 text-muted-foreground font-medium">{e.desc}</td>
               </tr>
             ))}
           </tbody>
@@ -422,7 +422,7 @@ function PhaseEngagement() {
             "Leaderboard integration with EduSync",
           ].map(tip => (
             <div key={tip} className="flex items-start gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
               <span>{tip}</span>
             </div>
           ))}
@@ -435,7 +435,7 @@ function PhaseEngagement() {
             "Student showcase spotlights monthly",
           ].map(tip => (
             <div key={tip} className="flex items-start gap-2">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 mt-0.5 shrink-0" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" />
               <span>{tip}</span>
             </div>
           ))}
@@ -451,34 +451,34 @@ export default function CommunityWorkflowPage() {
   const [activeTab, setActiveTab] = useState<TabId>("setup")
 
   return (
-    <div className="flex flex-col gap-5 md:gap-6 max-w-5xl mx-auto p-2 md:p-4 pb-20">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white flex items-center gap-3">
-          <div className="w-9 h-9 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg shadow-emerald-500/20 shrink-0">
-            <Users className="w-4 h-4 md:w-5 md:h-5 text-white" />
+    <div className="flex flex-col gap-6 max-w-6xl mx-auto p-4 md:p-8 pb-20 text-foreground">
+      {/* Top Banner Header */}
+      <LiquidGlassCard className="p-6 md:p-8 shadow-xl" accentColor="#10b981">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl neu-raised-sm flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+            <MessageCircle className="w-7 h-7" strokeWidth={2} />
           </div>
-          WhatsApp Community Workflow
-        </h1>
-        <p className="text-zinc-400 mt-1.5 text-xs md:text-sm">
-          Build and manage engaging student communities with a structured 5-phase approach.
-        </p>
-      </div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">Faculty WhatsApp Community Workflow</h1>
+            <p className="text-xs md:text-sm text-muted-foreground mt-0.5 font-medium">Build and manage engaging student communities with a structured 5-phase framework.</p>
+          </div>
+        </div>
+      </LiquidGlassCard>
 
-      {/* Phase Tabs — Horizontal Scrollable on Mobile */}
-      <div className="flex gap-1.5 overflow-x-auto no-scrollbar p-1.5 rounded-2xl bg-black/30 border border-emerald-500/15 shrink-0">
+      {/* Phase Tabs — Neumorphic Control Bar */}
+      <div className="flex gap-2 overflow-x-auto no-scrollbar p-2 rounded-[2rem] neu-flat dark:bg-white/5 dark:border-white/10 shrink-0 shadow-lg">
         {TABS.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "flex items-center gap-2 px-3.5 md:px-4 py-2 md:py-2.5 rounded-xl text-xs font-medium transition-all shrink-0 whitespace-nowrap",
+              "flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-extrabold transition-all shrink-0 whitespace-nowrap",
               activeTab === tab.id
-                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30"
-                : "text-zinc-400 hover:text-emerald-400 hover:bg-emerald-500/10"
+                ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/30 scale-105"
+                : "neu-button text-muted-foreground hover:text-foreground"
             )}
           >
-            <tab.icon className="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" />
+            <tab.icon className="w-4 h-4 shrink-0" />
             <span>{tab.label}</span>
           </button>
         ))}
