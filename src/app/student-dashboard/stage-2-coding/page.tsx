@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import NextImage from "next/image";
 import { GlassCard } from "@/components/ui/glass-card";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { Button } from "@/components/ui/button";
@@ -250,12 +251,12 @@ const SHOP_ITEMS = [
 type CodingTab = "code-coach" | "playground" | "arena" | "learning-paths" | "arcade" | "shop";
 
 const CODING_FEATURES = [
-  { id: "learning-paths" as CodingTab, label: "Learning Paths", icon: Compass, color: "text-blue-400", borderColor: "border-blue-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(59,130,246,0.3)]", bgGradient: "from-blue-500/20 to-indigo-500/10", desc: "Bite-sized language roadmaps, interactive slides & Boss Battles" },
-  { id: "code-coach" as CodingTab, label: "Code Coach", icon: Target, color: "text-emerald-400", borderColor: "border-emerald-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(16,185,129,0.3)]", bgGradient: "from-emerald-500/20 to-teal-500/10", desc: "Standalone practice algorithm problems with live test harnesses" },
-  { id: "playground" as CodingTab, label: "Playground", icon: Code, color: "text-indigo-400", borderColor: "border-indigo-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(99,102,241,0.3)]", bgGradient: "from-indigo-500/20 to-purple-500/10", desc: "Multi-language online Monaco compiler, custom input & runtime profiler" },
-  { id: "arena" as CodingTab, label: "Arena Modes", icon: Sword, color: "text-rose-400", borderColor: "border-rose-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(244,63,94,0.3)]", bgGradient: "from-rose-500/20 to-pink-500/10", desc: "1v1 Battle Duels, Bug Monster Boss, Bug Hunter & AI Reviewer" },
-  { id: "arcade" as CodingTab, label: "Arcade & Quests", icon: Gamepad, color: "text-amber-400", borderColor: "border-amber-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(245,158,11,0.3)]", bgGradient: "from-amber-500/20 to-yellow-500/10", desc: "Daily coding quests, streak chests & achievement badges cabinet" },
-  { id: "shop" as CodingTab, label: "Profile & Shop", icon: Coins, color: "text-purple-400", borderColor: "border-purple-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(168,85,247,0.3)]", bgGradient: "from-purple-500/20 to-fuchsia-500/10", desc: "Spend virtual coins on editor skins, shield guards & debug duck" },
+  { id: "learning-paths" as CodingTab, label: "Learning Paths", icon: Compass, image: "/images/coding/learning_paths.png", color: "text-blue-400", borderColor: "border-blue-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(59,130,246,0.3)]", bgGradient: "from-blue-500/20 to-indigo-500/10", desc: "Bite-sized language roadmaps, interactive slides & Boss Battles" },
+  { id: "code-coach" as CodingTab, label: "Code Coach", icon: Target, image: "/images/coding/code_coach.png", color: "text-emerald-400", borderColor: "border-emerald-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(16,185,129,0.3)]", bgGradient: "from-emerald-500/20 to-teal-500/10", desc: "Standalone practice algorithm problems with live test harnesses" },
+  { id: "playground" as CodingTab, label: "Playground", icon: Code, image: "/images/coding/playground.png", color: "text-indigo-400", borderColor: "border-indigo-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(99,102,241,0.3)]", bgGradient: "from-indigo-500/20 to-purple-500/10", desc: "Multi-language online Monaco compiler, custom input & runtime profiler" },
+  { id: "arena" as CodingTab, label: "Arena Modes", icon: Sword, image: "/images/coding/arena_modes.png", color: "text-rose-400", borderColor: "border-rose-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(244,63,94,0.3)]", bgGradient: "from-rose-500/20 to-pink-500/10", desc: "1v1 Battle Duels, Bug Monster Boss, Bug Hunter & AI Reviewer" },
+  { id: "arcade" as CodingTab, label: "Arcade & Quests", icon: Gamepad, image: "/images/coding/arcade_quests.png", color: "text-amber-400", borderColor: "border-amber-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(245,158,11,0.3)]", bgGradient: "from-amber-500/20 to-yellow-500/10", desc: "Daily coding quests, streak chests & achievement badges cabinet" },
+  { id: "shop" as CodingTab, label: "Profile & Shop", icon: Coins, image: "/images/coding/profile_shop.png", color: "text-purple-400", borderColor: "border-purple-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(168,85,247,0.3)]", bgGradient: "from-purple-500/20 to-fuchsia-500/10", desc: "Spend virtual coins on editor skins, shield guards & debug duck" },
 ];
 
 export default function CodingStagePage() {
@@ -845,8 +846,15 @@ export default function CodingStagePage() {
                 className={`group text-left relative flex flex-col justify-between p-6 neu-flat rounded-[2rem] hover:scale-[1.01] transition-all duration-300 shadow-xl ${feature.glowColor} h-60 dark:bg-white/5 dark:border-white/10`}
               >
                 <div className="flex items-center justify-between w-full">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br ${feature.bgGradient} border ${feature.borderColor} transition-transform duration-300 group-hover:scale-110 shadow-lg`}>
-                    <Icon className={`w-7 h-7 ${feature.color}`} strokeWidth={2} />
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center neu-raised-sm bg-gradient-to-br ${feature.bgGradient} border ${feature.borderColor} transition-transform duration-300 group-hover:scale-110 shadow-lg relative p-2 overflow-hidden`}>
+                    <NextImage 
+                      src={feature.image} 
+                      alt={feature.label}
+                      fill
+                      className="object-contain filter drop-shadow-[0_4px_12px_rgba(99,102,241,0.4)] transition-transform duration-300 group-hover:scale-105"
+                      sizes="64px"
+                      priority
+                    />
                   </div>
                   <div className="w-8 h-8 rounded-full neu-button flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
                     <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary-foreground group-hover:translate-x-0.5 transition-all" />
