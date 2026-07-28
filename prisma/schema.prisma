@@ -47,10 +47,27 @@ model User {
   assignmentSubmissions AssignmentSubmission[]
   studentProfile        StudentProfile?
 
-  
+  // Faculty Dashboard relations
+  timetableSlots        TimetableSlot[]        @relation("FacultyTimetable")
+  attendanceRecordsAsStudent AttendanceRecord[] @relation("StudentAttendance")
+  periodTopicLogs       PeriodTopicLog[]       @relation("FacultyPeriodLogs")
+  coursePlans           CoursePlan[]           @relation("FacultyCoursePlans")
+  internalMarksGiven    InternalMark[]         @relation("FacultyMarks")
+  internalMarksReceived InternalMark[]         @relation("StudentMarks")
+  leaveRequests         LeaveRequest[]         @relation("FacultyLeaves")
+  substitutionRequests  SubstitutionRequest[]  @relation("SubstituteRequests")
+  notifications         Notification[]         @relation("UserNotifications")
+  mentorGroups          MentorGroup[]          @relation("MentorGroups")
+  menteeOf              MentorGroup[]          @relation("MenteeOf")
+  counselingAsFaculty   CounselingSession[]    @relation("FacultyCounseling")
+  counselingAsStudent   CounselingSession[]    @relation("StudentCounseling")
+  studentLeaves         StudentLeaveRequest[]  @relation("StudentLeaves")
+  inchargeReviews       StudentLeaveRequest[]  @relation("InchargeReviews")
+
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 }
+
 
 model Department {
   id      String @id @default(uuid())
@@ -496,4 +513,176 @@ model AIAdminSettings {
   customProxies     String?  // JSON array of custom proxy URLs
   updatedAt         DateTime @updatedAt
 }
+
+// ==========================================
+// Faculty Dashboard Models
+// ==========================================
+
+/// Weekly timetable slot for a faculty member
+model TimetableSlot {
+  id          String   @id @default(uuid())
+  facultyId   String
+  faculty     User     @relation("FacultyTimetable", fields: [facultyId], references: [id], onDelete: Cascade)
+  dayOfWeek   Int      // 1=Mon .. 5=Fri
+  periodNo    Int      // 1..8
+  subject     String
+  classGroup  String   // e.g. "CSE-A", "IT-B"
+  room        String   @default("")
+  startTime   String   // "09:00"
+  endTime     String   // "09:50"
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  attendanceRecords AttendanceRecord[]
+  periodTopicLogs   PeriodTopicLog[]
+  substitutions     SubstitutionRequest[]
+}
+
+/// Daily attendance record per student per timetable slot
+model AttendanceRecord {
+  id             String        @id @default(uuid())
+  slotId         String
+  slot           TimetableSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  studentId      String
+  student        User          @relation("StudentAttendance", fields: [studentId], references: [id], onDelete: Cascade)
+  date           String        // "2026-07-27"
+  isPresent      Boolean       @default(true)
+  markedAt       DateTime      @default(now())
+
+  @@unique([slotId, studentId, date])
+}
+
+/// Faculty logs topic taught after each session
+model PeriodTopicLog {
+  id          String        @id @default(uuid())
+  slotId      String
+  slot        TimetableSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  facultyId   String
+  faculty     User          @relation("FacultyPeriodLogs", fields: [facultyId], references: [id], onDelete: Cascade)
+  date        String        // "2026-07-27"
+  topicCovered String
+  notes       String?
+  createdAt   DateTime      @default(now())
+}
+
+/// PDF course plan uploaded by faculty per subject
+model CoursePlan {
+  id          String   @id @default(uuid())
+  facultyId   String
+  faculty     User     @relation("FacultyCoursePlans", fields: [facultyId], references: [id], onDelete: Cascade)
+  subject     String
+  classGroup  String
+  semester    Int
+  academicYear String
+  fileName    String
+  fileUrl     String   // path relative to /public
+  uploadedAt  DateTime @default(now())
+}
+
+/// Student internal assessment marks per subject per exam type
+model InternalMark {
+  id          String   @id @default(uuid())
+  facultyId   String
+  faculty     User     @relation("FacultyMarks", fields: [facultyId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     User     @relation("StudentMarks", fields: [studentId], references: [id], onDelete: Cascade)
+  subject     String
+  classGroup  String
+  examType    String   // "CIA1", "CIA2", "MODEL", "PRACTICAL"
+  maxMark     Int      @default(100)
+  scoredMark  Int      @default(0)
+  remarks     String?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@unique([facultyId, studentId, subject, examType])
+}
+
+/// Faculty leave request
+model LeaveRequest {
+  id            String   @id @default(uuid())
+  facultyId     String
+  faculty       User     @relation("FacultyLeaves", fields: [facultyId], references: [id], onDelete: Cascade)
+  leaveType     String   // "CL", "ML", "OD", "COMP_OFF"
+  fromDate      DateTime
+  toDate        DateTime
+  reason        String
+  status        String   @default("PENDING") // "PENDING", "SUB_PENDING", "APPROVED", "REJECTED"
+  hodRemark     String?
+  appliedAt     DateTime @default(now())
+  reviewedAt    DateTime?
+
+  substitutions SubstitutionRequest[]
+}
+
+/// Per-period substitution request linked to a leave
+model SubstitutionRequest {
+  id            String        @id @default(uuid())
+  leaveId       String
+  leave         LeaveRequest  @relation(fields: [leaveId], references: [id], onDelete: Cascade)
+  slotId        String
+  slot          TimetableSlot @relation(fields: [slotId], references: [id])
+  date          String        // "2026-07-27"
+  substituteId  String
+  substitute    User          @relation("SubstituteRequests", fields: [substituteId], references: [id])
+  status        String        @default("PENDING") // "PENDING", "ACCEPTED", "REJECTED"
+  respondedAt   DateTime?
+  createdAt     DateTime      @default(now())
+}
+
+/// In-app notification
+model Notification {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+  type       String   // "SUBSTITUTION_REQUEST", "LEAVE_STATUS", "HOD_ACTION", "STUDENT_LEAVE"
+  title      String
+  message    String
+  isRead     Boolean  @default(false)
+  refId      String?  // id of related LeaveRequest / SubstitutionRequest
+  createdAt  DateTime @default(now())
+}
+
+/// Mentor-mentee group (faculty mentors a group of students)
+model MentorGroup {
+  id         String   @id @default(uuid())
+  mentorId   String
+  mentor     User     @relation("MentorGroups", fields: [mentorId], references: [id], onDelete: Cascade)
+  studentId  String
+  student    User     @relation("MenteeOf", fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([mentorId, studentId])
+}
+
+/// Counseling session log
+model CounselingSession {
+  id          String   @id @default(uuid())
+  facultyId   String
+  faculty     User     @relation("FacultyCounseling", fields: [facultyId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     User     @relation("StudentCounseling", fields: [studentId], references: [id], onDelete: Cascade)
+  summary     String
+  sessionType String   @default("GENERAL") // "GENERAL", "ACADEMIC", "PERSONAL", "CAREER"
+  nextAction  String?
+  createdAt   DateTime @default(now())
+}
+
+/// Student leave request reviewed by class incharge faculty
+model StudentLeaveRequest {
+  id              String   @id @default(uuid())
+  studentId       String
+  student         User     @relation("StudentLeaves", fields: [studentId], references: [id], onDelete: Cascade)
+  classInchargeId String?
+  classIncharge   User?    @relation("InchargeReviews", fields: [classInchargeId], references: [id])
+  fromDate        DateTime
+  toDate          DateTime
+  reason          String
+  leaveType       String   @default("PERSONAL") // "MEDICAL", "PERSONAL", "EVENT", "EXAM"
+  status          String   @default("PENDING")  // "PENDING", "APPROVED", "REJECTED", "FORWARDED_TO_HOD"
+  inchargeRemark  String?
+  appliedAt       DateTime @default(now())
+  reviewedAt      DateTime?
+}
+
 

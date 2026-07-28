@@ -1,20 +1,63 @@
 import { NextResponse } from "next/server"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
+
+export const dynamic = "force-dynamic"
 
 function generateCode(len = 6) {
   return Math.random().toString(36).substring(2, 2 + len).toUpperCase()
 }
 
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions)
+    let facultyId = session?.user?.id
+
+    if (!facultyId) {
+      const faculty = await db.user.findFirst({ where: { role: "FACULTY" } })
+      facultyId = faculty?.id
+    }
+
+    if (!facultyId) {
+      return NextResponse.json([])
+    }
+
+    const classrooms = await db.classroom.findMany({
+      where: { facultyId },
+      include: {
+        _count: {
+          select: { students: true, assignments: true }
+        }
+      },
+      orderBy: { createdAt: "desc" }
+    })
+
+    return NextResponse.json(classrooms)
+  } catch (e) {
+    console.error("GET /api/classrooms error:", e)
+    return NextResponse.json({ error: "Server error" }, { status: 500 })
+  }
+}
+
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions)
+    let facultyId = session?.user?.id
+
+    if (!facultyId) {
+      const faculty = await db.user.findFirst({ where: { role: "FACULTY" } })
+      facultyId = faculty?.id
+    }
+
+    if (!facultyId) {
+      return NextResponse.json({ error: "Faculty not found" }, { status: 404 })
+    }
+
     const { name, section } = await req.json()
     if (!name) return NextResponse.json({ error: "Name required" }, { status: 400 })
 
-    // Get first faculty user (session-based auth can be added later)
-    const faculty = await db.user.findFirst({ where: { role: "FACULTY" } })
-    if (!faculty) return NextResponse.json({ error: "No faculty found" }, { status: 404 })
-
-    // Ensure unique code
+    // Ensure unique 6-char code
     let code = generateCode()
     let existing = await db.classroom.findUnique({ where: { code } })
     while (existing) {
@@ -23,12 +66,16 @@ export async function POST(req: Request) {
     }
 
     const classroom = await db.classroom.create({
-      data: { name: section ? `${name} — ${section}` : name, code, facultyId: faculty.id }
+      data: {
+        name: section ? `${name} — ${section}` : name,
+        code,
+        facultyId,
+      }
     })
 
     return NextResponse.json(classroom)
   } catch (e) {
-    console.error(e)
+    console.error("POST /api/classrooms error:", e)
     return NextResponse.json({ error: "Server error" }, { status: 500 })
   }
 }

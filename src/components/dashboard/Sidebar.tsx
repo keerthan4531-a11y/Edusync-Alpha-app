@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, LayoutDashboard, BookOpen, Code, Briefcase, GraduationCap, Users, BarChart3, Mail, Languages, School, User, Map, Layers, Monitor, Compass, CheckSquare, Package, FileText, Settings, BookMarked, MessageCircle } from "lucide-react"
+import { Home, LayoutDashboard, BookOpen, Code, Briefcase, GraduationCap, Users, BarChart3, Mail, Languages, School, User, Map, Layers, Monitor, Compass, CheckSquare, Package, FileText, Settings, BookMarked, MessageCircle, Calendar, ClipboardCheck, Heart, Bell } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface SidebarProps {
@@ -31,12 +31,13 @@ const getMenuByRole = (role: string): MenuItem[] => {
   }
   if (role === "FACULTY") {
     return [
-      { name: "Dashboard", href: "/faculty-dashboard", icon: LayoutDashboard },
-      { name: "Classrooms", href: "/faculty-dashboard/classrooms", icon: Monitor },
-      { name: "Students", href: "/faculty-dashboard/students", icon: Users },
-      { name: "Attendance", href: "/faculty-dashboard/attendance", icon: User },
-      { name: "Schedule", href: "/faculty-dashboard/schedule", icon: Compass },
-      { name: "Community", href: "/faculty-dashboard/community", icon: MessageCircle },
+      { name: "Dashboard",      href: "/faculty-dashboard",              icon: LayoutDashboard },
+      { name: "Classrooms",     href: "/faculty-dashboard/classrooms",   icon: Monitor },
+      { name: "Academics",      href: "/faculty-dashboard/academics",    icon: GraduationCap },
+      { name: "Leave",          href: "/faculty-dashboard/leave",        icon: Calendar },
+      { name: "Class Incharge", href: "/faculty-dashboard/class-incharge", icon: ClipboardCheck },
+      { name: "Students",       href: "/faculty-dashboard/students",     icon: Users },
+      { name: "Community",      href: "/faculty-dashboard/community",    icon: MessageCircle },
     ]
   }
   if (role === "HOD") {
