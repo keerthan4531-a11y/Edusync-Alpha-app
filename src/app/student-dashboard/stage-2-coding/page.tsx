@@ -40,9 +40,19 @@ import {
   LayoutDashboard,
   Save,
   X,
-  ChevronLeft
+  ChevronLeft,
+  Puzzle,
+  Crown
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+
+import { CodeQuestModule } from "./components/CodeQuestModule";
+import { BugHunterModule } from "./components/BugHunterModule";
+import { CodeBattleModule } from "./components/CodeBattleModule";
+import { CodePuzzleModule } from "./components/CodePuzzleModule";
+import { OutputPredictorModule } from "./components/OutputPredictorModule";
+import { BossBattleModule } from "./components/BossBattleModule";
+
 
 interface Challenge {
   id: string;
@@ -248,15 +258,27 @@ const SHOP_ITEMS = [
   { id: "item_shield", name: "Streak Shield Guard", desc: "Protects your coding streak if you skip a day.", cost: 100, type: "item", icon: "🛡️" }
 ];
 
-type CodingTab = "code-coach" | "playground" | "arena" | "learning-paths" | "arcade" | "shop";
+type CodingTab = 
+  | "code-quest" 
+  | "bug-hunter" 
+  | "code-battle" 
+  | "code-puzzle" 
+  | "output-predictor" 
+  | "boss-battle" 
+  | "learning-paths" 
+  | "code-coach"
+  | "playground" 
+  | "arena"
+  | "arcade"
+  | "shop";
 
 const CODING_FEATURES = [
-  { id: "learning-paths" as CodingTab, label: "Learning Paths", icon: Compass, image: "/images/coding/learning_paths.png", color: "text-blue-400", borderColor: "border-blue-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(59,130,246,0.3)]", bgGradient: "from-blue-500/20 to-indigo-500/10", desc: "Bite-sized language roadmaps, interactive slides & Boss Battles" },
-  { id: "code-coach" as CodingTab, label: "Code Coach", icon: Target, image: "/images/coding/code_coach.png", color: "text-emerald-400", borderColor: "border-emerald-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(16,185,129,0.3)]", bgGradient: "from-emerald-500/20 to-teal-500/10", desc: "Standalone practice algorithm problems with live test harnesses" },
-  { id: "playground" as CodingTab, label: "Playground", icon: Code, image: "/images/coding/playground.png", color: "text-indigo-400", borderColor: "border-indigo-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(99,102,241,0.3)]", bgGradient: "from-indigo-500/20 to-purple-500/10", desc: "Multi-language online Monaco compiler, custom input & runtime profiler" },
-  { id: "arena" as CodingTab, label: "Arena Modes", icon: Sword, image: "/images/coding/arena_modes.png", color: "text-rose-400", borderColor: "border-rose-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(244,63,94,0.3)]", bgGradient: "from-rose-500/20 to-pink-500/10", desc: "1v1 Battle Duels, Bug Monster Boss, Bug Hunter & AI Reviewer" },
-  { id: "arcade" as CodingTab, label: "Arcade & Quests", icon: Gamepad, image: "/images/coding/arcade_quests.png", color: "text-amber-400", borderColor: "border-amber-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(245,158,11,0.3)]", bgGradient: "from-amber-500/20 to-yellow-500/10", desc: "Daily coding quests, streak chests & achievement badges cabinet" },
-  { id: "shop" as CodingTab, label: "Profile & Shop", icon: Coins, image: "/images/coding/profile_shop.png", color: "text-purple-400", borderColor: "border-purple-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(168,85,247,0.3)]", bgGradient: "from-purple-500/20 to-fuchsia-500/10", desc: "Spend virtual coins on editor skins, shield guards & debug duck" },
+  { id: "code-quest" as CodingTab, label: "Code Quest", icon: Gamepad, image: "/images/coding/arcade_quests.png", color: "text-blue-400", borderColor: "border-blue-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(59,130,246,0.3)]", bgGradient: "from-blue-500/20 to-indigo-500/10", desc: "Main Gamified Mode: Unlock 6 worlds from Syntax Village to AI/ML Lab" },
+  { id: "bug-hunter" as CodingTab, label: "Bug Hunter", icon: Bug, image: "/images/coding/arena_modes.png", color: "text-blue-400", borderColor: "border-blue-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(59,130,246,0.3)]", bgGradient: "from-blue-500/20 to-indigo-500/10", desc: "Inspect intentionally buggy code snippets, locate defects & fix them for XP" },
+  { id: "code-battle" as CodingTab, label: "Code Battle Arena", icon: Swords, image: "/images/coding/arena_modes.png", color: "text-blue-400", borderColor: "border-blue-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(59,130,246,0.3)]", bgGradient: "from-blue-500/20 to-indigo-500/10", desc: "1v1 realtime PvP coding duels, speed metrics, test cases & rank points" },
+  { id: "code-puzzle" as CodingTab, label: "Code Puzzle", icon: Puzzle, image: "/images/coding/code_coach.png", color: "text-blue-400", borderColor: "border-blue-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(59,130,246,0.3)]", bgGradient: "from-blue-500/20 to-indigo-500/10", desc: "Crack secret door passwords & vault ciphers using clue algorithm logic" },
+  { id: "output-predictor" as CodingTab, label: "Output Predictor", icon: Cpu, image: "/images/coding/playground.png", color: "text-blue-400", borderColor: "border-blue-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(59,130,246,0.3)]", bgGradient: "from-blue-500/20 to-indigo-500/10", desc: "Predict code snippet output without running — ideal for interview prep" },
+  { id: "boss-battle" as CodingTab, label: "Logic Boss Battles 👑", icon: Crown, image: "/images/coding/profile_shop.png", color: "text-blue-400", borderColor: "border-blue-500/30", glowColor: "group-hover:shadow-[0_0_25px_rgba(59,130,246,0.3)]", bgGradient: "from-blue-500/20 to-indigo-500/10", desc: "Defeat Array Monster by passing test cases to deal HP damage" },
 ];
 
 export default function CodingStagePage() {
@@ -770,110 +792,44 @@ export default function CodingStagePage() {
 
   if (!activeTab) {
     return (
-      <div className="space-y-8 p-2">
-        <div className="flex items-center justify-between">
+      <div className="space-y-8">
+        <div className="mb-4 shrink-0">
           <button 
             onClick={() => router.back()}
-            className="flex items-center justify-center w-10 h-10 rounded-full neu-button transition-colors shadow-sm"
+            className="flex items-center justify-center w-10 h-10 rounded-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 hover:bg-black/10 dark:hover:bg-white/10 transition-colors shadow-sm"
             aria-label="Go back"
           >
             <ChevronLeft className="w-6 h-6 text-foreground" />
           </button>
-          
-          <button 
-            onClick={claimDailyChest}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 dark:bg-gradient-to-r dark:from-amber-500/20 dark:to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/40 text-amber-700 dark:text-amber-300 font-bold text-xs rounded-full transition-all shadow-lg shadow-amber-500/10 hover:scale-105"
-          >
-            <Flame className="w-4 h-4 text-amber-500 animate-bounce" />
-            <span>{streak} Days Streak</span>
-            <span className="text-[10px] bg-amber-500/20 dark:bg-amber-500/30 px-2 py-0.5 rounded-full font-extrabold text-amber-900 dark:text-white border border-amber-400/40">Claim Chest 🎁</span>
-          </button>
+        </div>
+        <div>
+          <h1 className="text-[28px] md:text-[34px] leading-tight font-semibold text-foreground tracking-tight mb-2">Coding</h1>
         </div>
 
-        {/* Stage Header Banner */}
-        <LiquidGlassCard className="p-6 md:p-8 shadow-xl" accentColor="#3b82f6">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="flex items-center gap-5">
-              <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl neu-raised-sm flex items-center justify-center text-primary dark:text-blue-400 shrink-0 shadow-lg">
-                <Code className="w-9 h-9 md:w-10 md:h-10" strokeWidth={2} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] font-extrabold text-primary dark:text-blue-400 uppercase tracking-widest neu-raised-xs px-2.5 py-0.5 rounded-full">Stage 2</span>
-                  <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Judge0 Active
-                  </span>
-                </div>
-                <h1 className="text-2xl md:text-3xl font-extrabold text-foreground dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-blue-100 dark:to-indigo-200 tracking-tight">
-                  Coding Fundamentals
-                </h1>
-                <p className="text-xs md:text-sm text-muted-foreground mt-1 max-w-xl leading-relaxed font-medium">
-                  Master syntax roadmaps, solve algorithmic challenges, battle AI Bug Monsters in 1v1 arenas, and test code in real-time.
-                </p>
-              </div>
-            </div>
-            
-            {/* Quick Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full md:w-auto text-center border-t md:border-t-0 border-black/10 dark:border-white/10 pt-4 md:pt-0">
-              <div className="p-3 neu-raised-sm rounded-2xl hover:scale-105 transition-all">
-                <span className="text-xl font-extrabold text-primary dark:text-blue-400 block">{challengesCount}</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-extrabold">Completed</span>
-              </div>
-              <div className="p-3 neu-raised-sm rounded-2xl hover:scale-105 transition-all">
-                <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 block">{linesOfCode}</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-extrabold">Lines of Code</span>
-              </div>
-              <div className="p-3 neu-raised-sm rounded-2xl hover:scale-105 transition-all">
-                <span className="text-xl font-extrabold text-amber-600 dark:text-amber-400 block">{compilerRuns}</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-extrabold">Compiler Runs</span>
-              </div>
-              <div className="p-3 neu-raised-sm rounded-2xl hover:scale-105 transition-all">
-                <span className="text-xl font-extrabold text-purple-600 dark:text-purple-400 block">{tier}</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-extrabold">Current Tier</span>
-              </div>
-            </div>
-          </div>
-        </LiquidGlassCard>
-
         {/* Feature Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
           {CODING_FEATURES.map((feature) => {
-            const Icon = feature.icon;
             return (
               <button
                 key={feature.id}
                 onClick={() => setActiveTab(feature.id)}
-                className={`group text-left relative flex flex-col justify-between p-6 neu-flat rounded-[2rem] hover:scale-[1.01] transition-all duration-300 shadow-xl ${feature.glowColor} h-60 dark:bg-white/5 dark:border-white/10`}
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 neu-convex rounded-[2rem] hover:scale-[1.02] transition-all duration-300 dark:bg-white/5 dark:backdrop-blur-xl dark:border dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
               >
-                <div className="flex items-center justify-between w-full">
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center neu-raised-sm bg-gradient-to-br ${feature.bgGradient} border ${feature.borderColor} transition-transform duration-300 group-hover:scale-110 shadow-lg relative p-2 overflow-hidden`}>
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center neu-raised-sm dark:bg-indigo-950/30 dark:border-2 dark:border-indigo-400/20 transition-all duration-300 group-hover:scale-110 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+                  <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
                     <NextImage 
                       src={feature.image} 
                       alt={feature.label}
                       fill
-                      className="object-contain filter drop-shadow-[0_4px_12px_rgba(99,102,241,0.4)] transition-transform duration-300 group-hover:scale-105"
-                      sizes="64px"
+                      className="object-contain filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)] dark:mix-blend-screen"
+                      sizes="(max-width: 768px) 64px, 80px"
                       priority
                     />
                   </div>
-                  <div className="w-8 h-8 rounded-full neu-button flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                    <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary-foreground group-hover:translate-x-0.5 transition-all" />
-                  </div>
                 </div>
-                
-                <div className="space-y-1.5 mt-4">
-                  <h3 className="text-lg font-extrabold text-foreground dark:text-white group-hover:text-primary dark:group-hover:text-blue-400 transition-colors">
-                    {feature.label}
-                  </h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2 font-normal">
-                    {feature.desc}
-                  </p>
-                </div>
-
-                <div className="text-[11px] font-bold text-primary dark:text-blue-400 flex items-center gap-1 pt-3 border-t border-black/5 dark:border-white/5 mt-auto">
-                  <span>Open Module</span>
-                  <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </div>
+                <span className="text-[15px] font-semibold text-foreground dark:text-gray-200 group-hover:text-primary transition-colors text-center">
+                  {feature.label}
+                </span>
               </button>
             );
           })}
@@ -883,51 +839,80 @@ export default function CodingStagePage() {
   }
 
   return (
-    <div className={`space-y-6 transition-all duration-500 p-2 ${activeTheme === "theme_matrix"
-        ? "dark bg-[#020502] text-green-400 font-mono"
-        : activeTheme === "theme_cyberpunk"
-          ? "dark bg-[#0f051d] text-indigo-400"
-          : activeTheme === "theme_dracula"
-            ? "dark bg-[#1e1f29] text-[#f8f8f2]"
-            : ""
-      }`}>
-      {/* Top Floating Glass Navigation Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3 neu-raised rounded-3xl shrink-0 shadow-xl dark:bg-white/5 dark:border-white/10">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <button
-            onClick={() => setActiveTab(null)}
-            className="flex items-center justify-center w-9 h-9 rounded-full neu-button transition-colors shadow-sm shrink-0"
-            aria-label="Back to Coding Options"
-          >
-            <ChevronLeft className="w-5 h-5 text-foreground" />
-          </button>
-          <span className="text-sm font-extrabold text-foreground dark:text-white hidden md:inline">Stage 2: Coding</span>
-        </div>
+    <div className="space-y-6 transition-all duration-500">
+      {/* 1. CODE QUEST TAB */}
+      {activeTab === "code-quest" && (
+        <CodeQuestModule 
+          onBack={() => setActiveTab(null)} 
+          onAwardXP={(earnedXP, earnedCoins) => {
+            setXp(prev => prev + earnedXP);
+            setCoins(prev => prev + earnedCoins);
+            setChallengesCount(prev => prev + 1);
+          }} 
+        />
+      )}
 
-        {/* Tab Switcher Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
-          {CODING_FEATURES.map((feature) => {
-            const isActive = activeTab === feature.id;
-            const Icon = feature.icon;
-            return (
-              <button
-                key={feature.id}
-                onClick={() => setActiveTab(feature.id)}
-                className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                  isActive
-                    ? "bg-primary text-primary-foreground shadow-md scale-105 neu-button"
-                    : "neu-button text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{feature.label}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      {/* 2. BUG HUNTER TAB */}
+      {activeTab === "bug-hunter" && (
+        <BugHunterModule 
+          onBack={() => setActiveTab(null)} 
+          onAwardXP={(earnedXP, earnedCoins) => {
+            setXp(prev => prev + earnedXP);
+            setCoins(prev => prev + earnedCoins);
+            setChallengesCount(prev => prev + 1);
+          }} 
+        />
+      )}
 
-      {/* 1. LEARNING PATHS TAB */}
+      {/* 3. CODE BATTLE ARENA TAB */}
+      {activeTab === "code-battle" && (
+        <CodeBattleModule 
+          onBack={() => setActiveTab(null)} 
+          onAwardXP={(earnedXP, earnedCoins) => {
+            setXp(prev => prev + earnedXP);
+            setCoins(prev => prev + earnedCoins);
+            setChallengesCount(prev => prev + 1);
+          }} 
+        />
+      )}
+
+      {/* 4. CODE PUZZLE TAB */}
+      {activeTab === "code-puzzle" && (
+        <CodePuzzleModule 
+          onBack={() => setActiveTab(null)} 
+          onAwardXP={(earnedXP, earnedCoins) => {
+            setXp(prev => prev + earnedXP);
+            setCoins(prev => prev + earnedCoins);
+            setChallengesCount(prev => prev + 1);
+          }} 
+        />
+      )}
+
+      {/* 5. OUTPUT PREDICTOR TAB */}
+      {activeTab === "output-predictor" && (
+        <OutputPredictorModule 
+          onBack={() => setActiveTab(null)} 
+          onAwardXP={(earnedXP, earnedCoins) => {
+            setXp(prev => prev + earnedXP);
+            setCoins(prev => prev + earnedCoins);
+            setChallengesCount(prev => prev + 1);
+          }} 
+        />
+      )}
+
+      {/* 6. LOGIC BOSS BATTLES TAB */}
+      {activeTab === "boss-battle" && (
+        <BossBattleModule 
+          onBack={() => setActiveTab(null)} 
+          onAwardXP={(earnedXP, earnedCoins) => {
+            setXp(prev => prev + earnedXP);
+            setCoins(prev => prev + earnedCoins);
+            setChallengesCount(prev => prev + 1);
+          }} 
+        />
+      )}
+
+      {/* OTHER TABS */}
       {activeTab === "learning-paths" && (
         <div className="space-y-6 animate-in fade-in">
           {/* Daily Goal UI */}
