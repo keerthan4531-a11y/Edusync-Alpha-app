@@ -282,15 +282,15 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                   setPendingFeature(feature.id);
                   onSubFeatureOpen?.(true);
                 }}
-                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl shadow-indigo-500/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 neu-convex rounded-[2rem] hover:scale-[1.02] transition-all duration-300 dark:bg-white/5 dark:backdrop-blur-xl dark:border dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
               >
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-indigo-500/10 dark:bg-indigo-950/30 border-2 border-indigo-400/20 transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400/50 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center neu-raised-sm dark:bg-indigo-950/30 dark:border-2 dark:border-indigo-400/20 transition-all duration-300 group-hover:scale-110 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
                   <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
                     <Image 
                       src="/images/communication/writing.png" 
                       alt={feature.label}
                       fill
-                      className="object-contain mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
+                      className="object-contain dark:mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
                       sizes="(max-width: 768px) 64px, 80px"
                       priority
                     />
@@ -358,15 +358,15 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                     </div>
                   ) : (
                     <LiquidGlassCard className="p-6 border-indigo-500 bg-indigo-500/5 animate-in slide-in-from-bottom" accentColor="#6366f1">
-                      <h3 className="text-[28px] font-bold text-foreground mb-4">AI Feedback</h3>
+                      <h3 className="text-[28px] font-bold text-gray-900 dark:text-white mb-4">AI Feedback</h3>
                       
                       <div className="space-y-6">
-                        <div className="bg-white/50 dark:bg-black/40 p-5 rounded-2xl border border-black/5 dark:border-white/5">
-                          <p className="text-[17px] text-zinc-700 dark:text-gray-200 leading-relaxed font-medium">
+                        <div className="bg-black/5 dark:bg-black/40 p-5 rounded-2xl border border-black/10 dark:border-white/10">
+                          <p className="text-[17px] text-gray-900 dark:text-gray-100 leading-relaxed font-medium">
                             {tutorResult.evaluation?.feedback || "Great writing!"}
                           </p>
                           {tutorResult.evaluation?.tamilFeedback && (
-                            <p className="text-[15px] text-indigo-600 dark:text-indigo-400 italic mt-3">
+                            <p className="text-[15px] text-blue-700 dark:text-indigo-400 italic mt-3 font-medium">
                               {tutorResult.evaluation.tamilFeedback}
                             </p>
                           )}
@@ -375,25 +375,25 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                         {(tutorResult.evaluation?.grammarIssues?.length > 0 || tutorResult.evaluation?.vocabularySuggestions?.length > 0) && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {tutorResult.evaluation.grammarIssues?.length > 0 && (
-                              <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20">
-                                <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                              <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
+                                <h4 className="text-blue-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
                                   <ShieldAlert className="w-4 h-4" /> Grammar Fixes
                                 </h4>
                                 <ul className="list-disc pl-4 space-y-1">
                                   {tutorResult.evaluation.grammarIssues.map((issue: string, i: number) => (
-                                    <li key={i} className="text-[14px] text-indigo-700 dark:text-indigo-300">{issue}</li>
+                                    <li key={i} className="text-[14px] text-blue-800 dark:text-indigo-300 font-medium">{issue}</li>
                                   ))}
                                 </ul>
                               </div>
                             )}
                             {tutorResult.evaluation.vocabularySuggestions?.length > 0 && (
-                              <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20">
-                                <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                              <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
+                                <h4 className="text-blue-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
                                   <Sparkles className="w-4 h-4" /> Better Words
                                 </h4>
                                 <ul className="list-disc pl-4 space-y-1">
                                   {tutorResult.evaluation.vocabularySuggestions.map((sug: string, i: number) => (
-                                    <li key={i} className="text-[14px] text-indigo-700 dark:text-indigo-300">{sug}</li>
+                                    <li key={i} className="text-[14px] text-blue-800 dark:text-indigo-300 font-medium">{sug}</li>
                                   ))}
                                 </ul>
                               </div>
@@ -402,16 +402,16 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                         )}
 
                         <div className="mt-8 flex items-center gap-4 flex-wrap">
-                          <span className="px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/50">
+                          <span className="px-4 py-2 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold border border-blue-500/20 shadow-sm">
                             Score: {tutorResult.score}%
                           </span>
-                          <span className="px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/50">
+                          <span className="px-4 py-2 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-400 font-bold border border-amber-500/20 shadow-sm">
                             +{tutorResult.xpAwarded} XP
                           </span>
                           <div className="flex-1" />
                           <button
                             onClick={loadDynamicTutor}
-                            className="px-6 py-2.5 rounded-xl bg-[#6366f1] hover:bg-[#5254cc] text-white font-medium shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all"
+                            className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all shadow-sm"
                           >
                             Next
                           </button>
@@ -509,15 +509,15 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                 </div>
               ) : (
                 <LiquidGlassCard className="p-6 border-indigo-500 bg-indigo-500/5 animate-in slide-in-from-bottom" accentColor="#6366f1">
-                  <h3 className="text-[28px] font-bold text-foreground mb-4">AI Feedback</h3>
+                  <h3 className="text-[28px] font-bold text-gray-900 dark:text-white mb-4">AI Feedback</h3>
                   
                   <div className="space-y-6">
-                    <div className="bg-white/50 dark:bg-black/40 p-5 rounded-2xl border border-black/5 dark:border-white/5">
-                      <p className="text-[17px] text-zinc-700 dark:text-gray-200 leading-relaxed font-medium">
+                    <div className="bg-black/5 dark:bg-black/40 p-5 rounded-2xl border border-black/10 dark:border-white/10">
+                      <p className="text-[17px] text-gray-900 dark:text-gray-100 leading-relaxed font-medium">
                         {imageResult.evaluation?.feedback || "Great description!"}
                       </p>
                       {imageResult.evaluation?.tamilFeedback && (
-                        <p className="text-[15px] text-indigo-600 dark:text-indigo-400 italic mt-3">
+                        <p className="text-[15px] text-blue-700 dark:text-indigo-400 italic mt-3 font-medium">
                           {imageResult.evaluation.tamilFeedback}
                         </p>
                       )}
@@ -526,25 +526,25 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                     {(imageResult.evaluation?.grammarIssues?.length > 0 || imageResult.evaluation?.vocabularySuggestions?.length > 0) && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {imageResult.evaluation.grammarIssues?.length > 0 && (
-                          <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20">
-                            <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                          <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
+                            <h4 className="text-blue-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
                               <ShieldAlert className="w-4 h-4" /> Grammar Fixes
                             </h4>
                             <ul className="list-disc pl-4 space-y-1">
                               {imageResult.evaluation.grammarIssues.map((issue: string, i: number) => (
-                                <li key={i} className="text-[14px] text-indigo-700 dark:text-indigo-300">{issue}</li>
+                                <li key={i} className="text-[14px] text-blue-800 dark:text-indigo-300 font-medium">{issue}</li>
                               ))}
                             </ul>
                           </div>
                         )}
                         {imageResult.evaluation.vocabularySuggestions?.length > 0 && (
-                          <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20">
-                            <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                          <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
+                            <h4 className="text-blue-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
                               <Sparkles className="w-4 h-4" /> Better Words
                             </h4>
                             <ul className="list-disc pl-4 space-y-1">
                               {imageResult.evaluation.vocabularySuggestions.map((sug: string, i: number) => (
-                                <li key={i} className="text-[14px] text-indigo-700 dark:text-indigo-300">{sug}</li>
+                                <li key={i} className="text-[14px] text-blue-800 dark:text-indigo-300 font-medium">{sug}</li>
                               ))}
                             </ul>
                           </div>
@@ -553,16 +553,16 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                     )}
 
                     <div className="mt-8 flex items-center gap-4 flex-wrap">
-                      <span className="px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/50">
+                      <span className="px-4 py-2 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold border border-blue-500/20 shadow-sm">
                         Score: {imageResult.score}%
                       </span>
-                      <span className="px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/50">
+                      <span className="px-4 py-2 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-400 font-bold border border-amber-500/20 shadow-sm">
                         +{imageResult.xpAwarded} XP
                       </span>
                       <div className="flex-1" />
                       <button
                         onClick={loadDynamicImage}
-                        className="px-6 py-2.5 rounded-xl bg-[#6366f1] hover:bg-[#5254cc] text-white font-medium shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all"
+                        className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all shadow-sm"
                       >
                         Next
                       </button>
@@ -696,15 +696,15 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                 </div>
               ) : (
                 <LiquidGlassCard className="p-6 border-indigo-500 bg-indigo-500/5 animate-in slide-in-from-bottom" accentColor="#6366f1">
-                  <h3 className="text-[28px] font-bold text-foreground mb-4">AI Feedback</h3>
+                  <h3 className="text-[28px] font-bold text-gray-900 dark:text-white mb-4">AI Feedback</h3>
                   
                   <div className="space-y-6">
-                    <div className="bg-white/50 dark:bg-black/40 p-5 rounded-2xl border border-black/5 dark:border-white/5">
-                      <p className="text-[17px] text-zinc-700 dark:text-gray-200 leading-relaxed font-medium">
+                    <div className="bg-black/5 dark:bg-black/40 p-5 rounded-2xl border border-black/10 dark:border-white/10">
+                      <p className="text-[17px] text-gray-900 dark:text-gray-100 leading-relaxed font-medium">
                         {filterResult.evaluation?.feedback || "Great rewrite!"}
                       </p>
                       {filterResult.evaluation?.tamilFeedback && (
-                        <p className="text-[15px] text-indigo-600 dark:text-indigo-400 italic mt-3">
+                        <p className="text-[15px] text-blue-700 dark:text-indigo-400 italic mt-3 font-medium">
                           {filterResult.evaluation.tamilFeedback}
                         </p>
                       )}
@@ -713,25 +713,25 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                     {(filterResult.evaluation?.grammarIssues?.length > 0 || filterResult.evaluation?.vocabularySuggestions?.length > 0) && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {filterResult.evaluation.grammarIssues?.length > 0 && (
-                          <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20">
-                            <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                          <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
+                            <h4 className="text-blue-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
                               <ShieldAlert className="w-4 h-4" /> Grammar Fixes
                             </h4>
                             <ul className="list-disc pl-4 space-y-1">
                               {filterResult.evaluation.grammarIssues.map((issue: string, i: number) => (
-                                <li key={i} className="text-[14px] text-indigo-700 dark:text-indigo-300">{issue}</li>
+                                <li key={i} className="text-[14px] text-blue-800 dark:text-indigo-300 font-medium">{issue}</li>
                               ))}
                             </ul>
                           </div>
                         )}
                         {filterResult.evaluation.vocabularySuggestions?.length > 0 && (
-                          <div className="bg-indigo-500/10 p-4 rounded-xl border border-indigo-500/20">
-                            <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                          <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
+                            <h4 className="text-blue-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
                               <Sparkles className="w-4 h-4" /> Better Words
                             </h4>
                             <ul className="list-disc pl-4 space-y-1">
                               {filterResult.evaluation.vocabularySuggestions.map((sug: string, i: number) => (
-                                <li key={i} className="text-[14px] text-indigo-700 dark:text-indigo-300">{sug}</li>
+                                <li key={i} className="text-[14px] text-blue-800 dark:text-indigo-300 font-medium">{sug}</li>
                               ))}
                             </ul>
                           </div>
@@ -740,16 +740,16 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                     )}
 
                     <div className="mt-8 flex items-center gap-4 flex-wrap">
-                      <span className="px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/50">
+                      <span className="px-4 py-2 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold border border-blue-500/20 shadow-sm">
                         Score: {filterResult.score}%
                       </span>
-                      <span className="px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/50">
+                      <span className="px-4 py-2 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-400 font-bold border border-amber-500/20 shadow-sm">
                         +{filterResult.xpAwarded} XP
                       </span>
                       <div className="flex-1" />
                       <button
                         onClick={loadDynamicFilter}
-                        className="px-6 py-2.5 rounded-xl bg-[#6366f1] hover:bg-[#5254cc] text-white font-medium shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all"
+                        className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all shadow-sm"
                       >
                         Next
                       </button>

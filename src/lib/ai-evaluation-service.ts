@@ -70,38 +70,7 @@ function generateLocalSpeakingEvaluation(referenceText: string, transcribedText:
   };
 }
 
-export async function evaluateWriting(userId: string, contentId: string, submissionText: string) {
-  // @ts-ignore: Bypassing stale IDE cache
-  let content = await db.stage1Content.findUnique({
-    where: { id: contentId }
-  }).catch(() => null);
-
-  const promptText = content?.content || "Describe the image or topic in detail using clear English sentences.";
-
-  // Gemini Prompt for Writing Evaluation
-  const prompt = `You are an encouraging English teacher evaluating a student's writing.
-  
-  Topic given to student: "${promptText}"
-  Student's Submission: "${submissionText}"
-  
-  Focus your evaluation primarily on the student's English proficiency rather than strict adherence to the topic format. 
-  Evaluate the submission based on:
-  1. Grammar and sentence structure
-  2. Spelling and vocabulary usage
-  3. Creativity and how well they express their thoughts in English
-  
-  Do NOT penalize them if they didn't follow the exact format of the topic, as long as they express themselves creatively in English.
-  
-  Return your response as a valid JSON object ONLY. Do NOT wrap it in markdown blockquotes like \`\`\`json.
-  {
-      "score": integer (0-100),
-      "feedback": "Two sentences of professional, constructive feedback focusing on their English skills and creativity",
-      "tamilFeedback": "A clear professional explanation in Tamil with suggestions for improvement",
-      "grammarIssues": ["list of specific grammar or spelling mistakes, if any"],
-      "vocabularySuggestions": ["suggested better words to use to improve their vocabulary"]
-  }`;
-
-interface WritingEvaluationResult {
+export interface WritingEvaluationResult {
   score?: number;
   feedback?: string;
   tamilFeedback?: string;
@@ -109,28 +78,50 @@ interface WritingEvaluationResult {
   vocabularySuggestions?: string[];
 }
 
+export async function evaluateWriting(userId: string, contentId: string, submissionText: string) {
+  // @ts-ignore: Bypassing stale IDE cache
+  let content = await db.stage1Content.findUnique({
+    where: { id: contentId }
+  }).catch(() => null);
+
+  const promptText = content?.content || "Describe the topic in detail using clear English sentences.";
+
+  const systemPrompt = `You are an encouraging English teacher evaluating a student's writing.
+Return ONLY a valid JSON object:
+{
+  "score": integer (0-100),
+  "feedback": "Two sentences of professional, constructive feedback in English.",
+  "tamilFeedback": "Detailed explanation and style guidance in Tamil.",
+  "grammarIssues": ["grammar mistake 1", "spelling mistake 2"],
+  "vocabularySuggestions": ["use splendid instead of good"]
+}`;
+
+  const userPrompt = `Topic given to student: "${promptText}"\nStudent's Submission: "${submissionText}"\nEvaluate sentence structure, grammar, vocabulary, and creative expression.`;
+
   let parsedResponse: WritingEvaluationResult;
   try {
-    const responseText = await esChat([{ role: "user", content: prompt }]);
+    const responseText = await esChat([
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt }
+    ]);
     
     const parsed = safeJsonParse<WritingEvaluationResult>(responseText);
-    if (!parsed) {
-      throw new Error("No valid JSON found in AI response");
+    if (!parsed || typeof parsed.score !== "number") {
+      throw new Error("Invalid or unparseable JSON from AI evaluation response");
     }
     parsedResponse = parsed;
   } catch (e) {
-    console.warn("AI writing evaluation API call failed or returned non-JSON, using intelligent local evaluator:", e);
+    console.warn("AI writing evaluation call failed or non-JSON, using intelligent local evaluator:", e);
     parsedResponse = generateLocalWritingEvaluation(promptText, submissionText);
   }
 
-  const score = Math.max(0, Math.min(100, parsedResponse.score || 70));
+  const score = Math.max(0, Math.min(100, parsedResponse.score || 75));
   
   let xpAwarded = 0;
   if (score >= 80) xpAwarded = 30;
   else if (score >= 50) xpAwarded = 15;
-  else xpAwarded = 5; // Base effort XP
+  else xpAwarded = 5;
 
-  // Save activity record to DB if content exists or create fallback entry
   try {
     // @ts-ignore: Bypassing stale IDE cache
     await db.stage1Activity.create({
@@ -159,6 +150,13 @@ interface WritingEvaluationResult {
   };
 }
 
+export interface SpeakingEvaluationResult {
+  score?: number;
+  feedback?: string;
+  tamilFeedback?: string;
+  mispronouncedWords?: string[];
+}
+
 export async function evaluateSpeaking(userId: string, contentId: string, transcribedText: string) {
   // @ts-ignore: Bypassing stale IDE cache
   let content = await db.stage1Content.findUnique({
@@ -167,34 +165,31 @@ export async function evaluateSpeaking(userId: string, contentId: string, transc
 
   const referenceText = content?.content || "Speak clearly in English to practice your pronunciation.";
 
-  // Gemini Prompt for Speaking Evaluation
-  const prompt = `You are a friendly English speech coach evaluating an ESL student's pronunciation.
-  
-  Reference Text: "${referenceText}"
-  Transcribed Speech (what the student said): "${transcribedText}"
-  
-  Compare the transcribed speech with the reference text. Evaluate their accuracy (0-100), identifying small typos versus serious misunderstandings or skipped words.
-  
-  Return your response as a valid JSON object ONLY. Do NOT wrap it in markdown blockquotes like \`\`\`json.
-  {
-      "score": integer (0-100),
-      "feedback": "Two sentences of encouraging feedback in English",
-      "tamilFeedback": "A clear professional explanation in Tamil",
-      "mispronouncedWords": ["words they missed or likely mispronounced based on the transcript differences"]
-  }`;
+  const systemPrompt = `You are an encouraging speech coach evaluating an ESL student's spoken transcript.
+Return ONLY a valid JSON object:
+{
+  "score": integer (0-100),
+  "feedback": "Two sentences of encouraging speech feedback in English.",
+  "tamilFeedback": "Clear speech advice in Tamil.",
+  "mispronouncedWords": ["word1", "word2"]
+}`;
 
-  let parsedResponse;
+  const userPrompt = `Reference Text: "${referenceText}"\nStudent's Transcribed Speech: "${transcribedText}"\nEvaluate pronunciation accuracy and voice fluency.`;
+
+  let parsedResponse: SpeakingEvaluationResult;
   try {
-    const responseText = await esChat([{ role: "user", content: prompt }]);
+    const responseText = await esChat([
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userPrompt }
+    ]);
     
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      parsedResponse = JSON.parse(jsonMatch[0]);
-    } else {
-      throw new Error("No valid JSON found in AI response");
+    const parsed = safeJsonParse<SpeakingEvaluationResult>(responseText);
+    if (!parsed || typeof parsed.score !== "number") {
+      throw new Error("Invalid JSON from AI speaking response");
     }
+    parsedResponse = parsed;
   } catch (e) {
-    console.warn("AI speaking evaluation API call failed or returned non-JSON, using intelligent local evaluator:", e);
+    console.warn("AI speaking evaluation call failed, using intelligent local evaluator:", e);
     parsedResponse = generateLocalSpeakingEvaluation(referenceText, transcribedText);
   }
 

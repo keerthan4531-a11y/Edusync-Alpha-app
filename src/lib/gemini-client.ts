@@ -1,11 +1,25 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { esChat } from "./es-engine";
 
-if (!process.env.GEMINI_API_KEY) {
-  console.warn("Missing GEMINI_API_KEY environment variable");
-}
+export const getGeminiModel = (modelName = "surfsense/gpt-5.4-mini-no-login") => {
+  return {
+    generateContent: async (promptOrContent: any) => {
+      let promptText = "";
+      if (typeof promptOrContent === "string") {
+        promptText = promptOrContent;
+      } else if (Array.isArray(promptOrContent)) {
+        promptText = promptOrContent.map((p) => (typeof p === "string" ? p : JSON.stringify(p))).join("\n");
+      } else if (promptOrContent?.contents) {
+        promptText = JSON.stringify(promptOrContent.contents);
+      } else {
+        promptText = String(promptOrContent);
+      }
 
-export const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-
-export const getGeminiModel = (modelName = "gemini-1.5-flash") => {
-  return genAI.getGenerativeModel({ model: modelName });
+      const textResponse = await esChat([{ role: "user", content: promptText }]);
+      return {
+        response: {
+          text: () => textResponse,
+        },
+      };
+    },
+  };
 };

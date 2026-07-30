@@ -87,9 +87,13 @@ export function Stage1Client({ initialContent }: Stage1ClientProps) {
     );
   }
 
-  // AI Chat gets its own full-screen layout, no extra wrappers
+  // AI Chat gets full interface width layout, expanding edge-to-edge
   if (activeTab === "AICHAT") {
-    return <AIChatModule onSubFeatureOpen={setIsSubFeatureOpen} onBack={() => setActiveTab(null)} />;
+    return (
+      <div className="-mx-3 -mt-4 md:-mx-6 md:-mt-6">
+        <AIChatModule onSubFeatureOpen={setIsSubFeatureOpen} onBack={() => setActiveTab(null)} />
+      </div>
+    );
   }
 
   return (

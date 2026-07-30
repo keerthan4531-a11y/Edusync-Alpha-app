@@ -96,21 +96,21 @@
   /* App background — solid, no gradient */
   --app-gradient: none;
 
-  /* Shadcn tokens — matched to neumorphic base */
+  /* Shadcn tokens — matched to neumorphic base with dark grey text */
   --background: #dde1e7;
-  --foreground: #2D3142;
+  --foreground: #111827;
   --card: #dde1e7;
-  --card-foreground: #2D3142;
+  --card-foreground: #111827;
   --popover: #dde1e7;
-  --popover-foreground: #2D3142;
+  --popover-foreground: #111827;
   --primary: #4F46E5;
   --primary-foreground: #FFFFFF;
   --secondary: #d1d5dc;
-  --secondary-foreground: #2D3142;
+  --secondary-foreground: #111827;
   --muted: #d1d5dc;
-  --muted-foreground: #5c6370;
+  --muted-foreground: #374151;
   --accent: #d1d5dc;
-  --accent-foreground: #2D3142;
+  --accent-foreground: #111827;
   --destructive: #EF4444;
   --border: #c5c9d3;
   --input: #dde1e7;
@@ -122,11 +122,11 @@
   --chart-5: #EF4444;
   --radius: 0.625rem;
   --sidebar: #dde1e7;
-  --sidebar-foreground: #2D3142;
+  --sidebar-foreground: #111827;
   --sidebar-primary: #4F46E5;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #d1d5dc;
-  --sidebar-accent-foreground: #2D3142;
+  --sidebar-accent-foreground: #111827;
   --sidebar-border: #c5c9d3;
   --sidebar-ring: #818CF8;
 }
@@ -181,6 +181,33 @@
   }
   html {
     @apply font-sans;
+  }
+
+  /* Force dark grey text colors across light theme */
+  html:not(.dark) {
+    color: #111827;
+  }
+
+  html:not(.dark) .text-zinc-500,
+  html:not(.dark) .text-zinc-600,
+  html:not(.dark) .text-zinc-400,
+  html:not(.dark) .text-gray-500,
+  html:not(.dark) .text-gray-400,
+  html:not(.dark) .text-slate-500,
+  html:not(.dark) .text-muted-foreground {
+    color: #374151;
+  }
+
+  html:not(.dark) .text-zinc-700,
+  html:not(.dark) .text-zinc-800,
+  html:not(.dark) .text-zinc-900,
+  html:not(.dark) .text-gray-700,
+  html:not(.dark) .text-gray-800,
+  html:not(.dark) .text-gray-900,
+  html:not(.dark) .text-slate-700,
+  html:not(.dark) .text-slate-800,
+  html:not(.dark) .text-foreground {
+    color: #111827;
   }
 }
 

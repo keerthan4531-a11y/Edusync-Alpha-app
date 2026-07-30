@@ -1,12 +1,11 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
 export interface ESMessage {
   role: "system" | "user" | "assistant";
   content: string;
 }
 
-const AI_TIMEOUT = 25000; // 25 seconds timeout
-const WORKER_API_BASE = "https://curly-hill-3303.aegonat29.workers.dev/v1/chat/completions";
+const AI_TIMEOUT = 30000; // 30 seconds timeout
+const WORKER_API_BASE = "https://ultimate-ai-worker.haruyhari930.workers.dev/v1/chat/completions";
+const MODEL_NAME = "surfsense/gpt-5.4-mini-no-login";
 
 function isHtml(text: string): boolean {
   const t = text.trim();
@@ -33,102 +32,96 @@ function isValidResponse(text: string): boolean {
   );
 }
 
-// Try Direct Gemini API using GEMINI_API_KEY
-async function tryDirectGemini(messages: ESMessage[]): Promise<string | null> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
+function parseWorkerResponse(rawText: string): string {
+  const text = rawText.trim();
+  if (!text) return "";
 
-  try {
-    console.log("🌐 [ES-ENGINE] Trying direct Gemini API...");
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  // 1. Standard JSON object
+  if (text.startsWith("{")) {
+    try {
+      const data = JSON.parse(text);
+      if (data.choices?.[0]?.message?.content) return data.choices[0].message.content;
+      if (data.choices?.[0]?.delta?.content) return data.choices[0].delta.content;
+      if (data.response) return data.response;
+      if (data.output) return data.output;
+    } catch {}
+  }
 
-    const systemMsg = messages.find(m => m.role === "system")?.content || "";
-    const userMsgs = messages.filter(m => m.role !== "system");
-
-    const promptText = systemMsg 
-      ? `${systemMsg}\n\n${userMsgs.map(m => m.content).join("\n\n")}`
-      : userMsgs.map(m => m.content).join("\n\n");
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), AI_TIMEOUT);
-
-    const result = await model.generateContent(promptText);
-    clearTimeout(timeoutId);
-
-    const text = result.response.text();
-    if (text && isValidResponse(text) && !isHtml(text)) {
-      console.log("✅ [ES-ENGINE] Direct Gemini API succeeded!");
-      return text.trim();
+  // 2. Server-Sent Events (SSE) lines ("data: {...}")
+  let accumulatedContent = "";
+  const lines = text.split("\n");
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("data:")) {
+      const jsonStr = trimmed.replace(/^data:\s*/, "").trim();
+      if (jsonStr === "[DONE]") continue;
+      try {
+        const chunk = JSON.parse(jsonStr);
+        const delta = chunk.choices?.[0]?.delta?.content || chunk.choices?.[0]?.message?.content || "";
+        if (delta) accumulatedContent += delta;
+      } catch {}
     }
-  } catch (e: any) {
-    console.warn(`[ES-ENGINE] Direct Gemini API failed: ${e.message || e}`);
+  }
+
+  if (accumulatedContent) {
+    return accumulatedContent;
+  }
+
+  // 3. Fallback raw text if not HTML
+  return isHtml(text) ? "" : text;
+}
+
+// Custom Cloudflare Worker Request
+async function tryWorker(messages: ESMessage[], retries = 2): Promise<string | null> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    console.log(`🌐 [ES-ENGINE] Sending AI request to Worker (Attempt ${attempt}/${retries})...`);
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), AI_TIMEOUT);
+
+      const res = await fetch(WORKER_API_BASE, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json, text/event-stream",
+        },
+        body: JSON.stringify({
+          messages: messages.map((m) => ({ role: m.role, content: m.content })),
+          model: MODEL_NAME,
+          stream: false,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      if (res.status !== 200) {
+        console.warn(`[Worker] HTTP ${res.status} on attempt ${attempt}`);
+        if (attempt < retries) continue;
+        return null;
+      }
+
+      const rawText = await res.text();
+      const content = parseWorkerResponse(rawText);
+
+      if (!content || isHtml(content) || !isValidResponse(content)) {
+        console.warn(`[Worker] Invalid response or HTML received on attempt ${attempt}`);
+        if (attempt < retries) continue;
+        return null;
+      }
+
+      console.log("✅ [ES-ENGINE] Custom AI Worker succeeded!");
+      return content.trim();
+    } catch (e: any) {
+      console.warn(`[Worker] Error on attempt ${attempt}: ${e.message || e}`);
+      if (attempt < retries) continue;
+      return null;
+    }
   }
   return null;
 }
 
-// Custom Cloudflare Worker
-async function tryWorker(messages: ESMessage[]): Promise<string | null> {
-  console.log("🌐 [ES-ENGINE] Sending request to Custom Worker...");
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), AI_TIMEOUT);
-
-    const res = await fetch(WORKER_API_BASE, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-      },
-      body: JSON.stringify({
-        messages: messages.map((m) => ({ role: m.role, content: m.content })),
-        model: "gpt-4o-mini",
-        stream: false,
-      }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (res.status !== 200) {
-      console.warn(`[Worker] HTTP ${res.status}`);
-      return null;
-    }
-
-    const data = await res.json();
-    let content = "";
-    
-    if (data.choices?.[0]?.message?.content) {
-      content = data.choices[0].message.content;
-    } else if (typeof data === "string") {
-      content = data;
-    } else if (data.response) {
-      content = data.response;
-    } else {
-      content = JSON.stringify(data);
-    }
-
-    if (!content || isHtml(content) || !isValidResponse(content)) {
-      console.warn("[Worker] Invalid response or HTML received.");
-      return null;
-    }
-
-    console.log("✅ [ES-ENGINE] Custom Worker succeeded!");
-    return content.trim();
-  } catch (e: any) {
-    console.warn(`[Worker] Error: ${e.message || e}`);
-    return null;
-  }
-}
-
-// Main chat function
+// Main chat function used across all API routes
 export async function esChat(messages: ESMessage[]): Promise<string> {
-  // 1. Try Direct Gemini API first
-  const directResult = await tryDirectGemini(messages);
-  if (directResult && !directResult.includes("⚠️")) {
-    return directResult;
-  }
-
-  // 2. Try Worker API second
   const workerResult = await tryWorker(messages);
   if (workerResult && !workerResult.includes("⚠️")) {
     return workerResult;

@@ -1068,8 +1068,7 @@ export default function CodingStagePage() {
                     className="p-5 bg-white/5 border border-white/10 rounded-2xl cursor-pointer hover:border-indigo-500/40 hover:scale-[1.02] transition-all flex flex-col justify-between h-48"
                   >
                     <div className="flex justify-between items-start">
-                      <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${ch.difficulty === "Easy" ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
-                        }`}>{ch.difficulty}</span>
+                      <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">{ch.difficulty}</span>
                       <span className="text-[10px] text-yellow-500 font-bold">💰 +{ch.rewardCoins} Coins</span>
                     </div>
                     <div>

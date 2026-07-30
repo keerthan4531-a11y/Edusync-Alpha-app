@@ -370,15 +370,15 @@ export function VocabularyModule({ onSubFeatureOpen, difficulty, onComplete }: V
                   setQuizActive(false);
                   setQuizFinished(false);
                 }}
-                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl shadow-indigo-500/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 neu-convex rounded-[2rem] hover:scale-[1.02] transition-all duration-300 dark:bg-white/5 dark:backdrop-blur-xl dark:border dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
               >
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-indigo-500/10 dark:bg-indigo-950/30 border-2 border-indigo-400/20 transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400/50 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center neu-raised-sm dark:bg-indigo-950/30 dark:border-2 dark:border-indigo-400/20 transition-all duration-300 group-hover:scale-110 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
                   <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
                     <Image 
                       src="/images/communication/vocabulary.png" 
                       alt={feature.label}
                       fill
-                      className="object-contain mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
+                      className="object-contain dark:mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
                       sizes="(max-width: 768px) 64px, 80px"
                       priority
                     />
@@ -804,9 +804,9 @@ export function VocabularyModule({ onSubFeatureOpen, difficulty, onComplete }: V
             <div className="flex gap-2">
               <button
                 onClick={() => handleStartQuiz(quizType || "meaning")}
-                className="flex-1 py-2.5 bg-green-600 hover:bg-green-700 text-white text-[13px] font-semibold rounded-xl transition-all flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-bold rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm"
               >
-                <RotateCcw className="w-4 h-4" /> Try Again
+                <ArrowRight className="w-4 h-4" /> Next
               </button>
               <button
                 onClick={() => setQuizFinished(false)}

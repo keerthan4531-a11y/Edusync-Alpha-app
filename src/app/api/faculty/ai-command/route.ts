@@ -104,30 +104,23 @@ export async function POST(req: NextRequest) {
 
     const context = { classroomCount, studentCount, pendingSubmissions }
 
-    // Attempt Gemini AI response
-    const apiKey = process.env.GEMINI_API_KEY
-    if (apiKey && apiKey !== "dummy_key" && apiKey.length > 10) {
-      try {
-        const { GoogleGenerativeAI } = await import("@google/generative-ai")
-        const genAI = new GoogleGenerativeAI(apiKey)
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+    // Attempt Custom AI Worker response
+    try {
+      const { esChat } = await import("@/lib/es-engine");
+      const contextString = `Faculty has ${classroomCount} classrooms, ${studentCount} students, and ${pendingSubmissions} pending submissions.`;
+      const prompt = `${SYSTEM_PROMPT}\n\nContext: ${contextString}\n\nFaculty says: "${command.trim()}"`;
 
-        const contextString = `Faculty has ${classroomCount} classrooms, ${studentCount} students, and ${pendingSubmissions} pending submissions.`
-        const prompt = `${SYSTEM_PROMPT}\n\nContext: ${contextString}\n\nFaculty says: "${command.trim()}"`
+      const responseText = await esChat([{ role: "user", content: prompt }]);
 
-        const result = await model.generateContent(prompt)
-        const responseText = result.response.text()
-
-        if (responseText && responseText.length > 0) {
-          return NextResponse.json({
-            response: responseText,
-            source: "gemini",
-            context,
-          })
-        }
-      } catch (aiError) {
-        console.warn("Gemini AI call failed, falling back to rule-based response:", aiError)
+      if (responseText && responseText.length > 0) {
+        return NextResponse.json({
+          response: responseText,
+          source: "surfsense-gpt5.4-mini",
+          context,
+        });
       }
+    } catch (aiError) {
+      console.warn("Custom AI Worker call failed, falling back to rule-based response:", aiError);
     }
 
     // Fallback to rule-based response

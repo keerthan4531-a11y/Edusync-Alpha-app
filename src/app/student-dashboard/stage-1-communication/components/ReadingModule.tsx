@@ -126,15 +126,15 @@ export function ReadingModule({ onNext, onSubFeatureOpen, difficulty, onComplete
                   setPendingFeature(feature.id);
                   onSubFeatureOpen?.(true);
                 }}
-                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl shadow-indigo-500/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 neu-convex rounded-[2rem] hover:scale-[1.02] transition-all duration-300 dark:bg-white/5 dark:backdrop-blur-xl dark:border dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
               >
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-indigo-500/10 dark:bg-indigo-950/30 border-2 border-indigo-400/20 transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400/50 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center neu-raised-sm dark:bg-indigo-950/30 dark:border-2 dark:border-indigo-400/20 transition-all duration-300 group-hover:scale-110 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
                   <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
                     <Image 
                       src="/images/communication/reading.png" 
                       alt={feature.label}
                       fill
-                      className="object-contain mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
+                      className="object-contain dark:mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(99,102,241,0.3)]"
                       sizes="(max-width: 768px) 64px, 80px"
                       priority
                     />
@@ -237,22 +237,22 @@ export function ReadingModule({ onNext, onSubFeatureOpen, difficulty, onComplete
 
                       {result ? (
                         <LiquidGlassCard className="p-6 border-indigo-500/30 bg-indigo-500/5 animate-in slide-in-from-bottom-4" accentColor="#6366f1">
-                          <h3 className="text-[22px] font-bold text-foreground mb-2">Results</h3>
-                          <p className="text-zinc-700 dark:text-gray-200 mb-2 text-[17px] font-medium">{result.feedback}</p>
+                          <h3 className="text-[22px] font-bold text-gray-900 dark:text-white mb-2">Results</h3>
+                          <p className="text-gray-900 dark:text-gray-100 mb-2 text-[17px] font-medium">{result.feedback}</p>
                           {result.tamilFeedback && (
-                            <p className="text-indigo-600 dark:text-indigo-400 text-[15px] mb-4 italic">{result.tamilFeedback}</p>
+                            <p className="text-blue-700 dark:text-indigo-400 text-[15px] mb-4 italic font-medium">{result.tamilFeedback}</p>
                           )}
                           <div className="flex items-center gap-4 mt-6">
-                            <span className="px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 font-bold border border-indigo-500/50 shadow-sm">
+                            <span className="px-4 py-2 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold border border-blue-500/20 shadow-sm">
                               Score: {result.score}%
                             </span>
-                            <span className="px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-600 dark:text-yellow-500 font-bold border border-yellow-500/50 shadow-sm">
+                            <span className="px-4 py-2 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-400 font-bold border border-amber-500/20 shadow-sm">
                               +{result.xpAwarded} XP
                             </span>
                             <div className="flex-1" />
                             <button
                               onClick={loadDynamicReading}
-                              className="px-6 py-2.5 rounded-xl bg-[#6366f1] hover:bg-[#5254cc] text-white font-medium shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all"
+                              className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all shadow-sm"
                             >
                               Next
                             </button>

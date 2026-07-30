@@ -6,8 +6,21 @@ import { db } from "@/lib/db";
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const userId = session.user.id;
+    if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    
+    let userId = session.user.id;
+    if (userId) {
+      const userExists = await db.user.findUnique({ where: { id: userId }, select: { id: true } });
+      if (!userExists && session.user.email) {
+        const userByEmail = await db.user.findUnique({ where: { email: session.user.email }, select: { id: true } });
+        if (userByEmail) userId = userByEmail.id;
+      }
+    } else if (session.user.email) {
+      const userByEmail = await db.user.findUnique({ where: { email: session.user.email }, select: { id: true } });
+      if (userByEmail) userId = userByEmail.id;
+    }
+
+    if (!userId) return NextResponse.json({ pending_requests: [] });
 
     const pendingInvitations = await db.classroomInvitation.findMany({
       where: {

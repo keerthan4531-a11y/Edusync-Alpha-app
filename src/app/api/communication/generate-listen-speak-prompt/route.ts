@@ -1,9 +1,30 @@
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { esChat } from "@/lib/es-engine";
 import { db } from "@/lib/db";
 
+const LISTEN_SPEAK_FALLBACK_POOL = [
+  "Every morning, she enjoys a warm cup of coffee while reading the news.",
+  "The concert hall was filled with music as the talented orchestra performed beautifully.",
+  "Working together as a team helps us solve complex problems much more efficiently.",
+  "He decided to take a long walk along the peaceful river bank to clear his mind.",
+  "Submitting your assignments on time shows great discipline and dedication to your studies."
+];
+
 export async function POST(req: Request) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id && !session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    let difficulty = "medium";
+    try {
+      const body = await req.json();
+      if (body?.difficulty) difficulty = String(body.difficulty).toLowerCase();
+    } catch {}
+
     const topics = [
       "a morning routine at a busy office",
       "a traveller arriving at a new city",
@@ -19,24 +40,30 @@ export async function POST(req: Request) {
 
     const randomTopic = topics[Math.floor(Math.random() * topics.length)];
 
-    const prompt = `Generate a single, clear, moderately challenging sentence about "${randomTopic}" for a listening and speaking practice exercise.
-The sentence should be between 10 and 18 words long. It should sound natural when spoken aloud — use clear, everyday English vocabulary that tests pronunciation.
-Return ONLY the sentence, with no quotes, punctuation at start, or extra text.`;
+    let cleanSentence = LISTEN_SPEAK_FALLBACK_POOL[Math.floor(Math.random() * LISTEN_SPEAK_FALLBACK_POOL.length)];
 
-    const generatedSentence = await esChat([{ role: "user", content: prompt }]);
+    try {
+      const systemPrompt = "You are an English speech coach. Return ONLY a single clear English sentence for listening and speaking practice. Do NOT include quotes, explanations, markdown, or extra formatting.";
+      const userPrompt = `Generate a single, clear, ${difficulty} difficulty sentence (10-18 words) about "${randomTopic}" for a listening and speaking practice exercise.`;
 
-    if (!generatedSentence) {
-      throw new Error("Failed to generate sentence from AI");
+      const generatedSentence = await esChat([
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt }
+      ]);
+
+      if (generatedSentence && generatedSentence.trim().length > 5) {
+        cleanSentence = generatedSentence.trim().replace(/^["'`]|["'`]$/g, '').replace(/```[\s\S]*?```/g, '').trim();
+      }
+    } catch (aiErr) {
+      console.warn("[ES-ENGINE] generate-listen-speak-prompt AI call failed, using fallback sentence:", aiErr);
     }
-
-    const cleanSentence = generatedSentence.trim().replace(/^\"|\"$/g, "");
 
     const newContent = await db.stage1Content.create({
       data: {
         type: "SPEAKING",
         title: "Listen & Speak Practice",
         content: cleanSentence,
-        difficulty: "medium",
+        difficulty,
       },
     });
 

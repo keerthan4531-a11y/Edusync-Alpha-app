@@ -107,7 +107,7 @@ export function AdvancedFlashcards({ words, onClose, onUpdateWord, speakWord }: 
     <div className="fixed inset-0 z-[1000] bg-black/40 dark:bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div className="w-full max-w-lg space-y-4">
         {/* Header */}
-        <div className="flex justify-between items-center text-foreground bg-white/80 dark:bg-black/80 p-4 rounded-2xl border border-black/10 dark:border-white/10 shadow-lg">
+        <div className="flex justify-between items-center text-foreground neu-convex dark:bg-black/80 p-4 rounded-2xl dark:border dark:border-white/10">
           <h2 className="text-[17px] font-semibold flex items-center gap-2">
             <Layers className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> Advanced Flashcards
           </h2>
@@ -148,7 +148,7 @@ export function AdvancedFlashcards({ words, onClose, onUpdateWord, speakWord }: 
               >
                 {/* Front */}
                 <div 
-                  className="absolute inset-0 bg-white dark:bg-[#18181b] border border-black/10 dark:border-white/10 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between items-center text-center shadow-2xl"
+                  className="absolute inset-0 neu-convex dark:bg-[#18181b] dark:border dark:border-white/10 dark:backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between items-center text-center"
                   style={{ backfaceVisibility: "hidden" }}
                 >
                   <div className="w-full flex justify-between">
@@ -178,7 +178,7 @@ export function AdvancedFlashcards({ words, onClose, onUpdateWord, speakWord }: 
 
                 {/* Back */}
                 <div 
-                  className="absolute inset-0 bg-gradient-to-br from-indigo-50/90 to-indigo-50/90 dark:from-[#1e1b4b] dark:to-[#312e81] border border-indigo-200 dark:border-indigo-800/50 backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between text-left shadow-2xl overflow-y-auto"
+                  className="absolute inset-0 neu-convex dark:bg-gradient-to-br dark:from-[#1e1b4b] dark:to-[#312e81] dark:border dark:border-indigo-800/50 dark:backdrop-blur-xl rounded-3xl p-8 flex flex-col justify-between text-left overflow-y-auto"
                   style={{ 
                     backfaceVisibility: "hidden", 
                     transform: "rotateY(180deg)" 
@@ -234,7 +234,7 @@ export function AdvancedFlashcards({ words, onClose, onUpdateWord, speakWord }: 
               )}
 
               {/* Standard Navigation */}
-              <div className="flex justify-between items-center text-foreground bg-white/80 dark:bg-black/80 border border-black/10 dark:border-white/10 px-5 py-3 rounded-2xl shadow-lg">
+              <div className="flex justify-between items-center text-foreground neu-convex dark:bg-black/80 dark:border dark:border-white/10 px-5 py-3 rounded-2xl">
                 <button 
                   onClick={handlePrev}
                   className="p-2 hover:bg-black/5 dark:hover:bg-white/10 rounded-xl transition-colors"
@@ -256,7 +256,7 @@ export function AdvancedFlashcards({ words, onClose, onUpdateWord, speakWord }: 
             </div>
           </div>
         ) : (
-          <div className="p-8 bg-white/80 dark:bg-black/80 border border-black/10 dark:border-white/10 rounded-3xl text-center shadow-2xl">
+          <div className="p-8 neu-convex dark:bg-black/80 dark:border dark:border-white/10 rounded-3xl text-center">
             <Layers className="w-12 h-12 text-zinc-400 mx-auto mb-4 opacity-50" />
             <h3 className="text-[17px] font-semibold text-foreground mb-1">No cards to study</h3>
             <p className="text-[13px] text-zinc-500">There are no flashcards available for the current study mode.</p>

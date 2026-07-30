@@ -10,9 +10,9 @@ export const DIFFICULTY_OPTIONS = [
     label: "Easy",
     points: 10,
     icon: Zap,
-    color: "text-green-400",
-    bg: "bg-green-400/10",
-    border: "border-green-400/30",
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/20",
     desc: "Perfect for warm-up",
   },
   {
@@ -20,9 +20,9 @@ export const DIFFICULTY_OPTIONS = [
     label: "Medium",
     points: 30,
     icon: Shield,
-    color: "text-yellow-400",
-    bg: "bg-yellow-400/10",
-    border: "border-yellow-400/30",
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/20",
     desc: "A good challenge",
   },
   {
@@ -30,9 +30,9 @@ export const DIFFICULTY_OPTIONS = [
     label: "Hard",
     points: 50,
     icon: Flame,
-    color: "text-red-400",
-    bg: "bg-red-400/10",
-    border: "border-red-400/30",
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/20",
     desc: "Push your limits",
   },
 ];
@@ -56,8 +56,8 @@ export function DifficultyPicker({ title, onSelect, onBack }: DifficultyPickerPr
           <ChevronLeft className="w-6 h-6 text-foreground" />
         </button>
         <div className="flex flex-col">
-          <h1 className="text-xl font-bold text-foreground">{title}</h1>
-          <p className="text-xs text-zinc-500 dark:text-gray-400">Choose your difficulty</p>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h1>
+          <p className="text-xs font-semibold text-gray-700 dark:text-zinc-300">Choose your difficulty</p>
         </div>
       </div>
 
@@ -69,20 +69,20 @@ export function DifficultyPicker({ title, onSelect, onBack }: DifficultyPickerPr
             <button
               key={opt.id}
               onClick={() => onSelect(opt.id)}
-              className={`group relative flex items-center gap-5 p-5 rounded-2xl border-2 ${opt.border} ${opt.bg} bg-white/5 dark:bg-white/3 hover:bg-white/10 dark:hover:bg-white/8 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg text-left`}
+              className="group relative flex items-center gap-5 p-5 rounded-[1.5rem] neu-button dark:bg-white/5 dark:border dark:border-white/10 transition-all duration-300 text-left w-full hover:border-blue-500/30"
             >
-              <div className={`w-14 h-14 flex-shrink-0 rounded-2xl flex items-center justify-center ${opt.bg} border ${opt.border}`}>
-                <Icon className={`w-7 h-7 ${opt.color}`} />
+              <div className="w-14 h-14 flex-shrink-0 rounded-2xl flex items-center justify-center neu-inset-sm bg-blue-500/10 border border-blue-500/20">
+                <Icon className="w-7 h-7 text-blue-600 dark:text-blue-400" />
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-lg font-bold ${opt.color}`}>{opt.label}</span>
+                  <span className="text-lg font-bold text-gray-900 dark:text-white">{opt.label}</span>
                 </div>
-                <p className="text-sm text-zinc-500 dark:text-gray-400">{opt.desc}</p>
+                <p className="text-sm font-semibold text-gray-700 dark:text-zinc-300">{opt.desc}</p>
               </div>
               <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                <span className={`text-2xl font-black ${opt.color}`}>+{opt.points}</span>
-                <span className="text-[10px] text-zinc-400 dark:text-gray-500 uppercase tracking-wider font-semibold">Points</span>
+                <span className="text-2xl font-black text-blue-600 dark:text-blue-400">+{opt.points}</span>
+                <span className="text-[10px] text-gray-700 dark:text-zinc-300 uppercase tracking-wider font-bold">Points</span>
               </div>
             </button>
           );
@@ -90,9 +90,9 @@ export function DifficultyPicker({ title, onSelect, onBack }: DifficultyPickerPr
       </div>
 
       {/* Tip */}
-      <div className="mt-8 p-4 rounded-xl bg-white/5 border border-white/10 text-center">
-        <p className="text-xs text-zinc-500 dark:text-gray-400">
-          💡 Complete all 3 difficulties today to earn <span className="text-indigo-400 font-bold">50–100 XP</span> based on your performance
+      <div className="mt-8 p-5 rounded-2xl neu-inset dark:bg-white/5 dark:border dark:border-white/10 text-center">
+        <p className="text-xs font-semibold text-gray-800 dark:text-zinc-200">
+          💡 Complete all 3 difficulties today to earn <span className="text-blue-600 dark:text-blue-400 font-bold">50–100 XP</span> based on your performance
         </p>
       </div>
     </div>

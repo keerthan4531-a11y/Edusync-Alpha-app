@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { awardXp } from "@/lib/gamification";
 import { esChat } from "@/lib/es-engine";
+import { safeJsonParse } from "@/lib/utils";
 
 export async function POST(req: Request) {
   try {
@@ -41,30 +42,27 @@ export async function POST(req: Request) {
       : "சில விவரங்கள் விடுபட்டுள்ளன. ஆடியோவை மீண்டும் ஒருமுறை கேட்டு முயற்சிக்கவும்.";
 
     try {
-      const systemPrompt = "You are a professional English tutor.";
+      const systemPrompt = `You are a professional English tutor evaluating a listening gap fill exercise.
+Return ONLY a valid JSON object:
+{
+  "feedback": "English feedback here",
+  "tamil_feedback": "Tamil translation/feedback here"
+}`;
       const prompt = `Student filled gaps in a listening transcription task.
-      Correct answers: ${JSON.stringify(correctAnswers)}
-      Student answers: ${JSON.stringify(userAnswers)}
-      Accuracy: ${score}%.
-      Provide encouraging feedback in English (1-2 sentences) and a Tamil translation.
-      Return ONLY a valid JSON object:
-      {
-        "feedback": "English feedback here",
-        "tamil_feedback": "Tamil translation/feedback here"
-      }`;
+Correct answers: ${JSON.stringify(correctAnswers)}
+Student answers: ${JSON.stringify(userAnswers)}
+Accuracy: ${score}%.
+Provide encouraging feedback in English and Tamil.`;
 
       const aiResponse = await esChat([
         { role: "system", content: systemPrompt },
         { role: "user", content: prompt }
       ]);
 
-      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsedAi = JSON.parse(jsonMatch[0]);
-        if (parsedAi.feedback && parsedAi.tamil_feedback) {
-          feedback = parsedAi.feedback;
-          tamilFeedback = parsedAi.tamil_feedback;
-        }
+      const parsedAi = safeJsonParse<{ feedback?: string; tamil_feedback?: string }>(aiResponse);
+      if (parsedAi?.feedback && parsedAi?.tamil_feedback) {
+        feedback = parsedAi.feedback;
+        tamilFeedback = parsedAi.tamil_feedback;
       }
     } catch (err) {
       console.warn("[ES-ENGINE] evaluate-gap AI failed, using fallback:", err);

@@ -415,15 +415,15 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
           {/* Module 1: Listen & Go */}
           <button
             onClick={() => { setPendingFeature("directions"); stopAudio(); }}
-            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl shadow-indigo-500/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+            className="group relative flex flex-col items-center justify-center gap-4 p-8 neu-convex rounded-[2rem] hover:scale-[1.02] transition-all duration-300 dark:bg-white/5 dark:backdrop-blur-xl dark:border dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
           >
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-indigo-500/10 dark:bg-indigo-950/30 border-2 border-indigo-400/20 transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400/50 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center neu-raised-sm dark:bg-indigo-950/30 dark:border-2 dark:border-indigo-400/20 transition-all duration-300 group-hover:scale-110 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
               <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
                 <Image 
                   src="/images/communication/listening.png" 
                   alt="Listen & Go"
                   fill
-                  className="object-contain mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
+                  className="object-contain dark:mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
                   sizes="(max-width: 768px) 64px, 80px"
                   priority
                 />
@@ -437,15 +437,15 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
           {/* Module 2: Words fill in */}
           <button
             onClick={() => { setPendingFeature("fill"); stopAudio(); }}
-            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl shadow-indigo-500/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+            className="group relative flex flex-col items-center justify-center gap-4 p-8 neu-convex rounded-[2rem] hover:scale-[1.02] transition-all duration-300 dark:bg-white/5 dark:backdrop-blur-xl dark:border dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
           >
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-indigo-500/10 dark:bg-indigo-950/30 border-2 border-indigo-400/20 transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400/50 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center neu-raised-sm dark:bg-indigo-950/30 dark:border-2 dark:border-indigo-400/20 transition-all duration-300 group-hover:scale-110 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
               <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
                 <Image 
                   src="/images/communication/listening.png" 
                   alt="Words fill in"
                   fill
-                  className="object-contain mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
+                  className="object-contain dark:mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
                   sizes="(max-width: 768px) 64px, 80px"
                   priority
                 />
@@ -459,15 +459,15 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
           {/* Module 3: Listen & Answer */}
           <button
             onClick={() => { setPendingFeature("mcq"); stopAudio(); }}
-            className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl shadow-indigo-500/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+            className="group relative flex flex-col items-center justify-center gap-4 p-8 neu-convex rounded-[2rem] hover:scale-[1.02] transition-all duration-300 dark:bg-white/5 dark:backdrop-blur-xl dark:border dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
           >
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-indigo-500/10 dark:bg-indigo-950/30 border-2 border-indigo-400/20 transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400/50 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center neu-raised-sm dark:bg-indigo-950/30 dark:border-2 dark:border-indigo-400/20 transition-all duration-300 group-hover:scale-110 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
               <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
                 <Image 
                   src="/images/communication/listening.png" 
                   alt="Listen & Answer"
                   fill
-                  className="object-contain mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
+                  className="object-contain dark:mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
                   sizes="(max-width: 768px) 64px, 80px"
                   priority
                 />
@@ -932,9 +932,9 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
                           <div className="flex-1" />
                           <button
                             onClick={loadListenGo}
-                              className="px-6 py-2.5 rounded-xl bg-[#6366f1] hover:bg-[#5254cc] text-white font-medium shadow-[0_4px_16px_rgba(99,102,241,0.25)] hover:shadow-[0_6px_22px_rgba(99,102,241,0.35)] hover:-translate-y-[1px] active:translate-y-0 transition-all"
+                              className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all shadow-sm"
                           >
-                            {listenGoResult.success ? "Next Mission" : "Try Again"}
+                            Next
                           </button>
                         </div>
                       </LiquidGlassCard>
@@ -1018,17 +1018,17 @@ export function ListeningModule({ content, challenges = [], onNext, onSubFeature
               </button>
             ) : (
               <div className="mt-6 p-4 bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl space-y-3">
-                <p className="text-[13px] text-zinc-600 dark:text-gray-300 leading-relaxed font-light">{toneResult.feedback}</p>
+                <p className="text-[13.5px] text-gray-900 dark:text-gray-100 leading-relaxed font-medium">{toneResult.feedback}</p>
                 {toneResult.tamilFeedback && (
-                  <p className="text-[13px] text-indigo-600 dark:text-indigo-300 leading-relaxed font-light italic">{toneResult.tamilFeedback}</p>
+                  <p className="text-[13.5px] text-blue-700 dark:text-indigo-300 leading-relaxed font-medium italic">{toneResult.tamilFeedback}</p>
                 )}
                 <div className="flex justify-between items-center text-xs">
-                  <span className="font-semibold text-indigo-300">XP Awarded: +{toneResult.xpAwarded}</span>
+                  <span className="font-bold text-amber-700 dark:text-amber-400">XP Awarded: +{toneResult.xpAwarded}</span>
                   <button 
                     onClick={() => { setIsToneSubmitted(false); setToneSelectedIdx(null); setToneResult(null); }}
-                    className="text-indigo-400 hover:underline"
+                    className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-sm"
                   >
-                    Try Again
+                    Next
                   </button>
                 </div>
               </div>

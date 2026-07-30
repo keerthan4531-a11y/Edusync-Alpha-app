@@ -521,15 +521,15 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                   setPendingFeature(feature.id);
                   onSubFeatureOpen?.(true);
                 }}
-                className="group relative flex flex-col items-center justify-center gap-4 p-8 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/50 dark:border-white/10 rounded-[2rem] hover:bg-white/80 dark:hover:bg-white/10 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl shadow-indigo-500/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
+                className="group relative flex flex-col items-center justify-center gap-4 p-8 neu-convex rounded-[2rem] hover:scale-[1.02] transition-all duration-300 dark:bg-white/5 dark:backdrop-blur-xl dark:border dark:border-white/10 dark:shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
               >
-                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center bg-indigo-500/10 dark:bg-indigo-950/30 border-2 border-indigo-400/20 transition-all duration-300 group-hover:scale-110 group-hover:border-indigo-400/50 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center neu-raised-sm dark:bg-indigo-950/30 dark:border-2 dark:border-indigo-400/20 transition-all duration-300 group-hover:scale-110 shadow-inner group-hover:shadow-[0_0_20px_rgba(99,102,241,0.3)]">
                   <div className="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
                     <Image 
                       src="/images/communication/speaking.png" 
                       alt={feature.label}
                       fill
-                      className="object-contain mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
+                      className="object-contain dark:mix-blend-screen filter drop-shadow-[0_4px_12px_rgba(129,140,248,0.4)]"
                       sizes="(max-width: 768px) 64px, 80px"
                       priority
                     />
@@ -647,18 +647,18 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
               </div>
 
               <div className="mt-8 flex items-center gap-4">
-                <span className="px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/50">
+                <span className="px-4 py-2 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold border border-blue-500/20 shadow-sm">
                   Accuracy: {readAloudResult.score}%
                 </span>
-                <span className="px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/50">
+                <span className="px-4 py-2 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-400 font-bold border border-amber-500/20 shadow-sm">
                   +{readAloudResult.xpAwarded} XP
                 </span>
                 <div className="flex-1" />
                 <button
                   onClick={() => loadDynamicSpeakIt()}
-                  className="px-6 py-2.5 rounded-xl border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-foreground font-medium transition-all"
+                  className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all shadow-sm flex items-center gap-2"
                 >
-                  Try Again
+                  Next
                 </button>
               </div>
             </LiquidGlassCard>
@@ -746,20 +746,20 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
               ) : (
                 /* Result Card */
                 <LiquidGlassCard className="p-6 border-indigo-500/30 bg-indigo-500/5" accentColor="#6366f1">
-                  <h3 className="text-[28px] font-bold text-foreground mb-4">Pronunciation Feedback</h3>
+                  <h3 className="text-[28px] font-bold text-gray-900 dark:text-white mb-4">Pronunciation Feedback</h3>
                   <div className="space-y-4">
                     <div className="p-4 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/10 dark:border-white/10">
-                      <h4 className="text-indigo-600 dark:text-indigo-400 font-semibold mb-1 text-[15px]">Coach's Notes</h4>
-                      <p className="text-zinc-600 dark:text-gray-200 text-[15px]">{listenSpeakResult.evaluation?.feedback}</p>
-                      <p className="text-zinc-500 dark:text-gray-400 text-[13px] mt-2 italic">{listenSpeakResult.evaluation?.tamilFeedback}</p>
+                      <h4 className="text-blue-600 dark:text-indigo-400 font-semibold mb-1 text-[15px]">Coach's Notes</h4>
+                      <p className="text-gray-900 dark:text-gray-100 text-[15px] font-medium">{listenSpeakResult.evaluation?.feedback}</p>
+                      <p className="text-gray-700 dark:text-gray-300 text-[13.5px] mt-2 italic font-medium">{listenSpeakResult.evaluation?.tamilFeedback}</p>
                     </div>
 
                     {listenSpeakResult.evaluation?.mispronouncedWords?.length > 0 ? (
-                      <div className="p-4 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
-                        <h4 className="text-indigo-600 dark:text-indigo-400 font-semibold mb-2 text-[15px]">Words to Practice</h4>
+                      <div className="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                        <h4 className="text-blue-600 dark:text-indigo-400 font-semibold mb-2 text-[15px]">Words to Practice</h4>
                         <div className="flex flex-wrap gap-2">
                           {listenSpeakResult.evaluation.mispronouncedWords.map((word: string, idx: number) => (
-                            <span key={idx} className="px-3 py-1 bg-black/5 dark:bg-black/40 border border-indigo-500/30 rounded-lg text-indigo-600 dark:text-indigo-200 text-[13px]">
+                            <span key={idx} className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-700 dark:text-blue-300 text-[13px] font-semibold">
                               {word}
                             </span>
                           ))}
@@ -773,10 +773,10 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                   </div>
 
                   <div className="mt-8 flex items-center gap-4">
-                    <span className="px-4 py-2 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/50">
+                    <span className="px-4 py-2 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold border border-blue-500/20 shadow-sm">
                       Accuracy: {listenSpeakResult.score}%
                     </span>
-                    <span className="px-4 py-2 rounded-full bg-yellow-500/20 text-yellow-500 font-bold border border-yellow-500/50">
+                    <span className="px-4 py-2 rounded-full bg-amber-500/10 text-amber-800 dark:text-amber-400 font-bold border border-amber-500/20 shadow-sm">
                       +{listenSpeakResult.xpAwarded} XP
                     </span>
                     <div className="flex-1" />
@@ -786,9 +786,9 @@ export function SpeakingModule({ content, challenges = [], onFinish, onSubFeatur
                         setListenSpeakTranscribed("");
                         loadListenSpeakContent();
                       }}
-                      className="px-6 py-2.5 rounded-xl border border-black/10 dark:border-white/10 hover:bg-black/5 dark:hover:bg-white/5 text-foreground font-medium transition-all"
+                      className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold transition-all shadow-sm flex items-center gap-2"
                     >
-                      Try Again
+                      Next
                     </button>
                   </div>
                 </LiquidGlassCard>

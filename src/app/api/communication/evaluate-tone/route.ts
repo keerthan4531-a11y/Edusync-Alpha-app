@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { awardXp } from "@/lib/gamification";
 import { esChat } from "@/lib/es-engine";
+import { safeJsonParse } from "@/lib/utils";
 
 export async function POST(req: Request) {
   try {
@@ -33,27 +34,24 @@ export async function POST(req: Request) {
       : `உணர்ச்சி தொனி உண்மையில் ${correctTone} ஆகும்.`;
 
     try {
-      const systemPrompt = "You are a professional English tutor.";
+      const systemPrompt = `You are a professional English tutor evaluating a voice tone exercise.
+Return ONLY a valid JSON object:
+{
+  "feedback": "English explanation here",
+  "tamil_feedback": "Tamil explanation here"
+}`;
       const prompt = `Student identified the emotional tone of a speech snippet as '${selectedTone}'. It was actually '${correctTone}'.
-      Explain briefly in 1-2 sentences why it was '${correctTone}' and provide a Tamil translation.
-      Return ONLY a valid JSON object:
-      {
-        "feedback": "English explanation here",
-        "tamil_feedback": "Tamil explanation here"
-      }`;
+Explain briefly in 1-2 sentences why it was '${correctTone}' and provide a Tamil translation.`;
 
       const aiResponse = await esChat([
         { role: "system", content: systemPrompt },
         { role: "user", content: prompt }
       ]);
 
-      const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsedAi = JSON.parse(jsonMatch[0]);
-        if (parsedAi.feedback && parsedAi.tamil_feedback) {
-          feedback = parsedAi.feedback;
-          tamilFeedback = parsedAi.tamil_feedback;
-        }
+      const parsedAi = safeJsonParse<{ feedback?: string; tamil_feedback?: string }>(aiResponse);
+      if (parsedAi?.feedback && parsedAi?.tamil_feedback) {
+        feedback = parsedAi.feedback;
+        tamilFeedback = parsedAi.tamil_feedback;
       }
     } catch (err) {
       console.warn("[ES-ENGINE] evaluate-tone AI failed, using fallback:", err);

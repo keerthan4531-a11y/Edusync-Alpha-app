@@ -120,15 +120,15 @@ export default function StudentClassroomsPage() {
     try {
       // Fetch enrolled classrooms
       const resClassrooms = await fetch("/api/student/classrooms")
-      const dataClassrooms = await resClassrooms.json()
       if (resClassrooms.ok) {
+        const dataClassrooms = await resClassrooms.json()
         setClassrooms(dataClassrooms.classrooms || [])
       }
 
       // Fetch pending invitations
       const resInvites = await fetch("/api/student/classrooms/pending")
-      const dataInvites = await resInvites.json()
       if (resInvites.ok) {
+        const dataInvites = await resInvites.json()
         setPendingInvites(dataInvites.pending_requests || [])
       }
     } catch (e) {
