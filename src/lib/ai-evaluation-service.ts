@@ -22,6 +22,9 @@ function generateLocalWritingEvaluation(promptText: string, submissionText: stri
   const grammarIssues: string[] = [];
   if (!hasCapitalization) grammarIssues.push("Start your initial sentence with a capital letter.");
   if (!hasPunctuation) grammarIssues.push("Conclude your sentences with proper punctuation (period, exclamatory or question mark).");
+  if (grammarIssues.length === 0) {
+    grammarIssues.push("Ensure subject-verb agreement and proper sentence structure.");
+  }
 
   const lowerText = submissionText.toLowerCase();
   const vocabSuggestions: string[] = [];
@@ -70,6 +73,70 @@ function generateLocalSpeakingEvaluation(referenceText: string, transcribedText:
   };
 }
 
+/**
+ * Extract a numeric score from non-JSON AI text response.
+ * Looks for patterns like "Score: 72", "7/10", "⭐⭐⭐ (3/5)", "score: 85", etc.
+ */
+function extractScoreFromText(text: string): number | null {
+  // Pattern: "score": 72 or score: 72
+  const scoreMatch = text.match(/["']?score["']?\s*[:=]\s*(\d+)/i);
+  if (scoreMatch) return parseInt(scoreMatch[1], 10);
+
+  // Pattern: 7/10 or 72/100
+  const fractionMatch = text.match(/(\d+)\s*\/\s*(10|100|15|20)/);
+  if (fractionMatch) {
+    const num = parseInt(fractionMatch[1], 10);
+    const den = parseInt(fractionMatch[2], 10);
+    return Math.round((num / den) * 100);
+  }
+
+  // Pattern: (3/5) star ratings
+  const starMatch = text.match(/(\d+)\s*\/\s*5/);
+  if (starMatch) return Math.round((parseInt(starMatch[1], 10) / 5) * 100);
+
+  return null;
+}
+
+/**
+ * Build evaluation result from plain text AI response that didn't return JSON.
+ * Extracts score and uses the text itself as feedback.
+ */
+function buildEvalFromText(text: string, submissionText: string, promptText: string): WritingEvaluationResult {
+  const local = generateLocalWritingEvaluation(promptText, submissionText);
+  const extracted = extractScoreFromText(text);
+  const score = extracted !== null ? Math.max(0, Math.min(100, extracted)) : local.score;
+  
+  // Extract first 2 meaningful sentences for feedback
+  const sentences = text
+    .replace(/[#*_`|>]/g, "")
+    .split(/[.!?]\s+/)
+    .filter(s => s.trim().length > 10)
+    .slice(0, 2);
+  
+  const feedback = sentences.length > 0 
+    ? sentences.join(". ").trim() + "."
+    : local.feedback;
+
+  return {
+    score,
+    feedback,
+    tamilFeedback: local.tamilFeedback,
+    grammarIssues: local.grammarIssues,
+    vocabularySuggestions: local.vocabularySuggestions
+  };
+}
+
+// Strict JSON-only system prompt for ERNIE models
+const WRITING_EVAL_SYSTEM = `CRITICAL INSTRUCTION: You MUST respond with ONLY a raw JSON object. No markdown, no explanation, no code fences.
+You are an English teacher evaluating student writing.
+Your ENTIRE response must be exactly this JSON format and nothing else:
+{"score":75,"feedback":"Two sentences of feedback.","tamilFeedback":"Tamil feedback here.","grammarIssues":["issue1"],"vocabularySuggestions":["suggestion1"]}`;
+
+const SPEAKING_EVAL_SYSTEM = `CRITICAL INSTRUCTION: You MUST respond with ONLY a raw JSON object. No markdown, no explanation, no code fences.
+You are a speech coach evaluating student pronunciation.
+Your ENTIRE response must be exactly this JSON format and nothing else:
+{"score":75,"feedback":"Two sentences of feedback.","tamilFeedback":"Tamil feedback here.","mispronouncedWords":["word1"]}`;
+
 export interface WritingEvaluationResult {
   score?: number;
   feedback?: string;
@@ -86,33 +153,39 @@ export async function evaluateWriting(userId: string, contentId: string, submiss
 
   const promptText = content?.content || "Describe the topic in detail using clear English sentences.";
 
-  const systemPrompt = `You are an encouraging English teacher evaluating a student's writing.
-Return ONLY a valid JSON object:
-{
-  "score": integer (0-100),
-  "feedback": "Two sentences of professional, constructive feedback in English.",
-  "tamilFeedback": "Detailed explanation and style guidance in Tamil.",
-  "grammarIssues": ["grammar mistake 1", "spelling mistake 2"],
-  "vocabularySuggestions": ["use splendid instead of good"]
-}`;
-
-  const userPrompt = `Topic given to student: "${promptText}"\nStudent's Submission: "${submissionText}"\nEvaluate sentence structure, grammar, vocabulary, and creative expression.`;
+  const userPrompt = `Topic: "${promptText}"\nStudent's Submission: "${submissionText}"\nEvaluate and return JSON only.`;
 
   let parsedResponse: WritingEvaluationResult;
   try {
     const responseText = await esChat([
-      { role: "system", content: systemPrompt },
+      { role: "system", content: WRITING_EVAL_SYSTEM },
       { role: "user", content: userPrompt }
     ]);
     
+    // Attempt 1: Direct JSON parse
     const parsed = safeJsonParse<WritingEvaluationResult>(responseText);
-    if (!parsed || typeof parsed.score !== "number") {
-      throw new Error("Invalid or unparseable JSON from AI evaluation response");
+    if (parsed && typeof parsed.score === "number") {
+      parsedResponse = parsed;
+    } else {
+      // Attempt 2: Extract score from text response and build eval
+      console.warn("AI returned non-JSON for writing eval, extracting from text...");
+      parsedResponse = buildEvalFromText(responseText, submissionText, promptText);
     }
-    parsedResponse = parsed;
   } catch (e) {
-    console.warn("AI writing evaluation call failed or non-JSON, using intelligent local evaluator:", e);
+    console.warn("AI writing evaluation call failed, using intelligent local evaluator:", e);
     parsedResponse = generateLocalWritingEvaluation(promptText, submissionText);
+  }
+
+  // Ensure all fields are filled
+  const fallbackLocal = generateLocalWritingEvaluation(promptText, submissionText);
+  if (!parsedResponse.tamilFeedback) {
+    parsedResponse.tamilFeedback = fallbackLocal.tamilFeedback;
+  }
+  if (!parsedResponse.grammarIssues || parsedResponse.grammarIssues.length === 0) {
+    parsedResponse.grammarIssues = fallbackLocal.grammarIssues;
+  }
+  if (!parsedResponse.vocabularySuggestions || parsedResponse.vocabularySuggestions.length === 0) {
+    parsedResponse.vocabularySuggestions = fallbackLocal.vocabularySuggestions;
   }
 
   const score = Math.max(0, Math.min(100, parsedResponse.score || 75));
@@ -165,29 +238,28 @@ export async function evaluateSpeaking(userId: string, contentId: string, transc
 
   const referenceText = content?.content || "Speak clearly in English to practice your pronunciation.";
 
-  const systemPrompt = `You are an encouraging speech coach evaluating an ESL student's spoken transcript.
-Return ONLY a valid JSON object:
-{
-  "score": integer (0-100),
-  "feedback": "Two sentences of encouraging speech feedback in English.",
-  "tamilFeedback": "Clear speech advice in Tamil.",
-  "mispronouncedWords": ["word1", "word2"]
-}`;
-
-  const userPrompt = `Reference Text: "${referenceText}"\nStudent's Transcribed Speech: "${transcribedText}"\nEvaluate pronunciation accuracy and voice fluency.`;
+  const userPrompt = `Reference Text: "${referenceText}"\nStudent's Speech: "${transcribedText}"\nEvaluate and return JSON only.`;
 
   let parsedResponse: SpeakingEvaluationResult;
   try {
     const responseText = await esChat([
-      { role: "system", content: systemPrompt },
+      { role: "system", content: SPEAKING_EVAL_SYSTEM },
       { role: "user", content: userPrompt }
     ]);
     
     const parsed = safeJsonParse<SpeakingEvaluationResult>(responseText);
-    if (!parsed || typeof parsed.score !== "number") {
-      throw new Error("Invalid JSON from AI speaking response");
+    if (parsed && typeof parsed.score === "number") {
+      parsedResponse = parsed;
+    } else {
+      // Extract score from text if AI didn't return JSON
+      console.warn("AI returned non-JSON for speaking eval, extracting from text...");
+      const extracted = extractScoreFromText(responseText);
+      const localEval = generateLocalSpeakingEvaluation(referenceText, transcribedText);
+      if (extracted !== null) {
+        localEval.score = Math.max(0, Math.min(100, extracted));
+      }
+      parsedResponse = localEval;
     }
-    parsedResponse = parsed;
   } catch (e) {
     console.warn("AI speaking evaluation call failed, using intelligent local evaluator:", e);
     parsedResponse = generateLocalSpeakingEvaluation(referenceText, transcribedText);

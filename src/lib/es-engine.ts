@@ -3,9 +3,17 @@ export interface ESMessage {
   content: string;
 }
 
-const AI_TIMEOUT = 30000; // 30 seconds timeout
-const WORKER_API_BASE = "https://ultimate-ai-worker.haruyhari930.workers.dev/v1/chat/completions";
-const MODEL_NAME = "surfsense/gpt-5.4-mini-no-login";
+const AI_TIMEOUT = 10000; // 10 seconds timeout for fast response & fallback
+
+// Primary: curly-hill ERNIE workers (reliable, standard JSON)
+// ERINE-5.1 first — returns clean raw JSON (best for evaluation)
+// smartMode second — sometimes wraps JSON in markdown fences
+const PRIMARY_WORKER = "https://curly-hill-3303.aegonat29.workers.dev/v1/chat/completions";
+const PRIMARY_MODELS = ["ERINE-5.1", "smartMode"];
+
+// Fallback: ultimate-ai-worker (SSE stream format, may 403)
+const FALLBACK_WORKER = "https://ultimate-ai-worker.haruyhari930.workers.dev/v1/chat/completions";
+const FALLBACK_MODEL = "surfsense/gpt-5.4-mini-no-login";
 
 function isHtml(text: string): boolean {
   const t = text.trim();
@@ -18,8 +26,20 @@ function isHtml(text: string): boolean {
   );
 }
 
+/** Detect Chinese characters — ERNIE sometimes returns Chinese error messages */
+function containsChinese(text: string): boolean {
+  return /[\u4e00-\u9fff\u3400-\u4dbf]/.test(text);
+}
+
 function isValidResponse(text: string): boolean {
   if (!text) return false;
+
+  // Reject Chinese error messages from ERNIE (Baidu model)
+  if (containsChinese(text)) {
+    console.warn("[ES-ENGINE] Rejected response containing Chinese characters");
+    return false;
+  }
+
   const t = text.toLowerCase();
   return (
     !t.includes("sorry, ai servers are busy") &&
@@ -30,6 +50,21 @@ function isValidResponse(text: string): boolean {
     !t.includes("queue full") &&
     !t.includes("internal server error")
   );
+}
+
+/**
+ * Strip markdown code fences from AI responses.
+ * smartMode often returns: ```json\n{...}\n```
+ * This extracts the raw content inside.
+ */
+function stripMarkdownFences(text: string): string {
+  const trimmed = text.trim();
+  // Match ```json ... ``` or ``` ... ```
+  const fenceMatch = trimmed.match(/^```(?:json|JSON)?\s*\n?([\s\S]*?)\n?\s*```$/);
+  if (fenceMatch) {
+    return fenceMatch[1].trim();
+  }
+  return trimmed;
 }
 
 function parseWorkerResponse(rawText: string): string {
@@ -71,61 +106,72 @@ function parseWorkerResponse(rawText: string): string {
   return isHtml(text) ? "" : text;
 }
 
-// Custom Cloudflare Worker Request
-async function tryWorker(messages: ESMessage[], retries = 2): Promise<string | null> {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    console.log(`🌐 [ES-ENGINE] Sending AI request to Worker (Attempt ${attempt}/${retries})...`);
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), AI_TIMEOUT);
+// Try a single worker endpoint with a specific model
+async function tryEndpoint(
+  url: string,
+  model: string,
+  messages: ESMessage[],
+  label: string
+): Promise<string | null> {
+  console.log(`🌐 [ES-ENGINE] Trying ${label} (${model})...`);
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), AI_TIMEOUT);
 
-      const res = await fetch(WORKER_API_BASE, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json, text/event-stream",
-        },
-        body: JSON.stringify({
-          messages: messages.map((m) => ({ role: m.role, content: m.content })),
-          model: MODEL_NAME,
-          stream: false,
-        }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/event-stream",
+      },
+      body: JSON.stringify({
+        messages: messages.map((m) => ({ role: m.role, content: m.content })),
+        model,
+        stream: false,
+      }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
 
-      if (res.status !== 200) {
-        console.warn(`[Worker] HTTP ${res.status} on attempt ${attempt}`);
-        if (attempt < retries) continue;
-        return null;
-      }
-
-      const rawText = await res.text();
-      const content = parseWorkerResponse(rawText);
-
-      if (!content || isHtml(content) || !isValidResponse(content)) {
-        console.warn(`[Worker] Invalid response or HTML received on attempt ${attempt}`);
-        if (attempt < retries) continue;
-        return null;
-      }
-
-      console.log("✅ [ES-ENGINE] Custom AI Worker succeeded!");
-      return content.trim();
-    } catch (e: any) {
-      console.warn(`[Worker] Error on attempt ${attempt}: ${e.message || e}`);
-      if (attempt < retries) continue;
+    if (res.status !== 200) {
+      console.warn(`[${label}] HTTP ${res.status}`);
       return null;
     }
+
+    const rawText = await res.text();
+    const content = parseWorkerResponse(rawText);
+
+    if (!content || isHtml(content) || !isValidResponse(content)) {
+      console.warn(`[${label}] Invalid or empty response`);
+      return null;
+    }
+
+    // Strip markdown fences (smartMode wraps JSON in ```json ... ```)
+    const cleaned = stripMarkdownFences(content.trim());
+
+    console.log(`✅ [ES-ENGINE] ${label} (${model}) succeeded!`);
+    return cleaned;
+  } catch (e: any) {
+    console.warn(`[${label}] Error: ${e.message || e}`);
+    return null;
   }
-  return null;
 }
 
 // Main chat function used across all API routes
 export async function esChat(messages: ESMessage[]): Promise<string> {
-  const workerResult = await tryWorker(messages);
-  if (workerResult && !workerResult.includes("⚠️")) {
-    return workerResult;
+  // 1. Try primary curly-hill worker with each model
+  for (const model of PRIMARY_MODELS) {
+    const result = await tryEndpoint(PRIMARY_WORKER, model, messages, "curly-hill");
+    if (result && !result.includes("⚠️")) {
+      return result;
+    }
   }
-  
-  throw new Error("Custom AI Worker failed or returned invalid response.");
+
+  // 2. Fallback to ultimate-ai-worker with gpt-5.4-mini
+  const fallbackResult = await tryEndpoint(FALLBACK_WORKER, FALLBACK_MODEL, messages, "ultimate-ai-worker");
+  if (fallbackResult && !fallbackResult.includes("⚠️")) {
+    return fallbackResult;
+  }
+
+  throw new Error("All AI Workers failed or returned invalid responses.");
 }

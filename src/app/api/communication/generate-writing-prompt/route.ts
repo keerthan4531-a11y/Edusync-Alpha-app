@@ -38,8 +38,11 @@ Do not include any extra text. Just the prompt sentence. For example: "Write abo
         { role: "user", content: prompt }
       ]);
 
-      if (aiResponse && aiResponse.trim().length > 5) {
+      const hasChinese = /[\u4e00-\u9fff\u3400-\u4dbf]/.test(aiResponse);
+      if (aiResponse && aiResponse.trim().length > 5 && !hasChinese) {
         content = aiResponse.replace(/["']/g, "").trim();
+      } else if (hasChinese) {
+        console.warn("[generate-writing-prompt] Rejected Chinese error from ERNIE, using fallback");
       }
     } catch (err) {
       console.warn("[ES-ENGINE] generate-writing-prompt AI failed, using fallback:", err);

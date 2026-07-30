@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Stage1ContentDTO } from "@/types/communication";
 import { LiquidGlassCard } from "@/components/ui/liquid-glass-card";
 import { useWriting } from "../hooks/useWriting";
@@ -20,6 +20,80 @@ import {
   ChevronLeft,
   Play
 } from "lucide-react";
+
+/* ------------------------------------------------------------------ */
+/* Typewriter text — renders text character by character like streaming */
+/* ------------------------------------------------------------------ */
+function TypewriterText({ text, speed = 18, className = "", onComplete }: { 
+  text: string; speed?: number; className?: string; onComplete?: () => void 
+}) {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    setDisplayed("");
+    setDone(false);
+    if (!text) return;
+
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) {
+        clearInterval(id);
+        setDone(true);
+        onComplete?.();
+      }
+    }, speed);
+    return () => clearInterval(id);
+  }, [text, speed]);
+
+  return (
+    <span className={className}>
+      {displayed}
+      {!done && <span className="inline-block w-[2px] h-[1em] bg-indigo-500 animate-pulse ml-[1px] align-text-bottom" />}
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* AnimatedList — reveals list items one by one with stagger            */
+/* ------------------------------------------------------------------ */
+function AnimatedList({ items, renderItem, delayMs = 400, startAfterMs = 0 }: {
+  items: string[];
+  renderItem: (item: string, index: number) => React.ReactNode;
+  delayMs?: number;
+  startAfterMs?: number;
+}) {
+  const [visibleCount, setVisibleCount] = useState(0);
+
+  useEffect(() => {
+    if (!items || items.length === 0) return;
+    setVisibleCount(0);
+    
+    const startTimeout = setTimeout(() => {
+      let count = 0;
+      const id = setInterval(() => {
+        count++;
+        setVisibleCount(count);
+        if (count >= items.length) clearInterval(id);
+      }, delayMs);
+      return () => clearInterval(id);
+    }, startAfterMs);
+
+    return () => clearTimeout(startTimeout);
+  }, [items, delayMs, startAfterMs]);
+
+  return (
+    <>
+      {items.slice(0, visibleCount).map((item, i) => (
+        <div key={i} className="animate-in fade-in slide-in-from-left-4" style={{ animationDuration: '400ms' }}>
+          {renderItem(item, i)}
+        </div>
+      ))}
+    </>
+  );
+}
 
 interface WritingModuleProps {
   content: Stage1ContentDTO | null;
@@ -361,47 +435,77 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                       <h3 className="text-[28px] font-bold text-gray-900 dark:text-white mb-4">AI Feedback</h3>
                       
                       <div className="space-y-6">
+                        {/* English Feedback — typewriter */}
                         <div className="bg-black/5 dark:bg-black/40 p-5 rounded-2xl border border-black/10 dark:border-white/10">
                           <p className="text-[17px] text-gray-900 dark:text-gray-100 leading-relaxed font-medium">
-                            {tutorResult.evaluation?.feedback || "Great writing!"}
+                            <TypewriterText 
+                              text={tutorResult.evaluation?.feedback || "Great writing!"} 
+                              speed={15}
+                            />
                           </p>
-                          {tutorResult.evaluation?.tamilFeedback && (
-                            <p className="text-[15px] text-blue-700 dark:text-indigo-400 italic mt-3 font-medium">
-                              {tutorResult.evaluation.tamilFeedback}
-                            </p>
-                          )}
                         </div>
 
-                        {(tutorResult.evaluation?.grammarIssues?.length > 0 || tutorResult.evaluation?.vocabularySuggestions?.length > 0) && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {tutorResult.evaluation.grammarIssues?.length > 0 && (
-                              <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
-                                <h4 className="text-blue-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
-                                  <ShieldAlert className="w-4 h-4" /> Grammar Fixes
-                                </h4>
-                                <ul className="list-disc pl-4 space-y-1">
-                                  {tutorResult.evaluation.grammarIssues.map((issue: string, i: number) => (
-                                    <li key={i} className="text-[14px] text-blue-800 dark:text-indigo-300 font-medium">{issue}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
-                            {tutorResult.evaluation.vocabularySuggestions?.length > 0 && (
-                              <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
-                                <h4 className="text-blue-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
-                                  <Sparkles className="w-4 h-4" /> Better Words
-                                </h4>
-                                <ul className="list-disc pl-4 space-y-1">
-                                  {tutorResult.evaluation.vocabularySuggestions.map((sug: string, i: number) => (
-                                    <li key={i} className="text-[14px] text-blue-800 dark:text-indigo-300 font-medium">{sug}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            )}
+                        {/* Tamil Feedback — typewriter with label */}
+                        {tutorResult.evaluation?.tamilFeedback && (
+                          <div className="bg-indigo-500/5 dark:bg-indigo-950/30 p-5 rounded-2xl border border-indigo-500/15 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '600ms', animationFillMode: 'both' }}>
+                            <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[13px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                              🇮🇳 தமிழ் விளக்கம் (Tamil Explanation)
+                            </h4>
+                            <p className="text-[15px] text-indigo-700 dark:text-indigo-300 leading-relaxed font-medium">
+                              <TypewriterText 
+                                text={tutorResult.evaluation.tamilFeedback} 
+                                speed={12}
+                              />
+                            </p>
                           </div>
                         )}
 
-                        <div className="mt-8 flex items-center gap-4 flex-wrap">
+                        {/* Grammar Issues — animated list */}
+                        {tutorResult.evaluation?.grammarIssues?.length > 0 && (
+                          <div className="bg-red-500/5 dark:bg-red-950/20 p-5 rounded-2xl border border-red-500/15 dark:border-red-500/20 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '900ms', animationFillMode: 'both' }}>
+                            <h4 className="text-red-600 dark:text-red-400 font-bold text-[13px] uppercase tracking-wider mb-3 flex items-center gap-2">
+                              <ShieldAlert className="w-4 h-4" /> Grammar Mistakes / இலக்கணப் பிழைகள்
+                            </h4>
+                            <ul className="space-y-2">
+                              <AnimatedList
+                                items={tutorResult.evaluation.grammarIssues}
+                                delayMs={500}
+                                startAfterMs={200}
+                                renderItem={(issue, i) => (
+                                  <li className="flex items-start gap-2 text-[14px] text-red-800 dark:text-red-300 font-medium">
+                                    <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-500" />
+                                    <span>{issue}</span>
+                                  </li>
+                                )}
+                              />
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Vocabulary Suggestions — animated list */}
+                        {tutorResult.evaluation?.vocabularySuggestions?.length > 0 && (
+                          <div className="bg-emerald-500/5 dark:bg-emerald-950/20 p-5 rounded-2xl border border-emerald-500/15 dark:border-emerald-500/20 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '1200ms', animationFillMode: 'both' }}>
+                            <h4 className="text-emerald-600 dark:text-emerald-400 font-bold text-[13px] uppercase tracking-wider mb-3 flex items-center gap-2">
+                              <Sparkles className="w-4 h-4" /> Better Words / சிறந்த சொற்கள்
+                            </h4>
+                            <ul className="space-y-2">
+                              <AnimatedList
+                                items={tutorResult.evaluation.vocabularySuggestions}
+                                delayMs={500}
+                                startAfterMs={200}
+                                renderItem={(sug, i) => (
+                                  <li className="flex items-start gap-2 text-[14px] text-emerald-800 dark:text-emerald-300 font-medium">
+                                    <Sparkles className="w-4 h-4 mt-0.5 flex-shrink-0 text-emerald-500" />
+                                    <span>{sug}</span>
+                                  </li>
+                                )}
+                              />
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Score + XP + Next */}
+                        <div className="mt-8 flex items-center gap-4 flex-wrap animate-in fade-in" style={{ animationDelay: '1500ms', animationFillMode: 'both' }}>
                           <span className="px-4 py-2 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold border border-blue-500/20 shadow-sm">
                             Score: {tutorResult.score}%
                           </span>
@@ -514,45 +618,58 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                   <div className="space-y-6">
                     <div className="bg-black/5 dark:bg-black/40 p-5 rounded-2xl border border-black/10 dark:border-white/10">
                       <p className="text-[17px] text-gray-900 dark:text-gray-100 leading-relaxed font-medium">
-                        {imageResult.evaluation?.feedback || "Great description!"}
+                        <TypewriterText text={imageResult.evaluation?.feedback || "Great description!"} speed={15} />
                       </p>
-                      {imageResult.evaluation?.tamilFeedback && (
-                        <p className="text-[15px] text-blue-700 dark:text-indigo-400 italic mt-3 font-medium">
-                          {imageResult.evaluation.tamilFeedback}
-                        </p>
-                      )}
                     </div>
 
-                    {(imageResult.evaluation?.grammarIssues?.length > 0 || imageResult.evaluation?.vocabularySuggestions?.length > 0) && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {imageResult.evaluation.grammarIssues?.length > 0 && (
-                          <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
-                            <h4 className="text-blue-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
-                              <ShieldAlert className="w-4 h-4" /> Grammar Fixes
-                            </h4>
-                            <ul className="list-disc pl-4 space-y-1">
-                              {imageResult.evaluation.grammarIssues.map((issue: string, i: number) => (
-                                <li key={i} className="text-[14px] text-blue-800 dark:text-indigo-300 font-medium">{issue}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        {imageResult.evaluation.vocabularySuggestions?.length > 0 && (
-                          <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
-                            <h4 className="text-blue-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
-                              <Sparkles className="w-4 h-4" /> Better Words
-                            </h4>
-                            <ul className="list-disc pl-4 space-y-1">
-                              {imageResult.evaluation.vocabularySuggestions.map((sug: string, i: number) => (
-                                <li key={i} className="text-[14px] text-blue-800 dark:text-indigo-300 font-medium">{sug}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                    {imageResult.evaluation?.tamilFeedback && (
+                      <div className="bg-indigo-500/5 dark:bg-indigo-950/30 p-5 rounded-2xl border border-indigo-500/15 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '600ms', animationFillMode: 'both' }}>
+                        <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[13px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                          🇮🇳 தமிழ் விளக்கம் (Tamil Explanation)
+                        </h4>
+                        <p className="text-[15px] text-indigo-700 dark:text-indigo-300 leading-relaxed font-medium">
+                          <TypewriterText text={imageResult.evaluation.tamilFeedback} speed={12} />
+                        </p>
                       </div>
                     )}
 
-                    <div className="mt-8 flex items-center gap-4 flex-wrap">
+                    {imageResult.evaluation?.grammarIssues?.length > 0 && (
+                      <div className="bg-red-500/5 dark:bg-red-950/20 p-5 rounded-2xl border border-red-500/15 dark:border-red-500/20 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '900ms', animationFillMode: 'both' }}>
+                        <h4 className="text-red-600 dark:text-red-400 font-bold text-[13px] uppercase tracking-wider mb-3 flex items-center gap-2">
+                          <ShieldAlert className="w-4 h-4" /> Grammar Mistakes / இலக்கணப் பிழைகள்
+                        </h4>
+                        <ul className="space-y-2">
+                          <AnimatedList items={imageResult.evaluation.grammarIssues} delayMs={500} startAfterMs={200}
+                            renderItem={(issue) => (
+                              <li className="flex items-start gap-2 text-[14px] text-red-800 dark:text-red-300 font-medium">
+                                <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-500" />
+                                <span>{issue}</span>
+                              </li>
+                            )}
+                          />
+                        </ul>
+                      </div>
+                    )}
+
+                    {imageResult.evaluation?.vocabularySuggestions?.length > 0 && (
+                      <div className="bg-emerald-500/5 dark:bg-emerald-950/20 p-5 rounded-2xl border border-emerald-500/15 dark:border-emerald-500/20 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '1200ms', animationFillMode: 'both' }}>
+                        <h4 className="text-emerald-600 dark:text-emerald-400 font-bold text-[13px] uppercase tracking-wider mb-3 flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" /> Better Words / சிறந்த சொற்கள்
+                        </h4>
+                        <ul className="space-y-2">
+                          <AnimatedList items={imageResult.evaluation.vocabularySuggestions} delayMs={500} startAfterMs={200}
+                            renderItem={(sug) => (
+                              <li className="flex items-start gap-2 text-[14px] text-emerald-800 dark:text-emerald-300 font-medium">
+                                <Sparkles className="w-4 h-4 mt-0.5 flex-shrink-0 text-emerald-500" />
+                                <span>{sug}</span>
+                              </li>
+                            )}
+                          />
+                        </ul>
+                      </div>
+                    )}
+
+                    <div className="mt-8 flex items-center gap-4 flex-wrap animate-in fade-in" style={{ animationDelay: '1500ms', animationFillMode: 'both' }}>
                       <span className="px-4 py-2 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold border border-blue-500/20 shadow-sm">
                         Score: {imageResult.score}%
                       </span>
@@ -701,45 +818,58 @@ export function WritingModule({ content, challenges = [], onNext, onSubFeatureOp
                   <div className="space-y-6">
                     <div className="bg-black/5 dark:bg-black/40 p-5 rounded-2xl border border-black/10 dark:border-white/10">
                       <p className="text-[17px] text-gray-900 dark:text-gray-100 leading-relaxed font-medium">
-                        {filterResult.evaluation?.feedback || "Great rewrite!"}
+                        <TypewriterText text={filterResult.evaluation?.feedback || "Great rewrite!"} speed={15} />
                       </p>
-                      {filterResult.evaluation?.tamilFeedback && (
-                        <p className="text-[15px] text-blue-700 dark:text-indigo-400 italic mt-3 font-medium">
-                          {filterResult.evaluation.tamilFeedback}
-                        </p>
-                      )}
                     </div>
 
-                    {(filterResult.evaluation?.grammarIssues?.length > 0 || filterResult.evaluation?.vocabularySuggestions?.length > 0) && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {filterResult.evaluation.grammarIssues?.length > 0 && (
-                          <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
-                            <h4 className="text-blue-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
-                              <ShieldAlert className="w-4 h-4" /> Grammar Fixes
-                            </h4>
-                            <ul className="list-disc pl-4 space-y-1">
-                              {filterResult.evaluation.grammarIssues.map((issue: string, i: number) => (
-                                <li key={i} className="text-[14px] text-blue-800 dark:text-indigo-300 font-medium">{issue}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        {filterResult.evaluation.vocabularySuggestions?.length > 0 && (
-                          <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
-                            <h4 className="text-blue-600 dark:text-indigo-400 font-bold text-[14px] uppercase tracking-wider mb-2 flex items-center gap-2">
-                              <Sparkles className="w-4 h-4" /> Better Words
-                            </h4>
-                            <ul className="list-disc pl-4 space-y-1">
-                              {filterResult.evaluation.vocabularySuggestions.map((sug: string, i: number) => (
-                                <li key={i} className="text-[14px] text-blue-800 dark:text-indigo-300 font-medium">{sug}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
+                    {filterResult.evaluation?.tamilFeedback && (
+                      <div className="bg-indigo-500/5 dark:bg-indigo-950/30 p-5 rounded-2xl border border-indigo-500/15 dark:border-indigo-500/20 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '600ms', animationFillMode: 'both' }}>
+                        <h4 className="text-indigo-600 dark:text-indigo-400 font-bold text-[13px] uppercase tracking-wider mb-2 flex items-center gap-2">
+                          🇮🇳 தமிழ் விளக்கம் (Tamil Explanation)
+                        </h4>
+                        <p className="text-[15px] text-indigo-700 dark:text-indigo-300 leading-relaxed font-medium">
+                          <TypewriterText text={filterResult.evaluation.tamilFeedback} speed={12} />
+                        </p>
                       </div>
                     )}
 
-                    <div className="mt-8 flex items-center gap-4 flex-wrap">
+                    {filterResult.evaluation?.grammarIssues?.length > 0 && (
+                      <div className="bg-red-500/5 dark:bg-red-950/20 p-5 rounded-2xl border border-red-500/15 dark:border-red-500/20 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '900ms', animationFillMode: 'both' }}>
+                        <h4 className="text-red-600 dark:text-red-400 font-bold text-[13px] uppercase tracking-wider mb-3 flex items-center gap-2">
+                          <ShieldAlert className="w-4 h-4" /> Grammar Mistakes / இலக்கணப் பிழைகள்
+                        </h4>
+                        <ul className="space-y-2">
+                          <AnimatedList items={filterResult.evaluation.grammarIssues} delayMs={500} startAfterMs={200}
+                            renderItem={(issue) => (
+                              <li className="flex items-start gap-2 text-[14px] text-red-800 dark:text-red-300 font-medium">
+                                <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-red-500" />
+                                <span>{issue}</span>
+                              </li>
+                            )}
+                          />
+                        </ul>
+                      </div>
+                    )}
+
+                    {filterResult.evaluation?.vocabularySuggestions?.length > 0 && (
+                      <div className="bg-emerald-500/5 dark:bg-emerald-950/20 p-5 rounded-2xl border border-emerald-500/15 dark:border-emerald-500/20 animate-in fade-in slide-in-from-bottom-4" style={{ animationDelay: '1200ms', animationFillMode: 'both' }}>
+                        <h4 className="text-emerald-600 dark:text-emerald-400 font-bold text-[13px] uppercase tracking-wider mb-3 flex items-center gap-2">
+                          <Sparkles className="w-4 h-4" /> Better Words / சிறந்த சொற்கள்
+                        </h4>
+                        <ul className="space-y-2">
+                          <AnimatedList items={filterResult.evaluation.vocabularySuggestions} delayMs={500} startAfterMs={200}
+                            renderItem={(sug) => (
+                              <li className="flex items-start gap-2 text-[14px] text-emerald-800 dark:text-emerald-300 font-medium">
+                                <Sparkles className="w-4 h-4 mt-0.5 flex-shrink-0 text-emerald-500" />
+                                <span>{sug}</span>
+                              </li>
+                            )}
+                          />
+                        </ul>
+                      </div>
+                    )}
+
+                    <div className="mt-8 flex items-center gap-4 flex-wrap animate-in fade-in" style={{ animationDelay: '1500ms', animationFillMode: 'both' }}>
                       <span className="px-4 py-2 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300 font-bold border border-blue-500/20 shadow-sm">
                         Score: {filterResult.score}%
                       </span>
