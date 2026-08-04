@@ -31,13 +31,10 @@ const getMenuByRole = (role: string): MenuItem[] => {
   }
   if (role === "FACULTY") {
     return [
-      { name: "Dashboard",      href: "/faculty-dashboard",              icon: LayoutDashboard },
-      { name: "Classrooms",     href: "/faculty-dashboard/classrooms",   icon: Monitor },
-      { name: "Academics",      href: "/faculty-dashboard/academics",    icon: GraduationCap },
-      { name: "Leave",          href: "/faculty-dashboard/leave",        icon: Calendar },
-      { name: "Class Incharge", href: "/faculty-dashboard/class-incharge", icon: ClipboardCheck },
-      { name: "Students",       href: "/faculty-dashboard/students",     icon: Users },
-      { name: "Community",      href: "/faculty-dashboard/community",    icon: MessageCircle },
+      { name: "Dashboard",  href: "/faculty-dashboard",            icon: LayoutDashboard },
+      { name: "Classrooms", href: "/faculty-dashboard/classrooms", icon: Monitor },
+      { name: "Students",   href: "/faculty-dashboard/students",   icon: Users },
+      { name: "Academics",  href: "/faculty-dashboard/academics",  icon: GraduationCap },
     ]
   }
   if (role === "HOD") {

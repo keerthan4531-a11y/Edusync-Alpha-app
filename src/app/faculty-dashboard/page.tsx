@@ -102,16 +102,14 @@ export default async function FacultyDashboardPage() {
         {/* Quick Actions */}
         <div className="neu-flat p-6 rounded-[2rem] flex flex-col gap-5 shadow-xl dark:bg-white/5 dark:border-white/10 border border-blue-500/10">
           <h2 className="text-xl font-extrabold text-foreground">Quick Management Hub</h2>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { href: "/faculty-dashboard/classrooms",   icon: Monitor,         label: "Classrooms",   color: "text-blue-600 dark:text-blue-400" },
-              { href: "/faculty-dashboard/students",     icon: Users,           label: "Students & Att", color: "text-indigo-600 dark:text-indigo-400" },
-              { href: "/faculty-dashboard/academics",    icon: GraduationCap,   label: "Academics",    color: "text-violet-600 dark:text-violet-400" },
-              { href: "/faculty-dashboard/leave",        icon: Calendar,        label: "Leave",        color: "text-amber-600 dark:text-amber-400", badge: pendingLeaves > 0 ? pendingLeaves : undefined },
-              { href: "/faculty-dashboard/class-incharge", icon: ClipboardCheck, label: "Incharge",   color: "text-teal-600 dark:text-teal-400",   badge: pendingStudentLeaves > 0 ? pendingStudentLeaves : undefined },
-              { href: "/faculty-dashboard/community",    icon: MessageCircle,   label: "Community",    color: "text-emerald-600 dark:text-emerald-400" },
+              { href: "/faculty-dashboard/classrooms", icon: Monitor,       label: "Classrooms",     color: "text-blue-600 dark:text-blue-400" },
+              { href: "/faculty-dashboard/students",   icon: Users,         label: "Students & Hub", color: "text-indigo-600 dark:text-indigo-400", badge: pendingStudentLeaves > 0 ? pendingStudentLeaves : undefined },
+              { href: "/faculty-dashboard/academics", icon: GraduationCap, label: "Academics",      color: "text-violet-600 dark:text-violet-400" },
+              { href: "/faculty-dashboard/students",   icon: Calendar,      label: "Leave Hub",      color: "text-amber-600 dark:text-amber-400",   badge: pendingLeaves > 0 ? pendingLeaves : undefined },
             ].map(({ href, icon: Icon, label, color, badge }: any) => (
-              <Link key={href} href={href} className="relative flex flex-col items-center justify-center gap-2 p-4 rounded-2xl neu-raised-sm hover:scale-105 transition-all border border-blue-500/10">
+              <Link key={label} href={href} className="relative flex flex-col items-center justify-center gap-2 p-4 rounded-2xl neu-raised-sm hover:scale-105 transition-all border border-blue-500/10">
                 <Icon className={`w-6 h-6 ${color}`} />
                 <span className={`text-[10px] font-extrabold text-center ${color}`}>{label}</span>
                 {badge !== undefined && (

@@ -142,7 +142,6 @@ export function AttendanceSection() {
           {([
             { key: "mark", label: "Mark Attendance", icon: CheckCircle2 },
             { key: "stats", label: "Statistics", icon: BarChart3 },
-            { key: "setup", label: "Add Slot", icon: PlusCircle },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button key={key} onClick={() => setTab(key)}
               className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
@@ -162,8 +161,8 @@ export function AttendanceSection() {
         slots.length === 0 ? (
           <div className="text-center py-8">
             <Users className="w-10 h-10 mx-auto text-blue-500/40 mb-2" />
-            <p className="text-xs font-bold text-foreground mb-2">No timetable slots configured yet</p>
-            <button onClick={() => setTab("setup")} className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold shadow-md shadow-blue-500/20">Add Your First Timetable Slot</button>
+            <p className="text-xs font-bold text-foreground mb-1">No timetable slots configured yet</p>
+            <p className="text-[11px] text-muted-foreground font-medium">Use the Timetable Management section below to add your teaching slots.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -293,50 +292,6 @@ export function AttendanceSection() {
             </div>
           )}
         </div>
-      )}
-
-      {/* SETUP TAB */}
-      {tab === "setup" && (
-        <form onSubmit={handleAddSlot} className="flex flex-col gap-3 max-w-lg">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Day</label>
-              <select value={newSlot.dayOfWeek} onChange={e => setNewSlot(s => ({ ...s, dayOfWeek: e.target.value }))}
-                className="px-3 py-2 rounded-xl text-xs font-semibold bg-blue-500/10 dark:bg-white/5 border border-blue-500/20 outline-none focus:ring-2 focus:ring-blue-500 text-foreground">
-                {DAYS.slice(1).map((d, i) => <option key={i + 1} value={i + 1}>{d}</option>)}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Period</label>
-              <input type="number" min={1} max={8} value={newSlot.periodNo} onChange={e => setNewSlot(s => ({ ...s, periodNo: e.target.value }))}
-                className="px-3 py-2 rounded-xl text-xs font-semibold bg-blue-500/10 dark:bg-white/5 border border-blue-500/20 outline-none focus:ring-2 focus:ring-blue-500 text-foreground" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Subject</label>
-              <input required value={newSlot.subject} onChange={e => setNewSlot(s => ({ ...s, subject: e.target.value }))} placeholder="e.g. Data Structures"
-                className="px-3 py-2 rounded-xl text-xs font-semibold bg-blue-500/10 dark:bg-white/5 border border-blue-500/20 outline-none focus:ring-2 focus:ring-blue-500 text-foreground" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Class Group</label>
-              <input required value={newSlot.classGroup} onChange={e => setNewSlot(s => ({ ...s, classGroup: e.target.value }))} placeholder="e.g. CSE-A"
-                className="px-3 py-2 rounded-xl text-xs font-semibold bg-blue-500/10 dark:bg-white/5 border border-blue-500/20 outline-none focus:ring-2 focus:ring-blue-500 text-foreground" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Start Time</label>
-              <input type="time" value={newSlot.startTime} onChange={e => setNewSlot(s => ({ ...s, startTime: e.target.value }))}
-                className="px-3 py-2 rounded-xl text-xs font-semibold bg-blue-500/10 dark:bg-white/5 border border-blue-500/20 outline-none focus:ring-2 focus:ring-blue-500 text-foreground" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-[9px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-widest">End Time</label>
-              <input type="time" value={newSlot.endTime} onChange={e => setNewSlot(s => ({ ...s, endTime: e.target.value }))}
-                className="px-3 py-2 rounded-xl text-xs font-semibold bg-blue-500/10 dark:bg-white/5 border border-blue-500/20 outline-none focus:ring-2 focus:ring-blue-500 text-foreground" />
-            </div>
-          </div>
-          <button type="submit" disabled={savingSlot}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-extrabold hover:scale-[1.02] transition-all shadow-md shadow-blue-500/20 disabled:opacity-50 mt-1">
-            {savingSlot ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PlusCircle className="w-3.5 h-3.5" />} Save Slot
-          </button>
-        </form>
       )}
     </div>
   )
